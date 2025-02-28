@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Browserpad - A notepad in the browser</title>
+  <title>bpad.me</title>
   <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,R0lGODlhEAAQAKEAAAAAAICAgP///wAAACH/
     C05FVFNDQVBFMi4wAwEAAAAh/hFDcmVhdGVkIHdpdGggR0lNUAAh+QQBZAADACwAAAAAEAAQAAACJIyPacLtvp5kEUwYmL00i81VXK
     eNgjiioQdeqsuakXl6tIIjBQAh+QQBZAADACwAAAAAEAAQAAACIIyPacLtvp5kcb5qG85iZ2+BkyiRV8BBaEqtrKkqslEAADs=" />
@@ -12,32 +12,26 @@
   <textarea id="textbox" autofocus="autofocus" placeholder="type here"></textarea>
   <nav>
     <span id="stats">
-      <span id="char-count">0</span> chars │
-      <span id="word-count">0</span> words │
-      <span id="line-count">0</span> lines
+      <span id="char-count">0</span>  C │
+      <span id="word-count">0</span> W │
+      <span id="line-count">0</span> L
     </span>
     <span id="controls">
-      <input type="checkbox" id="fullwidth" />
-      <label for="fullwidth">80 Column</label> │
-      <input type="checkbox" id="spellcheck" />
-      <label for="spellcheck">spell-checking</label> │
-      <a href="#" id="print">print</a> │
       <span id="open">
         <input type="file" value="open" />
         <a href="#">open</a>
       </span>
       <span id="save">
-        <input id="filename" placeholder="browserpad.txt" />
+        <input id="filename" placeholder="bpad.txt" />
         <a href="#">save</a>
-      </span> │
-      <a href="#" title="About Browserpad" id="about-icon">ⓘ</a>
+      </span>
+      <a href="#" title="About bpad"</a>
     </span>
   </nav>
   <dialog id="about">
-    <h2>Browserpad</h2>
-    <p>As the name indicates, Browserpad is a notepad in the browser.</p>
-    <p>It is a plain text editor built entirely with HTML, CSS and JavaScript.</p>
-    <p>The source code is <a href="https://github.com/Browserpad/browserpad">available on GitHub</a>.</p>
+    <h2>bpad</h2>
+    <p>Made by barney.me Based on browserpad.org. Hosted by neocities.org.</p>
+    <p>Find the source code at github.com/Browserpad/browserpad.</p>
     <form method="dialog"><button>close</button></form>
   </dialog>
   <script src="script.js"></script>

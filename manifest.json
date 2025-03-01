@@ -2,7 +2,7 @@
   "short_name": "BPAD",
   "name": "BPAD.me PWA",
   "description": "Browser plaintext notepad",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",

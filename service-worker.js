@@ -1,9 +1,9 @@
 const CACHE_NAME = 'bpad-pwa-cache';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
+  '/index.xhtml',
+  '/style.css',
+  '/script.js',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
 ];

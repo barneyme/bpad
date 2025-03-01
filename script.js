@@ -69,10 +69,10 @@ document.querySelector('#open input').onchange = function () {
 // };
 
 // Toggle spell-checking
-document.querySelector('#spellcheck').onchange = function () {
-    textbox.spellcheck = this.checked;
-};
-textbox.spellcheck = document.querySelector('#spellcheck').checked; // Initialize
+// document.querySelector('#spellcheck').onchange = function () {
+//  textbox.spellcheck = this.checked;
+// };
+// textbox.spellcheck = document.querySelector('#spellcheck').checked; // Initialize
 
 // Print the content
 document.querySelector("#print").onclick = function () {

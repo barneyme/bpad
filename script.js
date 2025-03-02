@@ -30,14 +30,14 @@ textbox.onkeyup = function () {
 };
 
 // Calculate and display character, words and line counts
-// function calcStats() {
-//  updateCount('char', textbox.value.length);
-//  updateCount('word', textbox.value === "" ? 0 : textbox.value.replace(/\s+/g, ' ').split(' ').length);
-//  updateCount('line', textbox.value === "" ? 0 : textbox.value.split(/\n/).length);
-// }
-// function updateCount(item, value) {
-//  document.querySelector('#' + item + '-count').textContent = value;
-// }
+function calcStats() {
+  updateCount('char', textbox.value.length);
+  updateCount('word', textbox.value === "" ? 0 : textbox.value.replace(/\s+/g, ' ').split(' ').length);
+  updateCount('line', textbox.value === "" ? 0 : textbox.value.split(/\n/).length);
+ }
+ function updateCount(item, value) {
+  document.querySelector('#' + item + '-count').textContent = value;
+ }
 
 // Save textarea contents as a text file
 document.querySelector('#save a').onclick = function () {

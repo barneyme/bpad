@@ -3,10 +3,10 @@ var timeoutID = null;
 var filenameBox = document.querySelector('#filename');
 
 // Automatically load/save cache in local storage when opening and closing the page
-textbox.value = localStorage.getItem('browserpad') || '';
+textbox.value = localStorage.getItem('bpad') || '';
 textbox.setSelectionRange(textbox.value.length, textbox.value.length); // Place caret at end of content
 calcStats(); // Update counters after loading
-function storeLocally() { localStorage.setItem('browserpad', textbox.value); }
+function storeLocally() { localStorage.setItem('bpad', textbox.value); }
 window.beforeunload = storeLocally;
 
 // Allow inputting tabs in the textarea instead of changing focus to the next element
@@ -41,7 +41,7 @@ function calcStats() {
 
 // Save textarea contents as a text file
 document.querySelector('#save a').onclick = function () {
-    this.download = (filenameBox.value || 'browserpad.txt').replace(/^([^.]*)$/, "$1.txt");
+    this.download = (filenameBox.value || 'bpad.txt').replace(/^([^.]*)$/, "$1.txt");
     this.href = URL.createObjectURL(new Blob([document.querySelector('#textbox').value], { type: 'text/plain' }));
 };
 

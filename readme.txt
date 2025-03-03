@@ -2,6 +2,16 @@ WHAT:
 bPad.me is a browser based plaintext note web app. 
 bPad was created by www.barney.me.
 
+NAME:
+The "b" in bPad stands for:
+(a) Barney,
+(b) Brilliant,
+(c) Basic.
+The "Pad" in bPad stands for:
+(a) Helipad,
+(b) Notepad,
+(b) Scratchpad.
+
 FEATURES:
 bPad can:
 - Open plaintext files. 

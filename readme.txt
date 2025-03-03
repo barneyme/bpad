@@ -5,9 +5,19 @@ bPad was created by www.barney.me.
 FEATURES:
 bPad can:
 - Open plaintext files. 
-- Save content as plaintext files.
-- Autosave content in your browser. 
+- Save notes as plaintext files.
+- Autosave notes in your browser. 
 - Be installed as a Progressive Web App.
+
+DIRECTIONS:
+1. Open bpad.me in web browser and make notes.
+2. Notes are automatically saved.
+3. Reopen bpad.me to continue working on your notes.
+4. Bpad.me can be used offline after the first use. 
+5. Click "save" to download your notes as a .txt file to your computer.
+6. Click "open" to work on notes from a .txt file on your computer.
+7. Click "install" to add bpad.me as a PWA (Progressive Web App.)
+8. Bpad PWA can be used as a separate application from your browser and offline.
 
 CREDIT:
 bPad is based on the brilliant browserpad.org. 

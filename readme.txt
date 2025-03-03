@@ -9,6 +9,12 @@ bPad can:
 - Autosave notes in your browser. 
 - Be installed as a Progressive Web App.
 
+PRIVACY:
+Notes never leave your computer.
+We do not (and cannot) see your notes.
+We do not (and cannot) track who is using bPad.
+We do not (and cannot) sell your data.
+
 DIRECTIONS:
 1. Open bpad.me in web browser and make notes.
 2. Notes are automatically saved.

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Editor</title>
-    <link rel="stylesheet" href="mdstyle.css">
+    <title>Markdown Web App</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.1.3/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
@@ -14,13 +14,15 @@
         <h1>Markdown Editor</h1>
         <textarea id="markdown" placeholder="Write your markdown here..."></textarea>
         <div id="preview" class="preview"></div>
-        <button id="saveTxt">Save as .md</button>
+        <button id="saveMd">Save as .md</button>
+        <button id="saveTxt">Save as .txt</button>
         <button id="savePdf">Save as .pdf</button>
     </div>
 
     <script>
         const textarea = document.getElementById('markdown');
         const preview = document.getElementById('preview');
+        const saveMdButton = document.getElementById('saveMd');
         const saveTxtButton = document.getElementById('saveTxt');
         const savePdfButton = document.getElementById('savePdf');
 
@@ -29,13 +31,23 @@
             preview.innerHTML = marked(markdownText);
         });
 
+        // Save as .md
+        saveMdButton.addEventListener('click', () => {
+            const markdownText = textarea.value;
+            const blob = new Blob([markdownText], { type: 'text/markdown' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'document.md';
+            link.click();
+        });
+
         // Save as .txt
         saveTxtButton.addEventListener('click', () => {
             const markdownText = textarea.value;
             const blob = new Blob([markdownText], { type: 'text/plain' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'bpad.md';
+            link.download = 'document.txt';
             link.click();
         });
 
@@ -65,7 +77,7 @@
                     heightLeft -= pageHeight;
                 }
 
-                doc.save('bpad.pdf');
+                doc.save('document.pdf');
             });
         });
     </script>

@@ -8,7 +8,7 @@ The "b" in bPad stands for:
 (b) Brilliant,
 (c) Basic.
 The "Pad" in bPad stands for:
-(a) Helipad,
+(a) Launchpad,
 (b) Notepad,
 (b) Scratchpad.
 

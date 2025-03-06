@@ -6,10 +6,13 @@ bPad was created by www.barney.me.
 **NAME:**
 
 The "b" in bPad stands for:
+
 (a) barney,
 (b) brilliant,
 (c) basic.
+
 The "Pad" in bPad stands for:
+
 (a) launchPad,
 (b) notePad,
 (b) scratchPad.

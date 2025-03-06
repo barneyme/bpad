@@ -34,7 +34,7 @@
             const blob = new Blob([markdownText], { type: 'text/plain' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'document.txt';
+            link.download = 'bpad-me-md.txt';
             link.click();
         });
 
@@ -45,7 +45,7 @@
             const markdownText = textarea.value;
             const htmlContent = marked(markdownText);
             doc.fromHTML(htmlContent, 10, 10);
-            doc.save('document.pdf');
+            doc.save('bpad-me-md.pdf');
         });
     </script>
 </body>

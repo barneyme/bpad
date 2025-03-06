@@ -1,57 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bPad Markdown Editor</title>
-    <link rel="stylesheet" href="mdstyle.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.1.3/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Markdown Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #editor {
+            flex: 1;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+
+        #preview {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+        }
+
+        #controls {
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>bPad Markdown Editor</h1>
-        <textarea id="markdown" placeholder="Write your markdown here..."></textarea>
-        <div id="preview" class="preview"></div>
-        <button id="saveMd">Save as .md</button>
-        <button id="savePdf">Save as .pdf</button>
+    <textarea id="editor"></textarea>
+    <div id="preview"></div>
+    <div id="controls">
+        <button onclick="updatePreview()">Preview</button>
+        <button onclick="saveMarkdown()">Save as Markdown</button>
+        <button onclick="savePDF()">Save as PDF</button>
     </div>
 
     <script>
-        const textarea = document.getElementById('markdown');
+        const editor = document.getElementById('editor');
         const preview = document.getElementById('preview');
-        const saveMdButton = document.getElementById('saveMd');
-        const saveTxtButton = document.getElementById('saveTxt');
-        const savePdfButton = document.getElementById('savePdf');
+        const converter = new showdown.Converter();
 
-        textarea.addEventListener('input', () => {
-            const markdownText = textarea.value;
-            preview.innerHTML = marked(markdownText);
-        });
+        function updatePreview() {
+            const markdownText = editor.value;
+            const html = converter.makeHtml(markdownText);
+            preview.innerHTML = html;
+        }
 
-        // Save as .md
-        saveMdButton.addEventListener('click', () => {
-            const markdownText = textarea.value;
+        function saveMarkdown() {
+            const markdownText = editor.value;
             const blob = new Blob([markdownText], { type: 'text/markdown' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'document.md';
-            link.click();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
 
-        // Save as .pdf
-        savePdfButton.addEventListener('click', () => {
-            const element = preview; // The HTML element to convert to PDF
-            const opt = {
-                margin:       1,
-                filename:     'document.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+        function savePDF() {
+            updatePreview(); // Ensure preview is up-to-date
+            const element = preview;
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            pdf.html(element, {
+              callback: function(pdf) {
+                pdf.save('document.pdf');
+              },
+              x: 10,
+              y: 10,
+              width: pdf.internal.pageSize.getWidth() - 20,
+              windowWidth: element.offsetWidth
+            });
 
-            // Use html2pdf to generate the PDF
-            html2pdf().from(element).set(opt).save();
-        });
+        }
+
+        editor.addEventListener('input', updatePreview);
+        updatePreview(); // Initial preview
     </script>
 </body>
 </html>

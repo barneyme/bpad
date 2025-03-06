@@ -1,87 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Editor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
-            display: flex;
-            height: 100vh;
+            font-family: Arial, sans-serif;
             margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f7fa;
         }
-
-        #editor {
-            flex: 1;
+        textarea {
+            width: 80%;
+            height: 200px;
+            margin: 20px 0;
             padding: 10px;
-            font-family: monospace;
+            font-size: 16px;
+            line-height: 1.5;
             border: 1px solid #ccc;
-            resize: none;
+            border-radius: 5px;
         }
-
-        #preview {
-            flex: 1;
-            padding: 10px;
+        #output {
+            width: 80%;
             border: 1px solid #ccc;
-            overflow-y: auto;
-        }
-
-        #controls {
             padding: 10px;
-            text-align: center;
+            border-radius: 5px;
+            background-color: white;
+            min-height: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <textarea id="editor"></textarea>
-    <div id="preview"></div>
-    <div id="controls">
-        <button onclick="updatePreview()">Preview</button>
-        <button onclick="saveMarkdown()">Save as Markdown</button>
-        <button onclick="savePDF()">Save as PDF</button>
+
+    <h1>Markdown Editor</h1>
+    <textarea id="markdownInput" placeholder="Write your Markdown here..."></textarea>
+    <div id="output"></div>
+    <div>
+        <button onclick="downloadMD()">Save as .md</button>
+        <button onclick="downloadPDF()">Save as PDF</button>
     </div>
 
     <script>
-        const editor = document.getElementById('editor');
-        const preview = document.getElementById('preview');
-        const converter = new showdown.Converter();
+        const markdownInput = document.getElementById('markdownInput');
+        const outputDiv = document.getElementById('output');
 
-        function updatePreview() {
-            const markdownText = editor.value;
-            const html = converter.makeHtml(markdownText);
-            preview.innerHTML = html;
-        }
+        // Function to update the rendered HTML from Markdown
+        markdownInput.addEventListener('input', function () {
+            const markdownText = markdownInput.value;
+            const htmlContent = marked(markdownText);
+            outputDiv.innerHTML = htmlContent;
+        });
 
-        function saveMarkdown() {
-            const markdownText = editor.value;
+        // Function to download the Markdown as a .md file
+        function downloadMD() {
+            const markdownText = markdownInput.value;
             const blob = new Blob([markdownText], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'document.md';
-            a.click();
-            URL.revokeObjectURL(url);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'document.md';
+            link.click();
         }
 
-        function savePDF() {
-            updatePreview(); // Ensure preview is up-to-date
-            const element = preview;
+        // Function to download the content as a PDF
+        function downloadPDF() {
+            const markdownText = markdownInput.value;
+            const htmlContent = marked(markdownText);
+            
+            // Create a new jsPDF instance
             const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF();
-            pdf.html(element, {
-              callback: function(pdf) {
-                pdf.save('document.pdf');
-              },
-              x: 10,
-              y: 10,
-              width: pdf.internal.pageSize.getWidth() - 20,
-              windowWidth: element.offsetWidth
+            const doc = new jsPDF();
+            
+            // Add the rendered Markdown (as plain text) to the PDF
+            doc.html(htmlContent, {
+                callback: function (doc) {
+                    doc.save('document.pdf');
+                },
+                margin: [10, 10, 10, 10]
             });
-
         }
-
-        editor.addEventListener('input', updatePreview);
-        updatePreview(); // Initial preview
     </script>
+
 </body>
 </html>

@@ -4,13 +4,13 @@ bPad was created by www.barney.me.
 
 NAME:
 The "b" in bPad stands for:
-(a) Barney,
-(b) Brilliant,
-(c) Basic.
+(a) barney,
+(b) brilliant,
+(c) basic.
 The "Pad" in bPad stands for:
-(a) Launchpad,
-(b) Notepad,
-(b) Scratchpad.
+(a) launchPad,
+(b) notePad,
+(b) scratchPad.
 
 FEATURES:
 bPad can:
@@ -28,14 +28,14 @@ bPad can:
 -- .PS Powershell scripts,
 -- .PY Python scripts,
 -- .JS Javascript files,
--- .JAVA Java files,
+-- .JAVA Java files.
 - Autosave notes in your browser. 
 - Be installed as a Progressive Web App.
 
 DIRECTIONS:
 1. Open bpad.me in web browser and make notes.
 2. Notes are automatically saved.
-3. Bpad.me can be used offline after the first use. Reopen bpad.me to continue working on your notes.
+3. bPad.me can be used offline after the first use. Reopen bPad.me to continue working on your notes.
 4. Click ":write" to download your notes to your computer.
 5. bPad saves your notes as bpad.txt by default but you can change it to any name and filetype (EG INDEX.HTML.)
 6. Click ":edit" to open on a file on your computer.
@@ -45,7 +45,7 @@ DIRECTIONS:
 MARKDOWN
 [Markdown](https://daringfireball.net/projects/markdown/) is a lightweight markup language with plain text formatting syntax. Its design allows it to be converted to many output formats, but the original tool by the same name only supports HTML.
 
-Basic Markdown formatting:
+**Basic Markdown formatting:**
 # H1 heading
 ## H2 heading
 **bold**

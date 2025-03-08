@@ -30,6 +30,7 @@ bPad can:
 -- .JS Javascript files,
 -- .JAVA Java files.
 - Autosave notes in your browser. 
+- Be used on mobile and desktop browsers.
 - Be installed as a Progressive Web App.
 
 DIRECTIONS:

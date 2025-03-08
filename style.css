@@ -14,7 +14,7 @@ textarea {
   outline: none; 
   resize: none;
   font-family: monospace;
-  padding: 0.5em;
+  padding: 0.2em;
   width: 100%;
 }
 
@@ -31,7 +31,7 @@ nav {
   left: 0;
   width: 100%; 
   height: 3rem; /* Reduced height */
-  padding: 0 0.5em; /* Adjusted padding */
+  padding: 0 0.2em; /* Adjusted padding */
   background-color: #eee; 
   border-top: 1px solid silver;
   line-height: 3rem; /* Match line height to nav height */
@@ -50,7 +50,7 @@ nav {
 
 #save a, #open a, #about-icon {
   text-decoration: none;
-  margin-left: 0.5em; /* Space between links */
+  margin-left: 0.2em; /* Space between links */
 }
 
 #open > input {
@@ -73,7 +73,7 @@ nav {
   }
 
   #stats {
-    margin-bottom: 0.5em; /* Space between stats and controls */
+    margin-bottom: 0.2em; /* Space between stats and controls */
   }
 
   #controls {
@@ -81,7 +81,7 @@ nav {
   }
 
   #controls span {
-    margin-bottom: 0.5em; /* Space between control items */
+    margin-bottom: 0.2em; /* Space between control items */
   }
 }
 

@@ -35,7 +35,8 @@ bPad can:
 -- .PY Python scripts,
 -- .JS Javascript files,
 -- .JAVA Java files.
-- Autosave notes in your browser. 
+- Autosave notes in your browser.
+- Can be used on mobile and desktop browsers.
 - Be installed as a Progressive Web App.
 
 **DIRECTIONS:**

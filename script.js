@@ -22,8 +22,7 @@ textbox.onkeydown = function (event) {
 
 textbox.onkeyup = function () {
     calcStats();
-
-        window.clearTimeout(timeoutID);
+    window.clearTimeout(timeoutID);
     timeoutID = window.setTimeout(storeLocally, 1000);
 };
 
@@ -46,4 +45,14 @@ document.querySelector('#open a').onclick = function () {
     document.querySelector('#open input').click();
 };
 
-document.querySelector('#open input').onchange
+document.querySelector('#open input').onchange = function (event) {
+    var file = event.target.files[0]; // Get the selected file
+    if (file) {
+        var reader = new FileReader(); 
+        reader.onload = function (e) {
+            textbox.value = e.target.result; 
+            calcStats(); 
+        };
+        reader.readAsText(file); 
+    }
+};

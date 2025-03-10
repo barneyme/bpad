@@ -44,9 +44,9 @@ bPad can:
 1. Open bpad.me in web browser and make notes.
 2. Notes are automatically saved.
 3. bPad.me can be used offline after the first use. Reopen bPad.me to continue working on your notes.
-4. Click ":write" to download your notes to your computer.
+4. Click "save" to download your notes to your computer.
 5. bPad saves your notes as bpad.txt by default but you can change it to any name and filetype (EG INDEX.HTML.)
-6. Click ":edit" to open on a file on your computer.
+6. Click "open" to open on a file on your computer.
 7. Click "install" to add bpad.me as a PWA (Progressive Web App.)
 8. Bpad PWA can be used as a separate application from your browser and offline.
 
@@ -71,15 +71,3 @@ Notes never leave your computer.
 bPad does not (and cannot) see your notes.
 bPad does not (and cannot) track who is using bPad.
 bPad does not (and cannot) sell your data.
-
-**CREDIT:**
-bPad is based on the brilliant browserpad.org. 
-Find the source code at github.com/Browserpad/browserpad.
-
-**LICENSE:**
-
-Copyright (C) 2015 Waldir Pimenta and contributors
-
-Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

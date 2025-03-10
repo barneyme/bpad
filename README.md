@@ -1,5 +1,5 @@
 **bPad**
 
-bPad.me is a browser based plaintext editor web app. 
+bPad.me is a plaintext editor web app. 
 
 Learn more [here](https://bpad.me/readme.txt).

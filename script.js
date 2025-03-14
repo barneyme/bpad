@@ -36,16 +36,20 @@ function updateCount(item, value) {
     document.querySelector('#' + item + '-count').textContent = value;
 }
 
-document.querySelector('#save a').onclick = function () {
-    this.download = (filenameBox.value || 'bpad.txt').replace(/^([^.]*)$/, "$1.txt");
-    this.href = URL.createObjectURL(new Blob([textbox.value], { type: 'text/plain' }));
+document.querySelector('#save').onclick = function () {
+    var filename = filenameBox.value || 'bpad.txt';
+    var blob = new Blob([textbox.value], { type: 'text/plain' });
+    var link = document.createElement('a');
+    link.download = filename.replace(/^([^.]*)$/, "$1.txt");
+    link.href = URL.createObjectURL(blob);
+    link.click();
 };
 
-document.querySelector('#open a').onclick = function () {
-    document.querySelector('#open input').click();
+document.querySelector('#open').onclick = function () {
+    document.querySelector('#open-input').click();
 };
 
-document.querySelector('#open input').onchange = function (event) {
+document.querySelector('#open-input').onchange = function (event) {
     var file = event.target.files[0]; // Get the selected file
     if (file) {
         var reader = new FileReader(); 

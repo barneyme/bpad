@@ -19,11 +19,11 @@ Open bpad.me in web browser and start writing. Notes are automatically saved.
 
 bPad.me can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.
 
-Click "save" to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG index.html.)
+Click "Save" to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG index.html.)
 
-Click "open" to open on a file on your computer.
+Click "Open" to open a file from your computer.
 
-Click "install" to add bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
+Click "Install" to add bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
 
 
 **PRIVACY**

@@ -4,36 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>bPad.me</title>
-  <link rel="icon" type="image/png" href="https://bpad.me/bpad.png" />
+  <link rel="icon" type="image/png" href="bpad.png" />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
   <textarea id="textbox" autofocus="autofocus" placeholder="type here"></textarea>
   <nav>
-  <span id="stats">
-    <span id="char-count">0</span> chars, 
-    <span id="word-count">0</span> words, 
-    <span id="line-count">0</span> lines,
-  </span> 
-  <a href="https://bpad.me/readme.txt" target="_blank">readme.txt</a>
-  <span id="controls">
-    <span id="open">
-      <input type="file" value="open "/>
-      <a href="#">open </a>
-    </span>
-    <span id="save">
+    <span id="stats">
+      <span id="char-count">0</span> chars, 
+      <span id="word-count">0</span> words, 
+      <span id="line-count">0</span> lines,
+    </span> 
+    <span id="controls">
+      <button id="open">Open</button>
       <input id="filename" placeholder="bpad.txt" />
-      <a href="#">save</a>
+      <button id="save">Save</button>
+      <button id="readme-button">Readme.txt</button>
+      <a href="#" title="About bPad" id="about-icon"></a>
     </span>
-    <a href="#" title="About bPad" id="about-icon"></a>
-  </span>
-</nav>
+  </nav>
   <dialog id="about">
     <h2>bPad</h2>
     <p>Made by barney.me.</p>
     <form method="dialog"><button>close</button></form>
   </dialog>
+  <input type="file" id="open-input" style="display: none;" />
   <script src="script.js"></script>
+  <script>
+    document.getElementById('readme-button').onclick = function() {
+      window.open('readme.txt', '_blank');
+    };
+  </script>
 </body>
 </html>

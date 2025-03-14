@@ -22,6 +22,7 @@
       <button id="save">Save</button>
       <button id="readme-button">Readme.txt</button>
       <a href="#" title="About bPad" id="about-icon"></a>
+      <button id="installButton" style="display: none;">Install</button>
     </span>
   </nav>
   <dialog id="about">
@@ -35,6 +36,28 @@
     document.getElementById('readme-button').onclick = function() {
       window.open('readme.txt', '_blank');
     };
+
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installButton = document.getElementById('installButton');
+      installButton.style.display = 'block';
+
+      installButton.addEventListener('click', () => {
+        installButton.style.display = 'none';
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the A2HS prompt');
+          } else {
+            console.log('User dismissed the A2HS prompt');
+          }
+          deferredPrompt = null;
+        });
+      });
+    });
   </script>
 </body>
 </html>

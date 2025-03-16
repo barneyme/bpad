@@ -14,13 +14,13 @@ bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .
 
 **DIRECTIONS**
 
-Open bpad.me in web browser and start writing. Notes are automatically saved.
+Open bpad.me in web browser and start writing. Notes are automatically saved in your browser.
 
 bPad.me can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.
 
-Click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG index.html.)
+Press CTRL + O or click ^O to edit a file from your computer.
 
-Click ^O to edit a file from your computer.
+Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG index.html.)
 
 Click ? to view this Readme file.
 

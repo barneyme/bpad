@@ -24,7 +24,7 @@ Press CTRL + S or click ^S to download your notes to your computer. bPad saves y
 
 Click ? to view this Readme file.
 
-Click "Install" to add bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
+Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
 
 
 **PRIVACY**

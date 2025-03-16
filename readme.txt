@@ -20,7 +20,7 @@ bPad.me can be used offline after the first use. Simply reopen bPad.me to contin
 
 Press CTRL + O or click ^O to edit a file from your computer.
 
-Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG index.html.)
+Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-f.sh.)
 
 Click ? to view this Readme file.
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bWiki</title>
+    <title>bPad-Wiki</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -128,7 +128,7 @@
 </head>
 <body>
     <header>
-        <h1>bWiki</h1>
+        <h1>bPad-Wiki</h1>
         <div class="controls">
             <button id="new-page-btn">New Page</button>
             <button id="edit-btn">Edit Page</button>
@@ -142,8 +142,8 @@
     </div>
 
     <div class="content" id="content">
-        <h2>Welcome to bWiki</h2>
-        <p>This is a lightweight single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
+        <h2>Welcome to bPad-Wiki</h2>
+        <p>This is a basic single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
         <p>To get started:</p>
         <ul>
             <li>Click "New Page" to create a new wiki page</li>
@@ -175,7 +175,7 @@
     </div>
 
     <footer>
-        <p>bWiki - A basic browser-based wiki</p>
+        <p>bPad-Wiki - A basic browser-based wiki</p>
     </footer>
 
     <script>
@@ -186,7 +186,7 @@
                 const initialPages = {
                     'Home': {
                         title: 'Home',
-                        content: '# Welcome to bWiki\n\nThis is the home page of your wiki. You can create new pages or edit this one.'
+                        content: '# Welcome to bPad-Wiki\n\nThis is the home page. You can create new pages or edit this one.'
                     }
                 };
                 localStorage.setItem('wikiPages', JSON.stringify(initialPages));

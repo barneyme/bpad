@@ -29,6 +29,24 @@ Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be u
 Click + to open bWiki the basic browser based wiki.
 
 
+**bPad.me (w)**
+[bPad.me (w)](bpad.me/w) is a browser based wiki.
+
+bPad.me (w) automatically saves your pages in your browser.
+
+bPad.me (w) supports basic Markdown format like:
+# Header
+**bold**
+- bullet list
+[link](www.site.com)
+
+To create a new page click "New Page."
+
+To edit an existing page go to the page and click "Edit Page."
+
+To export a current page go to the page and click "Export Page." This will save the page to your computer as a .MD Markdown file.
+
+
 **PRIVACY**
 
 bPad does not (and cannot) see your notes.

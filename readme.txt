@@ -29,7 +29,7 @@ Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be u
 Click + to open bWiki the basic browser based wiki.
 
 
-**bPad.me (w)**
+**BPAD.ME (W)**
 [bPad.me (w)](bpad.me/w) is a browser based wiki.
 
 bPad.me (w) automatically saves your pages in your browser.

@@ -26,6 +26,8 @@ Click ? to view this Readme file.
 
 Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
 
+Click + to open bWiki the basic browser based wiki.
+
 
 **PRIVACY**
 

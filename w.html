@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bpad.me/w</title>
+    <title>bpad.me (w)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -128,7 +128,7 @@
 </head>
 <body>
     <header>
-        <h1>bpad.me/w</h1>
+        <h1>bpad.me (w)</h1>
         <div class="controls">
             <button id="new-page-btn">New Page</button>
             <button id="edit-btn">Edit Page</button>
@@ -142,7 +142,7 @@
     </div>
 
     <div class="content" id="content">
-        <h2>Welcome to bpad.me/w</h2>
+        <h2>Welcome to bpad.me (w)</h2>
         <p>This is a single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
         <p>To get started:</p>
         <ul>
@@ -175,7 +175,7 @@
     </div>
 
     <footer>
-        <p>bpad.me/w - A browser-based wiki</p>
+        <p>bpad.me (w) - A browser-based wiki</p>
     </footer>
 
     <script>
@@ -186,7 +186,7 @@
                 const initialPages = {
                     'Home': {
                         title: 'Home',
-                        content: '# Welcome to bpad.me/w - a browser-based wiki\n\nThis is the home page. You can create new pages or edit this one.'
+                        content: '# Welcome to bpad.me (w) - a browser-based wiki\n\nThis is the home page. You can create new pages or edit this one.'
                     }
                 };
                 localStorage.setItem('wikiPages', JSON.stringify(initialPages));
@@ -214,7 +214,7 @@
 
             if (pages && pages[pageName]) {
                 currentPage = pageName;
-                document.title = pageName + ' - bpad.me/w';
+                document.title = pageName + ' - bpad.me (w)';
 
                 let content = pages[pageName].content;
 
@@ -255,7 +255,7 @@
                     <p>This page doesn't exist yet. Click "Edit Page" to create it.</p>
                 `;
                 currentPage = pageName;
-                document.title = pageName + ' (New) - bpad.me/w';
+                document.title = pageName + ' (New) - bpad.me (w)';
             }
         }
 

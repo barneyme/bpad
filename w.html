@@ -121,9 +121,23 @@
             text-decoration: underline;
         }
 
-        .search-box {
-            margin-bottom: 20px;
-        }
+.search-box {
+    margin-bottom: 20px;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+}
+
+.search-container input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.search-container button {
+    white-space: nowrap;
+}
     </style>
 </head>
 <body>
@@ -136,10 +150,12 @@
         </div>
     </header>
 
-    <div class="search-box">
+<div class="search-box">
+    <div class="search-container">
         <input type="text" id="search-input" placeholder="Find...">
         <button id="search-btn">Find</button>
     </div>
+</div>
 
     <div class="content" id="content">
         <h2>Welcome to bPad(w)</h2>

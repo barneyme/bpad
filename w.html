@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bpad.me (w)</title>
+    <title>bPad (w)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -128,26 +128,26 @@
 </head>
 <body>
     <header>
-        <h1>bpad.me (w)</h1>
+        <h1>bPad (w)</h1>
         <div class="controls">
-            <button id="new-page-btn">New Page</button>
-            <button id="edit-btn">Edit Page</button>
-            <button id="export-btn">Export Page</button>
+            <button id="new-page-btn">New</button>
+            <button id="edit-btn">Edit</button>
+            <button id="export-btn">Export</button>
         </div>
     </header>
 
     <div class="search-box">
-        <input type="text" id="search-input" placeholder="Search pages...">
-        <button id="search-btn">Search</button>
+        <input type="text" id="search-input" placeholder="Find...">
+        <button id="search-btn">Find</button>
     </div>
 
     <div class="content" id="content">
-        <h2>Welcome to bpad.me (w)</h2>
+        <h2>Welcome to bPad (w)</h2>
         <p>This is a single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
         <p>To get started:</p>
         <ul>
-            <li>Click "New Page" to create a new wiki page</li>
-            <li>Click "Edit Page" to modify the current page</li>
+            <li>Click "New" to create a new wiki page</li>
+            <li>Click "Edit" to modify the current page</li>
             <li>Use [[Page Name]] syntax to create links to other pages</li>
         </ul>
         <p>This wiki supports basic markdown:</p>
@@ -170,12 +170,12 @@
     </div>
 
     <div class="page-list" id="page-list">
-        <h2>All Pages</h2>
+        <h2>Pages</h2>
         <ul id="pages-ul"></ul>
     </div>
 
     <footer>
-        <p>bpad.me (w) - A browser-based wiki</p>
+        <p>bPad (w) - A browser-based wiki</p>
     </footer>
 
     <script>
@@ -186,7 +186,7 @@
                 const initialPages = {
                     'Home': {
                         title: 'Home',
-                        content: '# Welcome to bpad.me (w) - a browser-based wiki.\n\nThis is the home page. You can create new pages or edit this one.'
+                        content: '# Welcome to bPad (w) - a browser-based wiki.\n\nThis is the home page. You can create new pages or edit this one.'
                     }
                 };
                 localStorage.setItem('wikiPages', JSON.stringify(initialPages));
@@ -214,7 +214,7 @@
 
             if (pages && pages[pageName]) {
                 currentPage = pageName;
-                document.title = pageName + ' - bpad.me (w)';
+                document.title = pageName + ' - bPad (w)';
 
                 let content = pages[pageName].content;
 
@@ -255,7 +255,7 @@
                     <p>This page doesn't exist yet. Click "Edit Page" to create it.</p>
                 `;
                 currentPage = pageName;
-                document.title = pageName + ' (New) - bpad.me (w)';
+                document.title = pageName + ' (New) - bPad (w)';
             }
         }
 
@@ -366,7 +366,7 @@
                     });
                 });
             } else {
-                contentDiv.innerHTML = `<h2>Search Results</h2><p>No pages found containing "${searchTerm}".</p>`;
+                contentDiv.innerHTML = `<h2>Results</h2><p>No pages found containing "${searchTerm}".</p>`;
             }
         }
 

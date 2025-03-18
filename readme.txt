@@ -22,11 +22,11 @@ Press CTRL + O or click ^O to edit a file from your computer.
 
 Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-rf.sh.)
 
+Click (w) to open bPad(w) the basic browser based wiki.
+
 Click ? to view this Readme file.
 
-Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
-
-Click (w) to open bPad(w) the basic browser based wiki.
+Click "PWA" to install bpad.me as a PWA (Progressive Web App.) A PWA can be used as a separate application from your browser and offline.
 
 
 **BPAD.ME (W)**

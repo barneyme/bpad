@@ -3,7 +3,7 @@
 
 **ABOUT**
 
-bPad.me is a plaintext editor web app created by [barney](https://barney.me).
+bPad is a plaintext editor web app created by [barney](https://barney.me).
 
 bPad is 'barneys notePad' but you can use it too.
 
@@ -16,7 +16,7 @@ bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .
 
 Open bpad.me in web browser and start writing. Notes are automatically saved in your browser.
 
-bPad.me can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.
+bPad can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.
 
 Press CTRL + O or click ^O to edit a file from your computer.
 
@@ -26,25 +26,25 @@ Click ? to view this Readme file.
 
 Click "PWA" to install bpad.me as a PWA (Progressive Web App.) Bpad PWA can be used as a separate application from your browser and offline.
 
-Click + to open bWiki the basic browser based wiki.
+Click (w) to open bPad(w) the basic browser based wiki.
 
 
 **BPAD.ME (W)**
-[bPad.me (w)](bpad.me/w) is a browser based wiki.
+[bPad(w)](bpad.me/w) is a browser based wiki.
 
-bPad.me (w) automatically saves your pages in your browser.
+bPad(w) automatically saves your pages in your browser.
 
-bPad.me (w) supports basic Markdown format like:
+bPad(w) supports basic Markdown format like:
 # Header
 **bold**
 - bullet list
 [link](www.site.com)
 
-To create a new page click "New Page."
+To create a new page click "New."
 
-To edit an existing page go to the page and click "Edit Page."
+To edit an existing page go to the page and click "Edit."
 
-To export a current page go to the page and click "Export Page." This will save the page to your computer as a .MD Markdown file.
+To export a current page go to the page and click "Export." This will save the page to your computer as a .MD Markdown file.
 
 
 **PRIVACY**

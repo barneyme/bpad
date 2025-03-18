@@ -30,6 +30,7 @@ Click "PWA" to install bpad.me as a PWA (Progressive Web App.) A PWA can be used
 
 
 **BPAD.ME (W)**
+
 [bPad(w)](bpad.me/w) is a browser based wiki.
 
 bPad(w) automatically saves your pages in your browser.

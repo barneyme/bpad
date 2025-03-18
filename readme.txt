@@ -46,6 +46,10 @@ To edit an existing page go to the page and click "Edit."
 
 To export a current page go to the page and click "Export." This will save the page to your computer as a .MD Markdown file.
 
+To import a page open the .MD file and paste the contents in a new page.
+
+Note: Deleting history or clearing cache in your browser will erase the contents of your bPad(w) wiki.
+
 
 **PRIVACY**
 

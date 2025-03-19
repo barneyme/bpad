@@ -52,6 +52,8 @@ To export a current page go to the page and click "Export." This will save the p
 
 To import a page open the .MD file and paste the contents in a new page.
 
+To delete a page click "Delete."
+
 To return to bPad click "bPad."
 
 Note: Deleting history or clearing cache in your browser will erase the contents of your bPad:w wiki.

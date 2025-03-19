@@ -29,13 +29,13 @@ Click ? to view this Readme file.
 Click "PWA" to install bpad.me as a PWA (Progressive Web App.) A PWA can be used as a separate application from your browser and offline.
 
 
-**BPAD.ME (W)**
+**BPAD.ME:W**
 
-[bPad(w)](bpad.me/w) is a browser based wiki.
+[bPad:w](bpad.me/w) is a browser based wiki.
 
-bPad(w) automatically saves your pages in your browser.
+bPad:w automatically saves your pages in your browser.
 
-bPad(w) supports basic Markdown format like:
+bPad:w supports basic Markdown format like:
 # Header
 **bold**
 - bullet list
@@ -49,7 +49,7 @@ To export a current page go to the page and click "Export." This will save the p
 
 To import a page open the .MD file and paste the contents in a new page.
 
-Note: Deleting history or clearing cache in your browser will erase the contents of your bPad(w) wiki.
+Note: Deleting history or clearing cache in your browser will erase the contents of your bPad:w wiki.
 
 
 **PRIVACY**

@@ -147,6 +147,8 @@
             <button id="new-page-btn">New</button>
             <button id="edit-btn">Edit</button>
             <button id="export-btn">Export</button>
+            <button id="bpadw-btn">:w</button>
+            <button id="bpad-btn">bPad</button>
         </div>
     </header>
 
@@ -222,6 +224,14 @@
                 }
             });
             document.getElementById('export-btn').addEventListener('click', exportToMarkdown);
+            
+            // Add event listeners for the new buttons
+            document.getElementById('bpadw-btn').addEventListener('click', function() {
+                window.location.href = 'https://bpad.me/w';
+            });
+            document.getElementById('bpad-btn').addEventListener('click', function() {
+                window.location.href = 'https://bpad.me';
+            });
         });
 
         function loadPage(pageName) {

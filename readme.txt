@@ -42,6 +42,8 @@ bPad:w supports basic Markdown format like:
 [link](www.site.com)
 Learn [more](https://www.markdownguide.org/cheat-sheet/).)
 
+To return to the bPad:w homepage click "bPad:w."
+
 To create a new page click "New."
 
 To edit an existing page go to the page and click "Edit."
@@ -49,8 +51,6 @@ To edit an existing page go to the page and click "Edit."
 To export a current page go to the page and click "Export." This will save the page to your computer as a .MD Markdown file.
 
 To import a page open the .MD file and paste the contents in a new page.
-
-To return to the bPad:w homepage click ":w."
 
 To return to bPad click "bPad."
 

@@ -42,7 +42,7 @@ bPad:w supports basic Markdown format like:
 [link](www.site.com)
 Learn [more](https://www.markdownguide.org/cheat-sheet/).)
 
-To return to the bPad:w homepage click "bPad:w."
+To return to the bPad:w homepage click "Home."
 
 To create a new page click "New."
 

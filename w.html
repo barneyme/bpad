@@ -49,6 +49,14 @@
             background-color: #0056b3;
         }
 
+        button.delete-btn {
+            background-color: #dc3545;
+        }
+
+        button.delete-btn:hover {
+            background-color: #c82333;
+        }
+
         .content {
             margin-bottom: 20px;
         }
@@ -121,23 +129,52 @@
             text-decoration: underline;
         }
 
-.search-box {
-    margin-bottom: 20px;
-}
+        .search-box {
+            margin-bottom: 20px;
+        }
 
-.search-container {
-    display: flex;
-    gap: 10px;
-}
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
 
-.search-container input[type="text"] {
-    flex: 1;
-    margin-bottom: 0;
-}
+        .search-container input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
 
-.search-container button {
-    white-space: nowrap;
-}
+        .search-container button {
+            white-space: nowrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -147,17 +184,18 @@
             <button id="bpadw-btn">Home</button>
             <button id="new-page-btn">New</button>
             <button id="edit-btn">Edit</button>
+            <button id="delete-btn" class="delete-btn">Delete</button>
             <button id="export-btn">Export</button>
             <button id="bpad-btn">bPad</button>
         </div>
     </header>
 
-<div class="search-box">
-    <div class="search-container">
-        <input type="text" id="search-input" placeholder="Find...">
-        <button id="search-btn">Find</button>
+    <div class="search-box">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Find...">
+            <button id="search-btn">Find</button>
+        </div>
     </div>
-</div>
 
     <div class="content" id="content">
         <h2>bPad:w</h2>
@@ -192,6 +230,18 @@
         <ul id="pages-ul"></ul>
     </div>
 
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h3>Delete Page</h3>
+            <p>Are you sure you want to delete "<span id="delete-page-name"></span>"?</p>
+            <p>This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="cancel-delete-btn">Cancel</button>
+                <button id="confirm-delete-btn" class="delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>bPad:w - A browser-based wiki.</p>
     </footer>
@@ -224,6 +274,9 @@
                 }
             });
             document.getElementById('export-btn').addEventListener('click', exportToMarkdown);
+            document.getElementById('delete-btn').addEventListener('click', showDeleteConfirmation);
+            document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
+            document.getElementById('confirm-delete-btn').addEventListener('click', deletePage);
             
             // Add event listeners for the new buttons
             document.getElementById('bpadw-btn').addEventListener('click', function() {
@@ -424,6 +477,34 @@
             link.href = URL.createObjectURL(blob);
             link.download = currentPage + '.md';
             link.click();
+        }
+
+        function showDeleteConfirmation() {
+            document.getElementById('delete-page-name').textContent = currentPage;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        function deletePage() {
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+            
+            // Don't allow deleting the Home page
+            if (currentPage === 'Home') {
+                alert('The Home page cannot be deleted.');
+                closeDeleteModal();
+                return;
+            }
+            
+            if (pages[currentPage]) {
+                delete pages[currentPage];
+                localStorage.setItem('wikiPages', JSON.stringify(pages));
+                closeDeleteModal();
+                updatePageList();
+                loadPage('Home');
+            }
         }
     </script>
 </body>

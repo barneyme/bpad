@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bPad(w)</title>
+    <title>bPad:w</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -142,7 +142,7 @@
 </head>
 <body>
     <header>
-        <h1>bPad(w)</h1>
+        <h1>bPad:w</h1>
         <div class="controls">
             <button id="new-page-btn">New</button>
             <button id="edit-btn">Edit</button>
@@ -158,15 +158,15 @@
 </div>
 
     <div class="content" id="content">
-        <h2>bPad(w)</h2>
-        <p>bPad(w) is a single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
+        <h2>bPad:w</h2>
+        <p>bPad:w is a single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
         <p>To get started:</p>
         <ul>
             <li>Click "New" to create a new wiki page</li>
             <li>Click "Edit" to modify the current page</li>
             <li>Use [[Page Name]] syntax to create links to other pages</li>
         </ul>
-        <p>bPad(w) supports basic markdown:</p>
+        <p>bPad:w supports basic markdown:</p>
         <ul>
             <li>**bold text**</li>
             <li>*italic text*</li>
@@ -191,7 +191,7 @@
     </div>
 
     <footer>
-        <p>bPad(w) - A browser-based wiki.</p>
+        <p>bPad:w - A browser-based wiki.</p>
     </footer>
 
     <script>
@@ -202,7 +202,7 @@
                 const initialPages = {
                     'Home': {
                         title: 'Home',
-                        content: '### bPad(w) - a browser-based wiki.\n\nThank you for using bPad(w). Click "New" to create a new page, "Edit" to change the current page or "Export" to save the current page as a .MD Markdown file on your computer. Learn [more](readme.txt).'
+                        content: '### bPad:w - a browser-based wiki.\n\nThank you for using bPad:w. Click "New" to create a new page, "Edit" to change the current page or "Export" to save the current page as a .MD Markdown file on your computer. Learn [more](readme.txt).'
                     }
                 };
                 localStorage.setItem('wikiPages', JSON.stringify(initialPages));
@@ -230,7 +230,7 @@
 
             if (pages && pages[pageName]) {
                 currentPage = pageName;
-                document.title = pageName + ' - bPad(w)';
+                document.title = pageName + ' - bPad:w';
 
                 let content = pages[pageName].content;
 
@@ -271,7 +271,7 @@
                     <p>This page doesn't exist yet. Click "Edit Page" to create it.</p>
                 `;
                 currentPage = pageName;
-                document.title = pageName + ' (New) - bPad(w)';
+                document.title = pageName + ' (New) - bPad:w';
             }
         }
 

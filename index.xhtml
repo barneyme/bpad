@@ -20,6 +20,7 @@
       <button id="open">^O</button>
       <input id="filename" placeholder="bpad.txt" />
       <button id="save">^S</button>
+      <button id="wiki-button">:w</button> 
       <button id="readme-button">?</button>
       <a href="#" title="About bPad" id="about-icon"></a>
       <button id="installButton" style="display: none;">PWA</button>
@@ -27,56 +28,36 @@
   </nav>
   <input type="file" id="open-input" style="display: none;" />
   <script src="script.js"></script>
-<script>
-// Wait a moment after page load to ensure all elements are accessible
-window.addEventListener('load', function() {
-  // Get the modal
-  var modal = document.getElementById("readme-modal");
-  
-  // Get the button that opens the modal
-  var btn = document.getElementById("readme-button");
-  
-  // Get the <span> element that closes the modal
-  var span = document.getElementsByClassName("close")[0];
-  
-  // When the user clicks the button, open the modal 
-  btn.onclick = function() {
-    modal.style.display = "block";
-  };
-  
-  // When the user clicks on <span> (x), close the modal
-  span.onclick = function() {
-    modal.style.display = "none";
-  };
-  
-  // When the user clicks anywhere outside of the modal, close it
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  };
-});
+  <script>
+    document.getElementById('readme-button').onclick = function() {
+      window.open('readme.txt', '_blank');
+    };
 
-// PWA installation prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const installButton = document.getElementById('installButton');
-  installButton.style.display = 'block';
-  installButton.addEventListener('click', () => {
-    installButton.style.display = 'none';
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the A2HS prompt');
-      } else {
-        console.log('User dismissed the A2HS prompt');
-      }
-      deferredPrompt = null;
+    document.getElementById('wiki-button').onclick = function() { 
+      window.open('w.html', '_blank'); // Opens w.html
+    };
+
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installButton = document.getElementById('installButton');
+      installButton.style.display = 'block';
+
+      installButton.addEventListener('click', () => {
+        installButton.style.display = 'none';
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the A2HS prompt');
+          } else {
+            console.log('User dismissed the A2HS prompt');
+          }
+          deferredPrompt = null;
+        });
+      });
     });
-  });
-});
-</script>
+  </script>
 </body>
 </html>

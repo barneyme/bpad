@@ -7,6 +7,54 @@
   <link rel="icon" type="image/png" href="bpad.png" />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    
+    .modal-content {
+      background-color: #f8f8f8;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    
+    .modal-content h2 {
+      margin-top: 0;
+    }
+    
+    .modal-content strong {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
   <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to bPad."></textarea>
@@ -26,20 +74,65 @@
     </span>
   </nav>
   <input type="file" id="open-input" style="display: none;" />
+  
+  <!-- Modal for readme -->
+  <div id="readme-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Readme</h2>
+      <strong>ABOUT</strong>
+      <p>bPad is a plaintext editor web app created by barney. bPad autosaves your notes in your browser, can be used offline, and it works on mobile and desktop browsers.</p>
+      <p>bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .HTML, .CSS, .LOG, .BAT, .VBS, .SH, .PS1, .PY, .PL, .JS, and more.</p>
+      
+      <strong>DIRECTIONS</strong>
+      <p>Open bpad.me in web browser and start writing. Notes are automatically saved in your browser. bPad can be used offline after the first use. Simply reopen bPad in your browser to continue working on your notes.</p>
+      <p>Press CTRL + O or click ^O to edit a file from your computer.</p>
+      <p>Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-rf.sh.)</p>
+      <p>Click ? to view this Readme file.</p>
+      
+      <strong>PRIVACY</strong>
+      <p>bPad does not (and cannot) see your notes.</p>
+      <p>bPad does not (and cannot) see any activity on your computer.</p>
+      <p>bPad does not (and cannot) judge your music choices while using bPad.</p>
+      <p>bPad does not (and cannot) track who is using bPad.</p>
+      <p>bPad does not (and cannot) sell your data.</p>
+    </div>
+  </div>
+  
   <script src="script.js"></script>
   <script>
-    document.getElementById('readme-button').onclick = function() {
-      window.open('wiki.html', '_blank');
-    };
-
+    // Get the modal
+    const modal = document.getElementById("readme-modal");
+    
+    // Get the button that opens the modal
+    const btn = document.getElementById("readme-button");
+    
+    // Get the <span> element that closes the modal
+    const span = document.getElementsByClassName("close")[0];
+    
+    // When the user clicks the button, open the modal 
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+    
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+    
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+    
     let deferredPrompt;
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       const installButton = document.getElementById('installButton');
       installButton.style.display = 'block';
-
       installButton.addEventListener('click', () => {
         installButton.style.display = 'none';
         deferredPrompt.prompt();
@@ -56,4 +149,3 @@
   </script>
 </body>
 </html>
-

@@ -20,7 +20,6 @@
       <button id="open">^O</button>
       <input id="filename" placeholder="bpad.txt" />
       <button id="save">^S</button>
-      <button id="wiki-button">:w</button> 
       <button id="readme-button">?</button>
       <a href="#" title="About bPad" id="about-icon"></a>
       <button id="installButton" style="display: none;">PWA</button>
@@ -30,11 +29,7 @@
   <script src="script.js"></script>
   <script>
     document.getElementById('readme-button').onclick = function() {
-      window.open('readme.txt', '_blank');
-    };
-
-    document.getElementById('wiki-button').onclick = function() { 
-      window.open('w.html', '_blank'); // Opens w.html
+      window.open('help.html', '_blank');
     };
 
     let deferredPrompt;

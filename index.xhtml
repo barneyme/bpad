@@ -3,16 +3,63 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bPad.me</title>
+  <title>0wl.us</title>
   <link rel="icon" type="image/png" href="bpad.png" />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    
+    .modal-content {
+      background-color: #f8f8f8;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    
+    .modal-content h2 {
+      margin-top: 0;
+    }
+    
+    .modal-content strong {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
-  <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to bPad."></textarea>
+  <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to 0wl."></textarea>
   <nav>
     <span id="stats">
-      <span id="char-count">0</span> C. 
       <span id="word-count">0</span> W. 
       <span id="line-count">0</span> L.
     </span> 
@@ -20,31 +67,163 @@
       <button id="open">^O</button>
       <input id="filename" placeholder="bpad.txt" />
       <button id="save">^S</button>
-      <button id="wiki-button">:w</button> 
       <button id="readme-button">?</button>
       <a href="#" title="About bPad" id="about-icon"></a>
       <button id="installButton" style="display: none;">PWA</button>
     </span>
   </nav>
+  
   <input type="file" id="open-input" style="display: none;" />
+  
+  <!-- Modal for readme -->
+  <div id="readme-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <h2>Readme</h2>
+      <strong>ABOUT</strong>
+      <p>bPad.me is a plaintext editor web app created by barney. bPad autosaves your notes in your browser, can be used offline, and it works on mobile and desktop browsers.</p>
+      <p>bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .HTML, .CSS, .LOG, .BAT, .VBS, .SH, .PS1, .PY, .PL, .JS, and more.</p>
+      
+      <strong>DIRECTIONS</strong>
+      <p>Open bpad.me in web browser and start writing. Notes are automatically saved in your browser. bPad can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.</p>
+      <p>Press CTRL + O or click ^O to edit a file from your computer.</p>
+      <p>Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-rf.sh.)</p>
+      <p>Click ? to view this Readme file.</p>
+      
+      <strong>PRIVACY</strong>
+      <p>bPad does not (and cannot) see your notes.</p>
+      <p>Bpad does not (and cannot) see any activity on your computer.</p>
+      <p>Bpad does not (and cannot) judge your music choices while using 0wl.</p>
+      <p>Bpad does not (and cannot) track who is using 0wl.</p>
+      <p>bPad does not (and cannot) sell your data.</p>
+    </div>
+  </div>
+  
   <script src="script.js"></script>
   <script>
-    document.getElementById('readme-button').onclick = function() {
-      window.open('readme.txt', '_blank');
-    };
+    // Wait a moment after page load to ensure all elements are accessible
+    window.addEventListener('load', function() {
+      // Get the textarea element
+      const textbox = document.getElementById('textbox');
+      
+      // Get the open and save elements
+      const openButton = document.getElementById('open');
+      const openInput = document.getElementById('open-input');
+      const saveButton = document.getElementById('save');
+      const filenameInput = document.getElementById('filename');
+      
+      // Setting up open button functionality
+      openButton.addEventListener('click', function() {
+        openInput.click();
+      });
+      
+      // Handle file opening
+      openInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          textbox.value = e.target.result;
+          updateCounts();
+          localStorage.setItem('saved-text', textbox.value);
+        };
+        reader.readAsText(file);
+        
+        // Update filename field with the opened file's name
+        if (file.name) {
+          filenameInput.value = file.name;
+        }
+      });
+      
+      // Setting up save button functionality
+      saveButton.addEventListener('click', function() {
+        const text = textbox.value;
+        const filename = filenameInput.value || '0wl.txt';
+        
+        const blob = new Blob([text], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      });
+      
+      // Function to update word and line counts
+      function updateCounts() {
+        const text = textbox.value;
+        
+        // Count words
+        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+        document.getElementById('word-count').textContent = wordCount;
+        
+        // Count lines
+        const lineCount = text ? text.split('\n').length : 0;
+        document.getElementById('line-count').textContent = lineCount;
+      }
+      
+      // Update counts when text changes
+      textbox.addEventListener('input', updateCounts);
+      
+      // Load saved text from localStorage
+      const savedText = localStorage.getItem('saved-text');
+      if (savedText) {
+        textbox.value = savedText;
+        updateCounts();
+      }
+      
+      // Auto-save text to localStorage
+      textbox.addEventListener('input', function() {
+        localStorage.setItem('saved-text', textbox.value);
+      });
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        // Ctrl+O for open
+        if (e.ctrlKey && e.key === 'o') {
+          e.preventDefault();
+          openInput.click();
+        }
+        // Ctrl+S for save
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          saveButton.click();
+        }
+      });
+      
+      // Get the modal elements
+      var modal = document.getElementById("readme-modal");
+      var btn = document.getElementById("readme-button");
+      var span = document.getElementsByClassName("close")[0];
+      
+      // When the user clicks the button, open the modal 
+      btn.onclick = function() {
+        modal.style.display = "block";
+      };
+      
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+        modal.style.display = "none";
+      };
+      
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+    });
 
-    document.getElementById('wiki-button').onclick = function() { 
-      window.open('w.html', '_blank'); // Opens w.html
-    };
-
+    // PWA installation prompt
     let deferredPrompt;
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       const installButton = document.getElementById('installButton');
       installButton.style.display = 'block';
-
       installButton.addEventListener('click', () => {
         installButton.style.display = 'none';
         deferredPrompt.prompt();

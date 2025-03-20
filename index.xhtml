@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000"/>
   <title>bpad.me</title>
+  <!-- Add manifest link -->
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9icGFkLm1lL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=" />
+  <!-- Add favicon using inline SVG data URI -->
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg==" />
   <style type="text/css">
     /* Embedded CSS */
     html, body {
@@ -140,9 +144,42 @@
       background: rgba(0,0,0,0.5);
       z-index: 999;
     }
+    /* Offline notification style */
+    #offline-notification {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 5px 10px;
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 85%;
+      z-index: 1001;
+    }
+    #online-notification {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #d4edda;
+      color: #155724;
+      padding: 5px 10px;
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 85%;
+      z-index: 1001;
+    }
   </style>
 </head>
 <body>
+  <!-- Offline notification bar -->
+  <div id="offline-notification">You are currently offline. Your changes will be saved locally.</div>
+  <div id="online-notification">You are back online!</div>
+  
   <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to bPad."></textarea>
   <nav>
     <span id="stats">
@@ -183,10 +220,93 @@
       bPad does not (and cannot) judge your music choices while using it.<br/>
       bPad does not (and cannot) track who is using it.<br/>
       Bpad does not (and cannot) sell your data.</p>
+      
+      <strong>OFFLINE USE</strong>
+      <p>bPad is fully functional offline after your first visit.<br/>
+      Your notes are saved locally in your browser.<br/>
+      You can continue working on your notes even when you're offline.</p>
     </div>
   </div>
   
   <script type="text/javascript">
+    // Register Service Worker for offline capability
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+    
+    // Online/Offline status handling
+    function updateOnlineStatus() {
+      const offlineNotification = document.getElementById('offline-notification');
+      const onlineNotification = document.getElementById('online-notification');
+      
+      if (navigator.onLine) {
+        offlineNotification.style.display = 'none';
+        onlineNotification.style.display = 'block';
+        setTimeout(() => {
+          onlineNotification.style.display = 'none';
+        }, 3000);
+      } else {
+        offlineNotification.style.display = 'block';
+        onlineNotification.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    // Inline ServiceWorker script creation
+    const swContent = `
+      // Service Worker for bPad
+      const CACHE_NAME = 'bpad-cache-v1';
+      const urlsToCache = [
+        './',
+        './index.html'
+      ];
+
+      self.addEventListener('install', function(event) {
+        event.waitUntil(
+          caches.open(CACHE_NAME)
+            .then(function(cache) {
+              return cache.addAll(urlsToCache);
+            })
+        );
+      });
+
+      self.addEventListener('fetch', function(event) {
+        event.respondWith(
+          caches.match(event.request)
+            .then(function(response) {
+              // Cache hit - return response
+              if (response) {
+                return response;
+              }
+              return fetch(event.request);
+            })
+        );
+      });
+    `;
+
+    // Create the service worker file dynamically
+    const blob = new Blob([swContent], {type: 'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    
+    // Override the service worker registration to use our blob URL
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register(swUrl).then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+    
     // Main script
     var textbox = document.querySelector('#textbox');
     var timeoutID = null;
@@ -239,7 +359,7 @@
     }
     
     document.querySelector('#save').onclick = function () {
-        var filename = filenameBox.value || '0wl.txt';
+        var filename = filenameBox.value || 'bpad.txt';
         var blob = new Blob([textbox.value], {type: 'text/plain'});
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -283,6 +403,9 @@
       document.getElementById('popup-overlay').style.display = 'none';
       document.getElementById('readme-popup').style.display = 'none';
     };
+    
+    // Check initial online status
+    updateOnlineStatus();
   </script>
 </body>
 </html>

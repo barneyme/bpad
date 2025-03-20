@@ -1,63 +1,149 @@
-<!DOCTYPE html>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bpad.me</title>
-  <link rel="icon" type="image/png" href="bpad.png" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
+  <meta name="theme-color" content="#000000"/>
+  <title>bad.me</title>
+  <style type="text/css">
+    /* Embedded CSS */
+    html, body {
+      height: 100%; 
+      box-sizing: border-box; 
+      margin: 0;
+    }
+    * {
+      box-sizing: inherit;
+    }
+    textarea {
+      height: calc(100% - 3rem); /* Adjusted for nav height */
+      border: none; 
+      outline: none; 
+      resize: none;
+      font-family: monospace;
+      padding: 0.5em;
       width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
     }
-    
-    .modal-content {
-      background-color: #f8f8f8;
-      margin: 15% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 600px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    #textbox {
+      border-right: 1px solid PaleTurquoise;
+      border-color: darkgray;
+      background-color: transparent;
+      overflow-y: scroll;
     }
-    
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
+    nav {
+      position: fixed; 
+      bottom: 0; 
+      left: 0;
+      width: 100%; 
+      height: 2rem; 
+      padding: 0 0.5em; /* Adjusted padding */
+      background-color: #eee; 
+      border-top: 1px solid silver;
+      line-height: 2rem;
+      color: gray; 
+      font-family: sans-serif; 
+      font-size: 85%;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    #controls {
+      display: flex; 
+      align-items: center; 
+    }
+    #save a, #open a, #about-icon {
+      text-decoration: none;
+      margin-left: 0.5em; /* Space between links */
+    }
+    #open > input {
+      display: none;
+    }
+    #about > form {
+      text-align: right;
+    }
+    #about-icon {
+      color: black;
       font-weight: bold;
     }
-    
-    .close:hover,
-    .close:focus {
-      color: black;
-      text-decoration: none;
-      cursor: pointer;
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column; /* Stack items on smaller screens */
+        height: auto; /* Allow height to adjust */
+      }
+      #stats {
+        margin-bottom: 0.5em; /* Space between stats and controls */
+      }
+      #controls {
+        flex-direction: column; /* Stack controls on smaller screens */
+      }
+      #controls span {
+        margin-bottom: 0.5em; /* Space between control items */
+      }
+    }
+    @media print { 
+      nav { display: none; } 
     }
     
-    .modal-content h2 {
+    /* Popup styles */
+    #readme-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 600px;
+      max-height: 80%;
+      background: white;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+      font-family: sans-serif;
+      border-radius: 5px;
+    }
+    #readme-popup h2 {
       margin-top: 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
     }
-    
-    .modal-content strong {
+    #readme-popup strong {
       display: block;
       margin-top: 15px;
       margin-bottom: 5px;
     }
+    #readme-content {
+      line-height: 1.5;
+    }
+    #readme-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+    }
+    #readme-close:hover {
+      color: #000;
+    }
+    #popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
   </style>
 </head>
 <body>
-  <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to 0wl."></textarea>
+  <textarea id="textbox" autofocus="autofocus" placeholder="Welcome to bPad."></textarea>
   <nav>
     <span id="stats">
       <span id="word-count">0</span> W. 
@@ -68,175 +154,135 @@
       <input id="filename" placeholder="bpad.txt" />
       <button id="save">^S</button>
       <button id="readme-button">?</button>
-      <a href="#" title="About bPad" id="about-icon"></a>
-      <button id="installButton" style="display: none;">PWA</button>
     </span>
   </nav>
-  
   <input type="file" id="open-input" style="display: none;" />
   
-  <!-- Modal for readme -->
-  <div id="readme-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">×</span>
-      <h2>Readme</h2>
+  <!-- Readme Popup -->
+  <div id="popup-overlay"></div>
+  <div id="readme-popup">
+    <button id="readme-close">×</button>
+    <h2>Readme</h2>
+    <div id="readme-content">
       <strong>ABOUT</strong>
-      <p>bPad.me is a plaintext editor web app created by barney. bPad autosaves your notes in your browser, can be used offline, and it works on mobile and desktop browsers.</p>
-      <p>bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .HTML, .CSS, .LOG, .BAT, .VBS, .SH, .PS1, .PY, .PL, .JS, and more.</p>
+      <p>bPad is a plaintext editor web app created by <a href="https://barney.me">barney</a>.<br/>
+      bPad is b(arneys note)Pad but you can use it too.<br/>
+      bPad autosaves your notes in your browser, can be used offline, and it works on mobile and desktop browsers.<br/>
+      bPad can open, create, and save plaintext files such as .TXT, .CSV, .XML, .MD, .HTML, .CSS, .LOG, .BAT, .VBS, .SH, .PS1, .PY, .PL, .JS, and more.</p>
       
       <strong>DIRECTIONS</strong>
-      <p>Open bpad.me in web browser and start writing. Notes are automatically saved in your browser. bPad can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.</p>
-      <p>Press CTRL + O or click ^O to edit a file from your computer.</p>
-      <p>Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-rf.sh.)</p>
-      <p>Click ? to view this Readme file.</p>
+      <p>Open bad.me in web browser and start writing. Notes are automatically saved in your browser.<br/>
+      bPad can be used offline after the first use. Simply reopen bPad.me to continue working on your notes.<br/>
+      Press CTRL + O or click ^O to edit a file from your computer.<br/>
+      Press CTRL + S or click ^S to download your notes to your computer. bPad saves your notes as 'bpad.txt' by default but you can change it to any name and filetype (EG rm-rf.sh.)<br/>
+      Click ? to view this Readme file.</p>
       
       <strong>PRIVACY</strong>
-      <p>bPad does not (and cannot) see your notes.</p>
-      <p>Bpad does not (and cannot) see any activity on your computer.</p>
-      <p>Bpad does not (and cannot) judge your music choices while using 0wl.</p>
-      <p>Bpad does not (and cannot) track who is using 0wl.</p>
-      <p>bPad does not (and cannot) sell your data.</p>
+      <p>bPad does not (and cannot) see your notes.<br/>
+      bPad does not (and cannot) see any activity on your computer.<br/>
+      bPad does not (and cannot) judge your music choices while using it.<br/>
+      bPad does not (and cannot) track who is using it.<br/>
+      Bpad does not (and cannot) sell your data.</p>
     </div>
   </div>
   
-  <script src="script.js"></script>
-  <script>
-    // Wait a moment after page load to ensure all elements are accessible
-    window.addEventListener('load', function() {
-      // Get the textarea element
-      const textbox = document.getElementById('textbox');
-      
-      // Get the open and save elements
-      const openButton = document.getElementById('open');
-      const openInput = document.getElementById('open-input');
-      const saveButton = document.getElementById('save');
-      const filenameInput = document.getElementById('filename');
-      
-      // Setting up open button functionality
-      openButton.addEventListener('click', function() {
-        openInput.click();
-      });
-      
-      // Handle file opening
-      openInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          textbox.value = e.target.result;
-          updateCounts();
-          localStorage.setItem('saved-text', textbox.value);
-        };
-        reader.readAsText(file);
-        
-        // Update filename field with the opened file's name
-        if (file.name) {
-          filenameInput.value = file.name;
+  <script type="text/javascript">
+    // Main script
+    var textbox = document.querySelector('#textbox');
+    var timeoutID = null;
+    var filenameBox = document.querySelector('#filename');
+    
+    textbox.value = localStorage.getItem('0wl') || '';
+    textbox.setSelectionRange(textbox.value.length, textbox.value.length); 
+    calcStats(); 
+    
+    function storeLocally() { 
+        localStorage.setItem('0wl', textbox.value); 
+    }
+    
+    window.onbeforeunload = storeLocally; 
+    
+    textbox.onkeydown = function (event) {
+        if (event.key === "Tab") {
+            event.preventDefault();
+            var text = this.value, s = this.selectionStart, e = this.selectionEnd;
+            this.value = text.substring(0, s) + '\t' + text.substring(e);
+            this.selectionStart = this.selectionEnd = s + 1;
         }
-      });
-      
-      // Setting up save button functionality
-      saveButton.addEventListener('click', function() {
-        const text = textbox.value;
-        const filename = filenameInput.value || '0wl.txt';
-        
-        const blob = new Blob([text], {type: 'text/plain'});
-        const a = document.createElement('a');
+    };
+    
+    window.addEventListener('keydown', function(event) {
+        if (event.ctrlKey) {
+            if (event.key === 'o') {
+                event.preventDefault(); 
+                document.querySelector('#open-input').click(); 
+            } else if (event.key === 's') {
+                event.preventDefault(); 
+                document.querySelector('#save').click(); 
+            }
+        }
+    });
+    
+    textbox.onkeyup = function () {
+        calcStats();
+        window.clearTimeout(timeoutID);
+        timeoutID = window.setTimeout(storeLocally, 1000);
+    };
+    
+    function calcStats() {
+        updateCount('word', textbox.value === "" ? 0 : textbox.value.replace(/\s+/g, ' ').split(' ').length);   
+        updateCount('line', textbox.value === "" ? 0 : textbox.value.split(/\n/).length);
+    }
+    
+    function updateCount(item, value) {
+        document.querySelector('#' + item + '-count').textContent = value;
+    }
+    
+    document.querySelector('#save').onclick = function () {
+        var filename = filenameBox.value || '0wl.txt';
+        var blob = new Blob([textbox.value], {type: 'text/plain'});
+        var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = filename;
-        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
-      });
-      
-      // Function to update word and line counts
-      function updateCounts() {
-        const text = textbox.value;
-        
-        // Count words
-        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-        document.getElementById('word-count').textContent = wordCount;
-        
-        // Count lines
-        const lineCount = text ? text.split('\n').length : 0;
-        document.getElementById('line-count').textContent = lineCount;
-      }
-      
-      // Update counts when text changes
-      textbox.addEventListener('input', updateCounts);
-      
-      // Load saved text from localStorage
-      const savedText = localStorage.getItem('saved-text');
-      if (savedText) {
-        textbox.value = savedText;
-        updateCounts();
-      }
-      
-      // Auto-save text to localStorage
-      textbox.addEventListener('input', function() {
-        localStorage.setItem('saved-text', textbox.value);
-      });
-      
-      // Keyboard shortcuts
-      document.addEventListener('keydown', function(e) {
-        // Ctrl+O for open
-        if (e.ctrlKey && e.key === 'o') {
-          e.preventDefault();
-          openInput.click();
+    };
+    
+    document.querySelector('#open').onclick = function() {
+        document.querySelector('#open-input').click();
+    };
+    
+    document.querySelector('#open-input').onchange = function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                textbox.value = e.target.result;
+                calcStats();
+                storeLocally();
+                filenameBox.value = file.name;
+            };
+            reader.readAsText(file);
         }
-        // Ctrl+S for save
-        if (e.ctrlKey && e.key === 's') {
-          e.preventDefault();
-          saveButton.click();
-        }
-      });
-      
-      // Get the modal elements
-      var modal = document.getElementById("readme-modal");
-      var btn = document.getElementById("readme-button");
-      var span = document.getElementsByClassName("close")[0];
-      
-      // When the user clicks the button, open the modal 
-      btn.onclick = function() {
-        modal.style.display = "block";
-      };
-      
-      // When the user clicks on <span> (x), close the modal
-      span.onclick = function() {
-        modal.style.display = "none";
-      };
-      
-      // When the user clicks anywhere outside of the modal, close it
-      window.onclick = function(event) {
-        if (event.target == modal) {
-          modal.style.display = "none";
-        }
-      };
-    });
+    };
 
-    // PWA installation prompt
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installButton = document.getElementById('installButton');
-      installButton.style.display = 'block';
-      installButton.addEventListener('click', () => {
-        installButton.style.display = 'none';
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the A2HS prompt');
-          } else {
-            console.log('User dismissed the A2HS prompt');
-          }
-          deferredPrompt = null;
-        });
-      });
-    });
+    // Popup functionality
+    document.getElementById('readme-button').onclick = function() {
+      document.getElementById('popup-overlay').style.display = 'block';
+      document.getElementById('readme-popup').style.display = 'block';
+    };
+    
+    document.getElementById('readme-close').onclick = function() {
+      document.getElementById('popup-overlay').style.display = 'none';
+      document.getElementById('readme-popup').style.display = 'none';
+    };
+    
+    document.getElementById('popup-overlay').onclick = function() {
+      document.getElementById('popup-overlay').style.display = 'none';
+      document.getElementById('readme-popup').style.display = 'none';
+    };
   </script>
 </body>
 </html>

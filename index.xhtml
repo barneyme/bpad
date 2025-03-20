@@ -173,34 +173,6 @@
       font-size: 100%;
       z-index: 1001;
     }
-    /* Download App button styles */
-    #download-app {
-      display: inline-block;
-      background-color: #000000;
-      color: white;
-      padding: 8px 16px;
-      text-align: center;
-      text-decoration: none;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-    #download-app:hover {
-      background-color: #808080;
-    }
-    /* Download success notification */
-    #download-notification {
-      display: none;
-      color: #155724;
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-      padding: 5px 10px;
-      margin-top: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
@@ -249,10 +221,6 @@
       bPad does not (and cannot) track who is using it.<br/>
       Bpad does not (and cannot) sell your data.</p>
 
-      <strong>DOWNLOAD</strong>
-      <p>You can download the entire bPad application for offline use:<br/>
-      <button id="download-app">Download bPad</button>
-      <span id="download-notification">Download started! The file will be saved as bpad.html</span></p>
     </div>
   </div>
   
@@ -432,38 +400,6 @@
     document.getElementById('popup-overlay').onclick = function() {
       document.getElementById('popup-overlay').style.display = 'none';
       document.getElementById('readme-popup').style.display = 'none';
-    };
-    
-    // Add the download app functionality
-    document.getElementById('download-app').onclick = function(event) {
-      // Prevent event from bubbling up to parent elements
-      event.stopPropagation();
-      
-      // Get the HTML content of the current page
-      const htmlContent = document.documentElement.outerHTML;
-      
-      // Create a blob with the HTML content
-      const blob = new Blob([htmlContent], {type: 'text/html'});
-      
-      // Create a download link
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'bpad.html';
-      
-      // Trigger download
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-      
-      // Show download notification
-      const notification = document.getElementById('download-notification');
-      notification.style.display = 'block';
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 3000);
     };
     
     // Check initial online status

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta charset="utf-8" />
@@ -16,6 +15,7 @@
       height: 100%; 
       box-sizing: border-box; 
       margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     * {
       box-sizing: inherit;
@@ -28,65 +28,66 @@
       font-family: monospace;
       padding: 0.5em;
       width: 100%;
+      font-size: 16px; /* Prevent zoom on mobile when focused */
     }
     #textbox {
-      border-right: 1px solid PaleTurquoise;
-      border-color: darkgray;
+      border-right: 1px solid darkgray;
       background-color: transparent;
       overflow-y: scroll;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 3rem; /* Adjusted for nav height */
     }
     nav {
       position: fixed; 
       bottom: 0; 
       left: 0;
       width: 100%; 
-      height: 2rem; 
-      padding: 0 0.5em; /* Adjusted padding */
+      height: auto; /* Allow height to adjust based on content */
+      min-height: 3rem; 
+      padding: 0.5em; 
       background-color: #eee; 
       border-top: 1px solid silver;
-      line-height: 2rem;
       color: gray; 
-      -family: sans-serif; 
-      -size: 100%;
+      font-size: 100%;
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
+      flex-wrap: wrap; /* Allow controls to wrap */
     }
     #controls {
       display: flex; 
       align-items: center; 
+      flex-wrap: wrap; /* Allow controls to wrap */
+      gap: 0.5em; /* Space between controls */
     }
-    #save a, #open a, #about-icon {
-      text-decoration: none;
-      margin-left: 0.5em; /* Space between links */
+    button {
+      padding: 0.5em 0.75em;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 0.25em 0;
+    }
+    button:hover {
+      background-color: #e8e8e8;
+    }
+    #filename {
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 100px;
+      max-width: 200px;
+    }
+    #stats {
+      padding: 0.5em 0;
     }
     #open > input {
       display: none;
-    }
-    #about > form {
-      text-align: right;
-    }
-    #about-icon {
-      color: black;
-      -weight: bold;
-    }
-    @media (max-width: 600px) {
-      nav {
-        flex-direction: column; /* Stack items on smaller screens */
-        height: auto; /* Allow height to adjust */
-      }
-      #stats {
-        margin-bottom: 0.5em; /* Space between stats and controls */
-      }
-      #controls {
-        flex-direction: column; /* Stack controls on smaller screens */
-      }
-      #controls span {
-        margin-bottom: 0.5em; /* Space between control items */
-      }
-    }
-    @media print { 
-      nav { display: none; } 
     }
     
     /* Popup styles */
@@ -96,16 +97,15 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 80%;
+      width: 90%;
       max-width: 600px;
-      max-height: 80%;
+      max-height: 90vh;
       background: white;
       border: 1px solid #ccc;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       z-index: 1000;
       overflow-y: auto;
       padding: 20px;
-      -family: sans-serif;
       border-radius: 5px;
     }
     #readme-popup h2 {
@@ -127,9 +127,11 @@
       right: 10px;
       background: none;
       border: none;
-      -size: 20px;
+      font-size: 20px;
       cursor: pointer;
       color: #666;
+      padding: 0;
+      margin: 0;
     }
     #readme-close:hover {
       color: #000;
@@ -144,56 +146,83 @@
       background: rgba(0,0,0,0.5);
       z-index: 999;
     }
-    /* Offline notification style */
-    #offline-notification {
+    /* Notification styles */
+    .notification {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
+      padding: 8px 10px;
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 14px;
+      z-index: 1001;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #offline-notification {
       background-color: #f8d7da;
       color: #721c24;
-      padding: 5px 10px;
-      text-align: center;
-      -family: sans-serif;
-      font-size: 100%;
-      z-index: 1001;
     }
     #online-notification {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
       background-color: #d4edda;
       color: #155724;
-      padding: 5px 10px;
-      text-align: center;
-      font-family: sans-serif;
-      font-size: 100%;
-      z-index: 1001;
     }
     #download-notification {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
       background-color: #d1ecf1;
       color: #0c5460;
-      padding: 5px 10px;
-      text-align: center;
-      font-family: sans-serif;
-      font-size: 100%;
-      z-index: 1001;
+    }
+    
+    /* Media queries for better responsiveness */
+    @media (max-width: 500px) {
+      nav {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.5em;
+      }
+      #controls {
+        margin-top: 0.5em;
+        justify-content: space-between;
+      }
+      #filename {
+        flex-grow: 1;
+        max-width: none;
+      }
+      #textbox {
+        bottom: 6rem; /* Adjusted for taller nav on mobile */
+      }
+      #stats {
+        text-align: center;
+      }
+    }
+    
+    @media (max-width: 350px) {
+      button {
+        padding: 0.4em 0.5em;
+        font-size: 12px;
+      }
+      #filename {
+        font-size: 12px;
+        padding: 0.4em;
+      }
+    }
+    
+    @media print { 
+      nav, .notification { 
+        display: none; 
+      } 
+      #textbox {
+        position: static;
+        height: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Offline notification bar -->
-  <div id="offline-notification">Offline! Changes will be saved locally.</div>
-  <div id="online-notification">Online!</div>
-  <div id="download-notification" style="display: none;">File downloaded successfully</div>
+  <!-- Notification bars -->
+  <div id="offline-notification" class="notification">Offline! Changes will be saved locally.</div>
+  <div id="online-notification" class="notification">Online!</div>
+  <div id="download-notification" class="notification">File downloaded successfully</div>
   
   <textarea id="textbox" autofocus="autofocus" placeholder="Start typing here to get started or click ? to learn more."></textarea>
   <nav>
@@ -238,7 +267,6 @@
       bPad.me does not (and cannot) judge your music choices while using it.<br/>
       bPad.me does not (and cannot) track who you are.<br/>
       bPad.me does not (and cannot) sell your data.</p>
-
     </div>
   </div>
   
@@ -273,6 +301,17 @@
 
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
+    
+    // Adjust textarea height on window resize
+    function adjustTextareaHeight() {
+      const nav = document.querySelector('nav');
+      const navHeight = nav.offsetHeight;
+      const textbox = document.querySelector('#textbox');
+      textbox.style.bottom = navHeight + 'px';
+    }
+    
+    window.addEventListener('resize', adjustTextareaHeight);
+    window.addEventListener('load', adjustTextareaHeight);
     
     // Inline ServiceWorker script creation
     const swContent = `
@@ -346,7 +385,7 @@
     };
     
     window.addEventListener('keydown', function(event) {
-        if (event.ctrlKey) {
+        if (event.ctrlKey || event.metaKey) { // Add metaKey for Mac support
             if (event.key === 'o') {
                 event.preventDefault(); 
                 document.querySelector('#open-input').click(); 
@@ -429,6 +468,9 @@
     
     // Check initial online status
     updateOnlineStatus();
+    
+    // Call adjustTextareaHeight initially
+    setTimeout(adjustTextareaHeight, 100);
   </script>
 </body>
 </html>

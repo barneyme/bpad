@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bPad Vi Edition</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .title {
+            font-weight: bold;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #777;
+        }
+        .editor-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .editor {
+            flex-grow: 1;
+            width: 100%;
+            resize: none;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            box-sizing: border-box;
+            background-color: #282c34;
+            color: #abb2bf;
+        }
+        .status-bar {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .mode {
+            font-weight: bold;
+        }
+        .position, .file-info {
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #f0f0f0;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .modal-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .close {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .input-field {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .command-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #333;
+            color: white;
+            padding: 5px;
+            display: none;
+        }
+        .command-input {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        .help-modal {
+            position: fixed;
+            z-index: 20;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            display: none;
+        }
+        .help-content {
+            background-color: #f0f0f0;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .help-section {
+            margin-bottom: 20px;
+        }
+        .help-header {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .key-command {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .key {
+            width: 150px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Vi-like Text Editor</div>
+        <div class="controls">
+            <button class="button" id="newBtn">New</button>
+            <button class="button" id="openBtn">Open</button>
+            <button class="button" id="saveBtn">Save</button>
+            <button class="button" id="helpBtn">Help</button>
+        </div>
+    </div>
+
+    <div class="editor-container">
+        <textarea class="editor" id="editor" spellcheck="false"></textarea>
+    </div>
+
+    <div class="status-bar">
+        <div class="mode" id="mode">NORMAL</div>
+        <div class="position" id="position">Line: 1, Col: 0</div>
+        <div class="file-info" id="fileInfo">No file opened</div>
+    </div>
+
+    <div class="command-prompt" id="commandPrompt">
+        <span>:</span>
+        <input type="text" class="command-input" id="commandInput">
+    </div>
+
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Open File</div>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <input type="file" id="fileInput" style="display: none;">
+            <input type="text" class="input-field" id="filenameInput" placeholder="Enter filename">
+            <button class="button" id="modalActionBtn">Open</button>
+        </div>
+    </div>
+
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <div class="modal-header">
+                <div class="modal-title">Vi-like Editor Help</div>
+                <span class="close" id="closeHelp">&times;</span>
+            </div>
+
+            <div class="help-section">
+                <div class="help-header">Modes</div>
+                <div class="key-command">
+                    <div class="key">NORMAL mode</div>
+                    <div>Navigate and use commands</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">INSERT mode</div>
+                    <div>Edit text</div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-header">Navigation (NORMAL mode)</div>
+                <div class="key-command">
+                    <div class="key">h</div>
+                    <div>Move cursor left</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">j</div>
+                    <div>Move cursor down</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">k</div>
+                    <div>Move cursor up</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">l</div>
+                    <div>Move cursor right</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">0</div>
+                    <div>Move to beginning of line</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">$</div>
+                    <div>Move to end of line</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">gg</div>
+                    <div>Move to beginning of file</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">G</div>
+                    <div>Move to end of file</div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-header">Editing (NORMAL mode)</div>
+                <div class="key-command">
+                    <div class="key">i</div>
+                    <div>Enter INSERT mode at cursor</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">a</div>
+                    <div>Enter INSERT mode after cursor</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">o</div>
+                    <div>Open line below cursor and enter INSERT mode</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">O</div>
+                    <div>Open line above cursor and enter INSERT mode</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">x</div>
+                    <div>Delete character under cursor</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">dd</div>
+                    <div>Delete current line</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">yy</div>
+                    <div>Yank (copy) current line</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">p</div>
+                    <div>Put (paste) after cursor</div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-header">Commands (NORMAL mode)</div>
+                <div class="key-command">
+                    <div class="key">:</div>
+                    <div>Open command prompt</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">:w</div>
+                    <div>Save file</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">:q</div>
+                    <div>Quit editor</div>
+                </div>
+                <div class="key-command">
+                    <div class="key">:wq</div>
+                    <div>Save and quit</div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-header">Other</div>
+                <div class="key-command">
+                    <div class="key">Esc</div>
+                    <div>Return to NORMAL mode</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const editor = document.getElementById('editor');
+        const modeDisplay = document.getElementById('mode');
+        const positionDisplay = document.getElementById('position');
+        const fileInfoDisplay = document.getElementById('fileInfo');
+        const fileModal = document.getElementById('fileModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const fileInput = document.getElementById('fileInput');
+        const filenameInput = document.getElementById('filenameInput');
+        const modalActionBtn = document.getElementById('modalActionBtn');
+        const commandPrompt = document.getElementById('commandPrompt');
+        const commandInput = document.getElementById('commandInput');
+        const helpModal = document.getElementById('helpModal');
+
+        // Editor state
+        let mode = 'NORMAL'; // NORMAL or INSERT
+        let currentFile = null;
+        let clipboard = '';
+        let commandBuffer = '';
+        let lastAction = '';
+        let currentLine = 0;
+        let currentCol = 0;
+
+        // Initialize editor
+        editor.focus();
+        updateMode();
+        updatePosition();
+
+        // Event listeners for buttons
+        document.getElementById('newBtn').addEventListener('click', newFile);
+        document.getElementById('openBtn').addEventListener('click', showOpenModal);
+        document.getElementById('saveBtn').addEventListener('click', showSaveModal);
+        document.getElementById('helpBtn').addEventListener('click', showHelp);
+        document.getElementById('closeModal').addEventListener('click', closeFileModal);
+        document.getElementById('closeHelp').addEventListener('click', closeHelp);
+        modalActionBtn.addEventListener('click', handleModalAction);
+        fileInput.addEventListener('change', handleFileSelection);
+
+        // Editor event listeners
+        editor.addEventListener('keydown', handleKeyDown);
+        editor.addEventListener('input', updatePosition);
+        editor.addEventListener('click', updatePosition);
+        commandInput.addEventListener('keydown', handleCommandKeyDown);
+
+        // Functions
+        function updateMode() {
+            modeDisplay.textContent = mode;
+            if (mode === 'NORMAL') {
+                editor.style.caretColor = 'transparent';
+            } else {
+                editor.style.caretColor = 'auto';
+            }
+        }
+
+        function updatePosition() {
+            const text = editor.value;
+            const position = editor.selectionStart;
+            
+            // Calculate line and column
+            const lines = text.substring(0, position).split('\n');
+            currentLine = lines.length;
+            currentCol = lines[lines.length - 1].length;
+            
+            positionDisplay.textContent = `Line: ${currentLine}, Col: ${currentCol}`;
+        }
+
+        function newFile() {
+            if (confirm('Create new file? Unsaved changes will be lost.')) {
+                editor.value = '';
+                currentFile = null;
+                fileInfoDisplay.textContent = 'No file opened';
+                mode = 'NORMAL';
+                updateMode();
+                updatePosition();
+            }
+        }
+
+        function showOpenModal() {
+            modalTitle.textContent = 'Open File';
+            filenameInput.style.display = 'none';
+            fileInput.style.display = 'block';
+            modalActionBtn.textContent = 'Open';
+            fileModal.style.display = 'block';
+        }
+
+        function showSaveModal() {
+            modalTitle.textContent = 'Save File';
+            fileInput.style.display = 'none';
+            filenameInput.style.display = 'block';
+            filenameInput.value = currentFile || '';
+            modalActionBtn.textContent = 'Save';
+            fileModal.style.display = 'block';
+        }
+
+        function closeFileModal() {
+            fileModal.style.display = 'none';
+        }
+
+        function handleModalAction() {
+            if (modalTitle.textContent === 'Open File') {
+                fileInput.click();
+            } else if (modalTitle.textContent === 'Save File') {
+                saveFile();
+            }
+        }
+
+        function handleFileSelection() {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editor.value = e.target.result;
+                    currentFile = file.name;
+                    fileInfoDisplay.textContent = currentFile;
+                    closeFileModal();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function saveFile() {
+            const filename = filenameInput.value.trim();
+            if (filename) {
+                const blob = new Blob([editor.value], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                currentFile = filename;
+                fileInfoDisplay.textContent = currentFile;
+                closeFileModal();
+            } else {
+                alert('Please enter a filename');
+            }
+        }
+
+        function handleKeyDown(e) {
+            if (mode === 'NORMAL') {
+                handleNormalModeKeyDown(e);
+            } else if (mode === 'INSERT') {
+                if (e.key === 'Escape') {
+                    mode = 'NORMAL';
+                    updateMode();
+                    // Move cursor back one position when exiting INSERT mode
+                    if (editor.selectionStart > 0 && editor.value[editor.selectionStart - 1] !== '\n') {
+                        editor.selectionStart = editor.selectionStart - 1;
+                        editor.selectionEnd = editor.selectionStart;
+                    }
+                    updatePosition();
+                    e.preventDefault();
+                }
+            }
+        }
+
+        function handleNormalModeKeyDown(e) {
+            const key = e.key;
+            
+            // Prevent default for most keys in NORMAL mode
+            if (key !== 'Escape' && 
+                key !== 'Control' && 
+                key !== 'Alt' && 
+                key !== 'Shift' &&
+                !e.ctrlKey && 
+                !e.altKey) {
+                e.preventDefault();
+            }
+            
+            // Navigation commands
+            if (key === 'h') { // Left
+                moveCursor(-1, 0);
+            } else if (key === 'j') { // Down
+                moveCursor(0, 1);
+            } else if (key === 'k') { // Up
+                moveCursor(0, -1);
+            } else if (key === 'l') { // Right
+                moveCursor(1, 0);
+            } else if (key === '0') { // Start of line
+                moveToStartOfLine();
+            } else if (key === '$') { // End of line
+                moveToEndOfLine();
+            } else if (key === 'g') { // gg for start of file
+                if (lastAction === 'g') {
+                    moveToStartOfFile();
+                    lastAction = '';
+                } else {
+                    lastAction = 'g';
+                }
+            } else if (key === 'G') { // End of file
+                moveToEndOfFile();
+            }
+            
+            // Edit commands
+            else if (key === 'i') { // Insert mode
+                mode = 'INSERT';
+                updateMode();
+            } else if (key === 'a') { // Append
+                moveCursor(1, 0);
+                mode = 'INSERT';
+                updateMode();
+            } else if (key === 'o') { // Open line below
+                moveToEndOfLine();
+                editor.value = editor.value.substring(0, editor.selectionStart) + '\n' + 
+                               editor.value.substring(editor.selectionStart);
+                editor.selectionStart = editor.selectionStart + 1;
+                editor.selectionEnd = editor.selectionStart;
+                mode = 'INSERT';
+                updateMode();
+                updatePosition();
+            } else if (key === 'O') { // Open line above
+                moveToStartOfLine();
+                editor.value = editor.value.substring(0, editor.selectionStart) + '\n' + 
+                               editor.value.substring(editor.selectionStart);
+                mode = 'INSERT';
+                updateMode();
+                updatePosition();
+            } else if (key === 'x') { // Delete character
+                deleteCharacter();
+            } else if (key === 'd') { // dd for delete line
+                if (lastAction === 'd') {
+                    deleteLine();
+                    lastAction = '';
+                } else {
+                    lastAction = 'd';
+                }
+            } else if (key === 'y') { // yy for yank line
+                if (lastAction === 'y') {
+                    yankLine();
+                    lastAction = '';
+                } else {
+                    lastAction = 'y';
+                }
+            } else if (key === 'p') { // Put
+                put();
+            } else if (key === ':') { // Command mode
+                showCommandPrompt();
+            }
+            
+            // Reset lastAction if a different key is pressed
+            if (key !== 'g' && key !== 'd' && key !== 'y' && lastAction !== '') {
+                lastAction = '';
+            }
+            
+            updatePosition();
+        }
+
+        function moveCursor(colDelta, lineDelta) {
+            const text = editor.value;
+            const lines = text.split('\n');
+            
+            let targetLine = currentLine - 1 + lineDelta;
+            targetLine = Math.max(0, Math.min(lines.length - 1, targetLine));
+            
+            let targetCol = currentCol + colDelta;
+            if (lineDelta !== 0) {
+                targetCol = Math.min(targetCol, lines[targetLine].length);
+            } else {
+                targetCol = Math.max(0, Math.min(lines[targetLine].length, targetCol));
+            }
+            
+            // Calculate new position
+            let newPos = 0;
+            for (let i = 0; i < targetLine; i++) {
+                newPos += lines[i].length + 1; // +1 for the newline character
+            }
+            newPos += targetCol;
+            
+            editor.selectionStart = newPos;
+            editor.selectionEnd = newPos;
+            updatePosition();
+        }
+
+        function moveToStartOfLine() {
+            const text = editor.value;
+            const lines = text.split('\n');
+            let pos = 0;
+            for (let i = 0; i < currentLine - 1; i++) {
+                pos += lines[i].length + 1;
+            }
+            editor.selectionStart = pos;
+            editor.selectionEnd = pos;
+            updatePosition();
+        }
+
+        function moveToEndOfLine() {
+            const text = editor.value;
+            const lines = text.split('\n');
+            let pos = 0;
+            for (let i = 0; i < currentLine - 1; i++) {
+                pos += lines[i].length + 1;
+            }
+            pos += lines[currentLine - 1].length;
+            editor.selectionStart = pos;
+            editor.selectionEnd = pos;
+            updatePosition();
+        }
+
+        function moveToStartOfFile() {
+            editor.selectionStart = 0;
+            editor.selectionEnd = 0;
+            updatePosition();
+        }
+
+        function moveToEndOfFile() {
+            editor.selectionStart = editor.value.length;
+            editor.selectionEnd = editor.value.length;
+            updatePosition();
+        }
+
+        function deleteCharacter() {
+            const pos = editor.selectionStart;
+            if (pos < editor.value.length) {
+                editor.value = editor.value.substring(0, pos) + 
+                               editor.value.substring(pos + 1);
+                editor.selectionStart = pos;
+                editor.selectionEnd = pos;
+                updatePosition();
+            }
+        }
+
+        function deleteLine() {
+            const text = editor.value;
+            const lines = text.split('\n');
+            const lineStart = text.lastIndexOf('\n', editor.selectionStart - 1) + 1;
+            const lineEnd = text.indexOf('\n', editor.selectionStart);
+            
+            if (lineEnd === -1) { // Last line
+                if (lineStart > 0) {
+                    clipboard = text.substring(lineStart);
+                    editor.value = text.substring(0, lineStart - 1);
+                } else {
+                    clipboard = text;
+                    editor.value = '';
+                }
+            } else {
+                clipboard = text.substring(lineStart, lineEnd + 1);
+                editor.value = text.substring(0, lineStart) + text.substring(lineEnd + 1);
+            }
+            
+            // Position cursor at the beginning of the next line
+            editor.selectionStart = lineStart;
+            editor.selectionEnd = lineStart;
+            updatePosition();
+        }
+
+        function yankLine() {
+            const text = editor.value;
+            const lineStart = text.lastIndexOf('\n', editor.selectionStart - 1) + 1;
+            let lineEnd = text.indexOf('\n', editor.selectionStart);
+            
+            if (lineEnd === -1) { // Last line
+                clipboard = text.substring(lineStart);
+                if (lineStart !== 0) {
+                    clipboard = '\n' + clipboard;
+                }
+            } else {
+                clipboard = text.substring(lineStart, lineEnd + 1);
+            }
+        }
+
+        function put() {
+            if (clipboard) {
+                const pos = editor.selectionStart;
+                const text = editor.value;
+                
+                // Find the end of the current line
+                let lineEnd = text.indexOf('\n', pos);
+                if (lineEnd === -1) lineEnd = text.length;
+                
+                editor.value = text.substring(0, lineEnd) + 
+                               clipboard + 
+                               text.substring(lineEnd);
+                
+                editor.selectionStart = lineEnd + 1;
+                editor.selectionEnd = lineEnd + 1;
+                updatePosition();
+            }
+        }
+
+        function showCommandPrompt() {
+            commandPrompt.style.display = 'block';
+            commandInput.value = '';
+            commandInput.focus();
+        }
+
+        function closeCommandPrompt() {
+            commandPrompt.style.display = 'none';
+            editor.focus();
+        }
+
+        function handleCommandKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeCommand(commandInput.value);
+                closeCommandPrompt();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeCommandPrompt();
+            }
+        }
+
+        function executeCommand(cmd) {
+            cmd = cmd.trim();
+            if (cmd === 'w') {
+                showSaveModal();
+            } else if (cmd === 'q') {
+                if (confirm('Quit editor? Unsaved changes will be lost.')) {
+                    alert('Editor would close in a real implementation.');
+                }
+            } else if (cmd === 'wq') {
+                showSaveModal();
+                setTimeout(() => {
+                    if (confirm('Quit editor after saving?')) {
+                        alert('Editor would close in a real implementation.');
+                    }
+                }, 100);
+            }
+        }
+
+        function showHelp() {
+            helpModal.style.display = 'block';
+        }
+
+        function closeHelp() {
+            helpModal.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

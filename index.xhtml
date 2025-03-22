@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000"/>
   <title>bpad.me</title>
-  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9icGFkLm1lL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=" />
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3wic3JjIjoiaHR0cHM6Ly9icGFkLm1lL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=" />
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg==" />
   <style type="text/css">
     html, body {
@@ -218,10 +218,17 @@
       window.addEventListener('load', () => {
         const swContent = `
           const CACHE_NAME = 'bpad-cache-v1';
-          const urlsToCache = ['./', './index.html', './styles.css', './script.js'];
+          const urlsToCache = [
+            './',
+            './index.html',
+            './styles.css',
+            './script.js'
+          ];
 
           self.addEventListener('install', event => {
-            event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+            );
           });
 
           self.addEventListener('activate', event => {

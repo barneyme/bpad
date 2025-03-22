@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bPad Wiki</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: #333;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .content {
+            margin-bottom: 20px;
+        }
+
+        .editor {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: inherit;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .page-list {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .page-list h2 {
+            margin-top: 0;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        a {
+            color: #2874A6;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .wiki-link {
+            color: #2874A6;
+            cursor: pointer;
+        }
+
+        .wiki-link:hover {
+            text-decoration: underline;
+        }
+
+.search-box {
+    margin-bottom: 20px;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+}
+
+.search-container input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.search-container button {
+    white-space: nowrap;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>bPad Wiki</h1>
+        <div class="controls">
+            <button id="new-page-btn">New Page</button>
+            <button id="edit-btn">Edit Page</button>
+            <button id="export-btn">Export Page</button>
+        </div>
+    </header>
+
+<div class="search-box">
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Find...">
+        <button id="search-btn">Find</button>
+    </div>
+</div>
+
+    <div class="content" id="content">
+        <h2>Welcome to bPad Wiki</h2>
+        <p>This is a lightweight single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
+        <p>To get started:</p>
+        <ul>
+            <li>Click "New Page" to create a new wiki page</li>
+            <li>Click "Edit Page" to modify the current page</li>
+            <li>Use [[Page Name]] syntax to create links to other pages</li>
+        </ul>
+        <p>This wiki supports basic markdown:</p>
+        <ul>
+            <li>**bold text**</li>
+            <li>*italic text*</li>
+            <li># Heading 1, ## Heading 2, etc.</li>
+            <li>- List items</li>
+            <li>[Link text](https://example.com)</li>
+        </ul>
+    </div>
+
+    <div class="editor" id="editor">
+        <input type="text" id="page-title" placeholder="Page Title">
+        <textarea id="page-content"></textarea>
+        <div class="controls">
+            <button id="save-btn">Save</button>
+            <button id="cancel-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div class="page-list" id="page-list">
+        <h2>All Pages</h2>
+        <ul id="pages-ul"></ul>
+    </div>
+
+    <footer>
+        <p>bPad Wiki - A basic browser-based wiki</p>
+    </footer>
+
+    <script>
+        let currentPage = 'Home';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!localStorage.getItem('wikiPages')) {
+                const initialPages = {
+                    'Home': {
+                        title: 'Home',
+                        content: '# Welcome to bPad Wiki\n\nThis is the home page of your wiki. You can create new pages or edit this one.'
+                    }
+                };
+                localStorage.setItem('wikiPages', JSON.stringify(initialPages));
+            }
+
+            loadPage('Home');
+            updatePageList();
+
+            document.getElementById('new-page-btn').addEventListener('click', newPage);
+            document.getElementById('edit-btn').addEventListener('click', editPage);
+            document.getElementById('save-btn').addEventListener('click', savePage);
+            document.getElementById('cancel-btn').addEventListener('click', cancelEdit);
+            document.getElementById('search-btn').addEventListener('click', searchPages);
+            document.getElementById('search-input').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchPages();
+                }
+            });
+            document.getElementById('export-btn').addEventListener('click', exportToMarkdown);
+        });
+
+        function loadPage(pageName) {
+            const pages = JSON.parse(localStorage.getItem('wikiPages'));
+            const contentDiv = document.getElementById('content');
+
+            if (pages && pages[pageName]) {
+                currentPage = pageName;
+                document.title = pageName + ' - Wiki';
+
+                let content = pages[pageName].content;
+
+                content = content.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+                content = content.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+                content = content.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+                content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                content = content.replace(/^- (.*?)$/gm, '<li>$1</li>');
+                content = content.split(/\n/).map(line => {
+                    if (line.startsWith('<li>')) {
+                        return line;
+                    } else if (line.trim() === '') {
+                        return '<br>';
+                    } else {
+                        return '<p>' + line + '</p>';
+                    }
+                }).join('');
+                content = content.replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>');
+                content = content.replace(/<\/ul><ul>/g, '');
+                content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                content = content.replace(/\[\[([^\]]+)\]\]/g, (match, pageName) => {
+                    return `<span class="wiki-link" onclick="loadPage('${pageName}')">${pageName}</span>`;
+                });
+
+                contentDiv.innerHTML = `<h2>${pageName}</h2>${content}`;
+
+                const wikiLinks = contentDiv.querySelectorAll('.wiki-link');
+                wikiLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        const pageName = this.textContent;
+                        loadPage(pageName);
+                    });
+                });
+            } else {
+                contentDiv.innerHTML = `
+                    <h2>${pageName}</h2>
+                    <p>This page doesn't exist yet. Click "Edit Page" to create it.</p>
+                `;
+                currentPage = pageName;
+                document.title = pageName + ' (New) - Wiki';
+            }
+        }
+
+        function newPage() {
+            const editorDiv = document.getElementById('editor');
+            const contentDiv = document.getElementById('content');
+
+            editorDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+
+            document.getElementById('page-title').value = '';
+            document.getElementById('page-content').value = '';
+        }
+
+        function editPage() {
+            const editorDiv = document.getElementById('editor');
+            const contentDiv = document.getElementById('content');
+            const pages = JSON.parse(localStorage.getItem('wikiPages'));
+
+            editorDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+
+            document.getElementById('page-title').value = currentPage;
+
+            if (pages && pages[currentPage]) {
+                document.getElementById('page-content').value = pages[currentPage].content;
+            } else {
+                document.getElementById('page-content').value = '';
+            }
+        }
+
+        function savePage() {
+            const title = document.getElementById('page-title').value.trim();
+            const content = document.getElementById('page-content').value;
+
+            if (!title) {
+                alert('Page title cannot be empty');
+                return;
+            }
+
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+            pages[title] = {
+                title: title,
+                content: content
+            };
+
+            localStorage.setItem('wikiPages', JSON.stringify(pages));
+
+            document.getElementById('editor').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            updatePageList();
+            loadPage(title);
+        }
+
+        function cancelEdit() {
+            document.getElementById('editor').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function updatePageList() {
+            const pagesList = document.getElementById('pages-ul');
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+
+            pagesList.innerHTML = '';
+
+            Object.keys(pages).sort().forEach(pageName => {
+                const li = document.createElement('li');
+                const link = document.createElement('span');
+                link.textContent = pageName;
+                link.className = 'wiki-link';
+                link.addEventListener('click', function() {
+                    loadPage(pageName);
+                });
+                li.appendChild(link);
+                pagesList.appendChild(li);
+            });
+        }
+
+        function searchPages() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            if (!searchTerm) return;
+
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+            const results = [];
+
+            Object.keys(pages).forEach(pageName => {
+                if (pageName.toLowerCase().includes(searchTerm) || 
+                    pages[pageName].content.toLowerCase().includes(searchTerm)) {
+                    results.push(pageName);
+                }
+            });
+
+            const contentDiv = document.getElementById('content');
+            if (results.length > 0) {
+                let resultHtml = `<h2>Search Results for "${searchTerm}"</h2><ul>`;
+                results.forEach(pageName => {
+                    resultHtml += `<li><span class="wiki-link" onclick="loadPage('${pageName}')">${pageName}</span></li>`;
+                });
+                resultHtml += '</ul>';
+                contentDiv.innerHTML = resultHtml;
+
+                const wikiLinks = contentDiv.querySelectorAll('.wiki-link');
+                wikiLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        const pageName = this.textContent;
+                        loadPage(pageName);
+                    });
+                });
+            } else {
+                contentDiv.innerHTML = `<h2>Search Results</h2><p>No pages found containing "${searchTerm}".</p>`;
+            }
+        }
+
+        function htmlToMarkdown(html) {
+            html = html.replace(/<h1>(.*?)<\/h1>/g, '# $1');
+            html = html.replace(/<h2>(.*?)<\/h2>/g, '## $1');
+            html = html.replace(/<h3>(.*?)<\/h3>/g, '### $1');
+            html = html.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+            html = html.replace(/<em>(.*?)<\/em>/g, '*$1*');
+            html = html.replace(/<ul>(.*?)<\/ul>/gs, function(match, p1) {
+                return p1.replace(/<li>(.*?)<\/li>/g, '- $1');
+            });
+            html = html.replace(/<a href="([^"]+)" target="_blank">(.*?)<\/a>/g, '[$2]($1)');
+            html = html.replace(/<br>/g, '\n');
+            html = html.replace(/<p>(.*?)<\/p>/g, function(match, p1) {
+                return p1 + '\n';
+            });
+
+            return html.trim();
+        }
+
+        function exportToMarkdown() {
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+            const pageContent = pages[currentPage] ? pages[currentPage].content : '';
+            const markdownContent = htmlToMarkdown(pageContent);
+
+            const blob = new Blob([markdownContent], { type: 'text/markdown' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = currentPage + '.md';
+            link.click();
+        }
+    </script>
+</body>
+</html>

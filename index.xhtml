@@ -146,32 +146,6 @@
       background: rgba(0,0,0,0.5);
       z-index: 999;
     }
-    /* Notification styles */
-    .notification {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 8px 10px;
-      text-align: center;
-      font-family: sans-serif;
-      font-size: 14px;
-      z-index: 1001;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    #offline-notification {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    #online-notification {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    #download-notification {
-      background-color: #d1ecf1;
-      color: #0c5460;
-    }
     
     /* Media queries for better responsiveness */
     @media (max-width: 500px) {
@@ -208,7 +182,7 @@
     }
     
     @media print { 
-      nav, .notification { 
+      nav { 
         display: none; 
       } 
       #textbox {
@@ -219,11 +193,6 @@
   </style>
 </head>
 <body>
-  <!-- Notification bars -->
-  <div id="offline-notification" class="notification">Offline. Changes will be saved locally.</div>
-  <div id="online-notification" class="notification">Online.</div>
-  <div id="download-notification" class="notification">File downloaded successfully</div>
-  
   <textarea id="textbox" autofocus="autofocus" placeholder="Start typing here or click ? to learn more."></textarea>
   <nav>
     <span id="stats">
@@ -279,26 +248,6 @@
         });
       });
     }
-    
-    // Online/Offline status handling
-    function updateOnlineStatus() {
-      const offlineNotification = document.getElementById('offline-notification');
-      const onlineNotification = document.getElementById('online-notification');
-      
-      if (navigator.onLine) {
-        offlineNotification.style.display = 'none';
-        onlineNotification.style.display = 'block';
-        setTimeout(() => {
-          onlineNotification.style.display = 'none';
-        }, 3000);
-      } else {
-        offlineNotification.style.display = 'block';
-        onlineNotification.style.display = 'none';
-      }
-    }
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
     
     // Adjust textarea height on window resize
     function adjustTextareaHeight() {
@@ -419,13 +368,6 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
-        
-        // Show download notification
-        const downloadNotification = document.getElementById('download-notification');
-        downloadNotification.style.display = 'block';
-        setTimeout(() => {
-            downloadNotification.style.display = 'none';
-        }, 3000);
     };
     
     document.querySelector('#open').onclick = function() {
@@ -450,8 +392,6 @@
     document.getElementById('readme-button').onclick = function() {
       document.getElementById('popup-overlay').style.display = 'block';
       document.getElementById('readme-popup').style.display = 'block';
-      // Hide download notification if it was showing
-      document.getElementById('download-notification').style.display = 'none';
     };
     
     document.getElementById('readme-close').onclick = function() {
@@ -463,9 +403,6 @@
       document.getElementById('popup-overlay').style.display = 'none';
       document.getElementById('readme-popup').style.display = 'none';
     };
-    
-    // Check initial online status
-    updateOnlineStatus();
     
     // Call adjustTextareaHeight initially
     setTimeout(adjustTextareaHeight, 100);

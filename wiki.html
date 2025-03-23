@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bPad Wiki</title>
+    <title>bPad wiki</title>
     <style>
+        :root {
+            --primary-color: #007BFF;
+            --primary-dark: #0056b3;
+            --danger-color: #dc3545;
+            --danger-dark: #c82333;
+            --background: #ffffff;
+            --text-color: #333333;
+            --border-color: #dddddd;
+            --link-color: #2874A6;
+        }
+
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -12,7 +23,8 @@
             padding: 20px;
             max-width: 1000px;
             margin: 0 auto;
-            color: #333;
+            color: var(--text-color);
+            background-color: var(--background);
         }
 
         header {
@@ -20,7 +32,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
 
@@ -31,10 +43,11 @@
         .controls {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         button {
-            background-color: #007BFF;
+            background-color: var(--primary-color);
             border: none;
             color: white;
             padding: 8px 16px;
@@ -43,10 +56,19 @@
             font-size: 14px;
             cursor: pointer;
             border-radius: 4px;
+            transition: background-color 0.2s;
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-dark);
+        }
+
+        button.delete-btn {
+            background-color: var(--danger-color);
+        }
+
+        button.delete-btn:hover {
+            background-color: var(--danger-dark);
         }
 
         .content {
@@ -66,8 +88,9 @@
             font-family: inherit;
             font-size: inherit;
             line-height: inherit;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
+            resize: vertical;
         }
 
         input[type="text"] {
@@ -77,14 +100,14 @@
             box-sizing: border-box;
             font-family: inherit;
             font-size: inherit;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
         }
 
         .page-list {
             margin-top: 20px;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid var(--border-color);
         }
 
         .page-list h2 {
@@ -96,7 +119,7 @@
         }
 
         a {
-            color: #2874A6;
+            color: var(--link-color);
             text-decoration: none;
         }
 
@@ -107,13 +130,14 @@
         footer {
             margin-top: 40px;
             padding-top: 10px;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid var(--border-color);
             font-size: 14px;
             color: #777;
+            text-align: center;
         }
 
         .wiki-link {
-            color: #2874A6;
+            color: var(--link-color);
             cursor: pointer;
         }
 
@@ -121,59 +145,91 @@
             text-decoration: underline;
         }
 
-.search-box {
-    margin-bottom: 20px;
-}
+        .search-box {
+            margin-bottom: 20px;
+        }
 
-.search-container {
-    display: flex;
-    gap: 10px;
-}
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
 
-.search-container input[type="text"] {
-    flex: 1;
-    margin-bottom: 0;
-}
+        .search-container input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
 
-.search-container button {
-    white-space: nowrap;
-}
+        .search-container button {
+            white-space: nowrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--background);
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>bPad Wiki</h1>
+        <h1>bPad wiki</h1>
         <div class="controls">
-            <button id="new-page-btn">New Page</button>
-            <button id="edit-btn">Edit Page</button>
-            <button id="export-btn">Export Page</button>
+            <button id="home-btn">Home</button>
+            <button id="new-page-btn">New</button>
+            <button id="edit-btn">Edit</button>
+            <button id="delete-btn" class="delete-btn">Delete</button>
+            <button id="export-btn">Export</button>
+            <button id="bpad-btn">bPad</button>
         </div>
     </header>
 
-<div class="search-box">
-    <div class="search-container">
-        <input type="text" id="search-input" placeholder="Find...">
-        <button id="search-btn">Find</button>
+    <div class="search-box">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Find...">
+            <button id="search-btn">Find</button>
+        </div>
     </div>
-</div>
 
     <div class="content" id="content">
-        <h2>Welcome to bPad Wiki</h2>
-        <p>This is a lightweight single-page wiki that works entirely in your browser. All data is stored locally on your device.</p>
-        <p>To get started:</p>
-        <ul>
-            <li>Click "New Page" to create a new wiki page</li>
-            <li>Click "Edit Page" to modify the current page</li>
-            <li>Use [[Page Name]] syntax to create links to other pages</li>
-        </ul>
-        <p>This wiki supports basic markdown:</p>
-        <ul>
-            <li>**bold text**</li>
-            <li>*italic text*</li>
-            <li># Heading 1, ## Heading 2, etc.</li>
-            <li>- List items</li>
-            <li>[Link text](https://example.com)</li>
-        </ul>
+        <!-- Content will be loaded dynamically by JavaScript -->
     </div>
 
     <div class="editor" id="editor">
@@ -186,31 +242,64 @@
     </div>
 
     <div class="page-list" id="page-list">
-        <h2>All Pages</h2>
+        <h2>Pages</h2>
         <ul id="pages-ul"></ul>
     </div>
 
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h3>Delete Page</h3>
+            <p>Are you sure you want to delete "<span id="delete-page-name"></span>"?</p>
+            <p>This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="cancel-delete-btn">Cancel</button>
+                <button id="confirm-delete-btn" class="delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
-        <p>bPad Wiki - A basic browser-based wiki</p>
+        <p>bPad wiki - A browser based wiki.</p>
     </footer>
 
     <script>
         let currentPage = 'Home';
 
+        // Homepage content
+        const homepageContent = `# bPad wiki
+**BPAD WIKI**
+[bPad wiki](bpad.me/wiki) is a browser based wiki.
+bPad wiki automatically saves your pages in your browser.
+bPad wiki supports basic [Markdown](https://www.markdownguide.org/cheat-sheet/).
+- To return to the bPad wiki homepage click "Home."
+- To create a new page click "New."
+- To edit an existing page go to the page and click "Edit."
+- To export a current page go to the page and click "Export." This will save the page to your computer as a .MD Markdown file.
+- To import a page open the .MD file and paste the contents in a new page.
+To delete a page click "Delete."
+- To return to bPad click "bPad."
+Note: Deleting history or clearing cache in your browser will erase the contents of your bPad wiki.`;
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize localStorage if it doesn't exist
             if (!localStorage.getItem('wikiPages')) {
                 const initialPages = {
                     'Home': {
                         title: 'Home',
-                        content: '# Welcome to bPad Wiki\n\nThis is the home page of your wiki. You can create new pages or edit this one.'
+                        content: homepageContent
                     }
                 };
                 localStorage.setItem('wikiPages', JSON.stringify(initialPages));
             }
 
+            // Load home page and update page list
             loadPage('Home');
             updatePageList();
 
+            // Add event listeners to buttons
+            document.getElementById('home-btn').addEventListener('click', function() {
+                loadPage('Home');
+            });
             document.getElementById('new-page-btn').addEventListener('click', newPage);
             document.getElementById('edit-btn').addEventListener('click', editPage);
             document.getElementById('save-btn').addEventListener('click', savePage);
@@ -222,6 +311,12 @@
                 }
             });
             document.getElementById('export-btn').addEventListener('click', exportToMarkdown);
+            document.getElementById('delete-btn').addEventListener('click', showDeleteConfirmation);
+            document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
+            document.getElementById('confirm-delete-btn').addEventListener('click', deletePage);
+            document.getElementById('bpad-btn').addEventListener('click', function() {
+                window.location.href = 'https://bpad.me';
+            });
         });
 
         function loadPage(pageName) {
@@ -229,17 +324,22 @@
             const contentDiv = document.getElementById('content');
 
             if (pages && pages[pageName]) {
+                // Set current page and title
                 currentPage = pageName;
-                document.title = pageName + ' - Wiki';
+                document.title = pageName + ' - bPad Wiki';
 
+                // Get page content
                 let content = pages[pageName].content;
 
+                // Convert markdown to HTML
                 content = content.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
                 content = content.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
                 content = content.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
                 content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
                 content = content.replace(/^- (.*?)$/gm, '<li>$1</li>');
+                
+                // Handle paragraphs and line breaks
                 content = content.split(/\n/).map(line => {
                     if (line.startsWith('<li>')) {
                         return line;
@@ -249,15 +349,21 @@
                         return '<p>' + line + '</p>';
                     }
                 }).join('');
+                
+                // Combine list items into lists
                 content = content.replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>');
                 content = content.replace(/<\/ul><ul>/g, '');
+                
+                // Convert markdown links and wiki links
                 content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
                 content = content.replace(/\[\[([^\]]+)\]\]/g, (match, pageName) => {
                     return `<span class="wiki-link" onclick="loadPage('${pageName}')">${pageName}</span>`;
                 });
 
+                // Set the content
                 contentDiv.innerHTML = `<h2>${pageName}</h2>${content}`;
 
+                // Add event listeners to wiki links
                 const wikiLinks = contentDiv.querySelectorAll('.wiki-link');
                 wikiLinks.forEach(link => {
                     link.addEventListener('click', function() {
@@ -266,12 +372,13 @@
                     });
                 });
             } else {
+                // Page doesn't exist yet
                 contentDiv.innerHTML = `
                     <h2>${pageName}</h2>
-                    <p>This page doesn't exist yet. Click "Edit Page" to create it.</p>
+                    <p>This page doesn't exist yet. Click "Edit" to create it.</p>
                 `;
                 currentPage = pageName;
-                document.title = pageName + ' (New) - Wiki';
+                document.title = pageName + ' (New) - bPad Wiki';
             }
         }
 
@@ -374,6 +481,7 @@
                 resultHtml += '</ul>';
                 contentDiv.innerHTML = resultHtml;
 
+                // Add event listeners to the newly created wiki links
                 const wikiLinks = contentDiv.querySelectorAll('.wiki-link');
                 wikiLinks.forEach(link => {
                     link.addEventListener('click', function() {
@@ -382,7 +490,7 @@
                     });
                 });
             } else {
-                contentDiv.innerHTML = `<h2>Search Results</h2><p>No pages found containing "${searchTerm}".</p>`;
+                contentDiv.innerHTML = `<h2>Results</h2><p>No pages found containing "${searchTerm}".</p>`;
             }
         }
 
@@ -407,14 +515,45 @@
         function exportToMarkdown() {
             const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
             const pageContent = pages[currentPage] ? pages[currentPage].content : '';
-            const markdownContent = htmlToMarkdown(pageContent);
 
-            const blob = new Blob([markdownContent], { type: 'text/markdown' });
+            // Create a blob and trigger a download
+            const blob = new Blob([pageContent], { type: 'text/markdown' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = currentPage + '.md';
             link.click();
         }
+
+        function showDeleteConfirmation() {
+            document.getElementById('delete-page-name').textContent = currentPage;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        function deletePage() {
+            const pages = JSON.parse(localStorage.getItem('wikiPages')) || {};
+            
+            // Don't allow deleting the Home page
+            if (currentPage === 'Home') {
+                alert('The Home page cannot be deleted.');
+                closeDeleteModal();
+                return;
+            }
+            
+            if (pages[currentPage]) {
+                delete pages[currentPage];
+                localStorage.setItem('wikiPages', JSON.stringify(pages));
+                closeDeleteModal();
+                updatePageList();
+                loadPage('Home');
+            }
+        }
+
+        // Make the loadPage function available globally
+        window.loadPage = loadPage;
     </script>
 </body>
 </html>

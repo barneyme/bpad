@@ -71,7 +71,6 @@
         
         .notes-container {
             display: grid;
-            /* Changed from 250px to 300px for larger notes */
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
         }
@@ -79,11 +78,9 @@
         .note {
             background-color: #fff8dc;
             border-radius: 5px;
-            /* Increased padding from 15px to 20px */
             padding: 20px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             position: relative;
-            /* Increased min-height from 150px to 200px */
             min-height: 350px;
             display: flex;
             flex-direction: column;
@@ -94,7 +91,6 @@
             margin-bottom: 10px;
             border: none;
             background-color: transparent;
-            /* Increased font-size from 16px to 18px */
             font-size: 18px;
             width: 100%;
             padding: 0;
@@ -105,17 +101,14 @@
             border: none;
             background-color: transparent;
             resize: none;
-            /* Increased font-size from 14px to 16px */
             font-size: 16px;
             line-height: 1.5;
-            /* Added min-height to make textarea larger */
             min-height: 350px;
         }
         
         .note-footer {
             display: flex;
-            justify-content: space-between;
-            /* Increased font-size from 12px to 14px */
+            justify-content: flex-end;
             font-size: 14px;
             color: #777;
             margin-top: 10px;
@@ -130,10 +123,8 @@
             color: #f44336;
             cursor: pointer;
             font-weight: bold;
-            /* Increased font-size from 16px to 18px */
             font-size: 18px;
             padding: 0;
-            /* Increased width and height from 24px to 28px */
             width: 28px;
             height: 28px;
             display: flex;
@@ -151,7 +142,6 @@
             color: #777;
             grid-column: 1 / -1;
             padding: 20px;
-            /* Increased font-size */
             font-size: 16px;
         }
         
@@ -236,20 +226,6 @@
                 const footer = document.createElement('div');
                 footer.classList.add('note-footer');
                 
-                const lastEdited = document.createElement('span');
-                lastEdited.textContent = note.lastEdited ? 
-                    `Last edited: ${new Date(note.lastEdited).toLocaleString(undefined, {
-                        month: 'short', 
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}` : '';
-                
-                const removeBtn = document.createElement('button');
-                removeBtn.classList.add('remove-note');
-                removeBtn.innerHTML = '&times;';
-                removeBtn.dataset.index = index;
-                
                 const exportBtn = document.createElement('button');
                 exportBtn.textContent = 'Export';
                 exportBtn.classList.add('export');
@@ -257,8 +233,12 @@
                 exportBtn.style.fontSize = '12px';
                 exportBtn.dataset.index = index;
                 
-                footer.appendChild(lastEdited);
                 footer.appendChild(exportBtn);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.classList.add('remove-note');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.dataset.index = index;
                 
                 noteDiv.appendChild(titleInput);
                 noteDiv.appendChild(contentTextarea);
@@ -268,15 +248,13 @@
                 // Event listeners
                 titleInput.addEventListener('input', function(e) {
                     updateNote(parseInt(e.target.dataset.index), {
-                        title: e.target.value,
-                        lastEdited: Date.now()
+                        title: e.target.value
                     });
                 });
                 
                 contentTextarea.addEventListener('input', function(e) {
                     updateNote(parseInt(e.target.dataset.index), {
-                        content: e.target.value,
-                        lastEdited: Date.now()
+                        content: e.target.value
                     });
                 });
                 
@@ -296,8 +274,7 @@
                 const newNote = {
                     title: '',
                     content: '',
-                    createdAt: Date.now(),
-                    lastEdited: Date.now()
+                    createdAt: Date.now()
                 };
                 
                 notes.push(newNote);
@@ -318,19 +295,6 @@
                 if (index >= 0 && index < notes.length) {
                     notes[index] = { ...notes[index], ...updates };
                     saveNotes();
-                    
-                    // Update the last edited text
-                    const noteElement = document.querySelectorAll('.note')[index];
-                    if (noteElement) {
-                        const footer = noteElement.querySelector('.note-footer');
-                        const lastEdited = footer.querySelector('span');
-                        lastEdited.textContent = `Last edited: ${new Date(notes[index].lastEdited).toLocaleString(undefined, {
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}`;
-                    }
                 }
             }
             
@@ -375,8 +339,7 @@
                 notes.forEach((note, index) => {
                     content += `--- Note ${index + 1} ${note.title ? '- ' + note.title : ''} ---\n\n`;
                     content += note.content + '\n\n';
-                    content += `Created: ${new Date(note.createdAt).toLocaleString()}\n`;
-                    content += `Last Edited: ${new Date(note.lastEdited).toLocaleString()}\n\n`;
+                    content += `Created: ${new Date(note.createdAt).toLocaleString()}\n\n`;
                     content += '--------------------------------\n\n';
                 });
                 

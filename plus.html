@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000"/>
+  <title>bPad+</title>
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvcnMiOiIjMDAwMDAwIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vYnBhZC5tZS9pY29uLnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmcifV19" />
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg==" />
+  <style type="text/css">
+    html, body {
+      height: 100%; 
+      box-sizing: border-box; 
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    * { box-sizing: inherit; }
+    
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    #file-list-container {
+      height: 3rem;
+      background-color: #eee; 
+      border-bottom: 1px solid silver;
+      color: gray; 
+      font-size: 100%;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 0.5em; 
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+    
+    #file-list-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      flex-grow: 1;
+      overflow-x: auto;
+    }
+    
+    #file-list {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      flex-grow: 1;
+    }
+    
+    #file-list .file-item {
+      padding: 10px;
+      border: 1px solid #ddd;
+      background-color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-width: 150px;
+      max-width: 250px;
+    }
+    
+    #file-list .file-item.active {
+      background-color: #e0e0e0;
+    }
+    
+    #file-list .file-item-name {
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    #file-list .file-item-close {
+      margin-left: 10px;
+      color: #888;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    
+    #file-list .file-item-close:hover {
+      color: #000;
+    }
+    
+    #editor-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    textarea {
+      flex-grow: 1;
+      border: none; 
+      outline: none; 
+      resize: none;
+      font-family: monospace;
+      padding: 0.5em;
+      width: 100%;
+      font-size: 16px;
+      overflow-y: scroll;
+    }
+    
+    #top-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      z-index: 10;
+    }
+    
+    #top-controls #filename {
+      margin-right: 0.5em;
+      min-width: 100px;
+      max-width: 200px;
+    }
+    
+    button {
+      padding: 0.5em 0.75em;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 0.25em 0;
+    }
+    
+    button:hover { background-color: #e8e8e8; }
+    
+    #filename {
+      padding: 0.5em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    #readme-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    #readme-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      max-height: 80%;
+      overflow-y: auto;
+    }
+    
+    #readme-close {
+      float: right;
+      cursor: pointer;
+    }
+    
+    #stats { 
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      padding: 0.5em;
+      background-color: #f0f0f0;
+      width: 100%;
+      border-top: 1px solid #ddd;
+    }
+    
+    #open > input { display: none; }
+    
+    @media (max-width: 600px) {
+      #file-list {
+        flex-direction: column;
+      }
+      #file-list .file-item {
+        max-width: 100%;
+      }
+      
+      #top-controls {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <div id="file-list-container">
+      <div id="file-list-header">
+        <div id="file-list"></div>
+      </div>
+    </div>
+    
+    <div id="editor-container">
+      <div id="top-controls">
+        <button id="new-file">^N</button>
+        <button id="open">^O</button>
+        <input id="filename" placeholder="bpad.txt" />
+        <button id="save">^S</button>
+        <button id="readme">?</button>
+      </div>
+      
+      <textarea id="textbox" autofocus="autofocus" placeholder="Start typing here or click New File to create a new document."></textarea>
+      
+      <div id="stats">
+        <span id="word-count">0</span> W. 
+        <span id="line-count">0</span> L.
+      </div>
+    </div>
+  </div>
+  
+  <div id="readme-modal">
+    <div id="readme-content">
+      <button id="readme-close">×</button>
+      <h1>bPad+</h1>
+      <p>A simple offline-capable text editor with multi-file support.</p>
+      
+      <h2>Features</h2>
+      <ul>
+        <li>Create multiple files</li>
+        <li>Save and open files</li>
+        <li>Local storage persistence</li>
+        <li>Keyboard shortcuts</li>
+      </ul>
+      
+      <h2>Keyboard Shortcuts</h2>
+      <ul>
+        <li>Ctrl+N: New File</li>
+        <li>Ctrl+O: Open File</li>
+        <li>Ctrl+S: Save File</li>
+        <li>Ctrl+W: Close Current File</li>
+      </ul>
+      
+      <h2>About</h2>
+      <p>bPad+ is a lightweight, browser-based text editor for working on plaintext files.</p>
+    </div>
+  </div>
+  
+  <input type="file" id="open-input" multiple style="display: none;" />
+  
+  <script type="text/javascript">
+    let files = {};
+    let activeFileName = null;
+    
+    const fileList = document.getElementById('file-list');
+    const textbox = document.getElementById('textbox');
+    const filenameBox = document.getElementById('filename');
+    const openInput = document.getElementById('open-input');
+    const saveButton = document.getElementById('save');
+    const newFileButton = document.getElementById('new-file');
+    
+    let timeoutID = null;
+    
+    function createFileListItem(filename) {
+      const fileItem = document.createElement('div');
+      fileItem.className = 'file-item';
+      fileItem.dataset.filename = filename;
+      
+      const fileNameSpan = document.createElement('span');
+      fileNameSpan.textContent = filename;
+      fileNameSpan.className = 'file-item-name';
+      
+      const closeButton = document.createElement('button');
+      closeButton.textContent = '×';
+      closeButton.className = 'file-item-close';
+      closeButton.onclick = () => closeFile(filename);
+      
+      fileItem.appendChild(fileNameSpan);
+      fileItem.appendChild(closeButton);
+      
+      fileItem.onclick = (e) => {
+        if (e.target !== closeButton) {
+          switchToFile(filename);
+        }
+      };
+      
+      return fileItem;
+    }
+    
+    function switchToFile(filename) {
+      // Save current file before switching
+      if (activeFileName && files[activeFileName] !== undefined) {
+        files[activeFileName] = textbox.value;
+      }
+      
+      // Update active file styling
+      const prevActiveItem = document.querySelector('.file-item.active');
+      if (prevActiveItem) {
+        prevActiveItem.classList.remove('active');
+      }
+      
+      const newActiveItem = document.querySelector(`.file-item[data-filename="${filename}"]`);
+      if (newActiveItem) {
+        newActiveItem.classList.add('active');
+      }
+      
+      // Load new file content
+      activeFileName = filename;
+      textbox.value = files[filename] || '';
+      filenameBox.value = filename;
+      calcStats();
+    }
+    
+    function addNewFile(filename = `bpad-${Object.keys(files).length + 1}.txt`) {
+      // Ensure unique filename
+      let uniqueFilename = filename;
+      let counter = 1;
+      while (files[uniqueFilename]) {
+        uniqueFilename = `${filename.replace(/\.\w+$/, '')}-${counter}.txt`;
+        counter++;
+      }
+      
+      files[uniqueFilename] = '';
+      const fileItem = createFileListItem(uniqueFilename);
+      fileList.appendChild(fileItem);
+      switchToFile(uniqueFilename);
+    }
+    
+    function closeFile(filename) {
+      if (Object.keys(files).length <= 1) {
+        alert('You must keep at least one file open.');
+        return;
+      }
+      
+      if (confirm(`Are you sure you want to close "${filename}"?`)) {
+        const fileItem = document.querySelector(`.file-item[data-filename="${filename}"]`);
+        fileList.removeChild(fileItem);
+        
+        delete files[filename];
+        
+        // Switch to another file
+        const remainingFiles = Object.keys(files);
+        if (remainingFiles.length > 0) {
+          switchToFile(remainingFiles[0]);
+        }
+      }
+    }
+    
+    function calcStats() {
+      const wordCount = textbox.value === "" ? 0 : textbox.value.replace(/\s+/g, ' ').split(' ').length;
+      const lineCount = textbox.value === "" ? 0 : textbox.value.split(/\n/).length;
+      
+      document.querySelector('#word-count').textContent = wordCount;
+      document.querySelector('#line-count').textContent = lineCount;
+    }
+    
+    function storeLocally() {
+      if (activeFileName) {
+        files[activeFileName] = textbox.value;
+        localStorage.setItem('bpad-multi', JSON.stringify(files));
+      }
+    }
+    
+    // Event Listeners
+    newFileButton.onclick = () => addNewFile();
+    
+    textbox.onkeyup = () => {
+      calcStats();
+      clearTimeout(timeoutID);
+      timeoutID = setTimeout(storeLocally, 1000);
+    };
+    
+    textbox.onkeydown = event => {
+      if (event.key === "Tab") {
+        event.preventDefault();
+        const s = textbox.selectionStart, e = textbox.selectionEnd;
+        textbox.value = textbox.value.substring(0, s) + '\t' + textbox.value.substring(e);
+        textbox.selectionStart = textbox.selectionEnd = s + 1;
+      }
+    };
+    
+    saveButton.onclick = () => {
+      const filename = filenameBox.value || activeFileName || 'bpad.txt';
+      const blob = new Blob([textbox.value], {type: 'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    };
+    
+    document.getElementById('open').onclick = () => {
+      openInput.click();
+    };
+    
+    openInput.onchange = event => {
+      const fileList = event.target.files;
+      for (let file of fileList) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          addNewFile(file.name);
+          files[activeFileName] = e.target.result;
+          textbox.value = e.target.result;
+          calcStats();
+          storeLocally();
+        };
+        reader.readAsText(file);
+      }
+    };
+    
+    // Restore previous session
+    window.onload = () => {
+      const savedFiles = localStorage.getItem('bpad-multi');
+      if (savedFiles) {
+        files = JSON.parse(savedFiles);
+        
+        // Recreate file list and select first file
+        Object.keys(files).forEach(filename => {
+          const fileItem = createFileListItem(filename);
+          fileList.appendChild(fileItem);
+        });
+        
+        if (Object.keys(files).length > 0) {
+          switchToFile(Object.keys(files)[0]);
+        } else {
+          addNewFile();
+        }
+      } else {
+        addNewFile();
+      }
+    };
+    
+    window.onbeforeunload = storeLocally;
+    
+    // Keyboard shortcuts
+    window.addEventListener('keydown', event => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'o') {
+          event.preventDefault();
+          openInput.click();
+        } else if (event.key === 's') {
+          event.preventDefault();
+          saveButton.click();
+        } else if (event.key === 'n') {
+          event.preventDefault();
+          addNewFile();
+        } else if (event.key === 'w') {
+          event.preventDefault();
+          if (activeFileName) {
+            closeFile(activeFileName);
+          }
+        }
+      }
+    });
+    
+    // README Modal Logic
+    const readmeButton = document.getElementById('readme');
+    const readmeModal = document.getElementById('readme-modal');
+    const readmeCloseButton = document.getElementById('readme-close');
+    
+    readmeButton.onclick = () => {
+      readmeModal.style.display = 'flex';
+    };
+    
+    readmeCloseButton.onclick = () => {
+      readmeModal.style.display = 'none';
+    };
+    
+    // Close modal if clicking outside the content
+    readmeModal.onclick = (event) => {
+      if (event.target === readmeModal) {
+        readmeModal.style.display = 'none';
+      }
+    };
+  </script>
+</body>
+</html>

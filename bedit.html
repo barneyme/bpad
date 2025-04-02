@@ -1,0 +1,473 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#000000" />
+        <title>bEdit</title>
+        <link
+            rel="manifest"
+            href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9icGFkLm1lL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0="
+        />
+        <link
+            rel="icon"
+            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg=="
+        />
+        <style type="text/css">
+            html,
+            body {
+                height: 100%;
+                box-sizing: border-box;
+                margin: 0;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+                    sans-serif;
+            }
+            * {
+                box-sizing: inherit;
+            }
+            textarea {
+                height: calc(100% - 3rem);
+                border: none;
+                outline: none;
+                resize: none;
+                font-family: monospace;
+                padding: 0.5em;
+                width: 100%;
+                font-size: 16px;
+            }
+            #textbox {
+                border-right: 1px solid darkgray;
+                background-color: transparent;
+                overflow-y: scroll;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 3rem;
+            }
+            nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: auto;
+                min-height: 3rem;
+                padding: 0.5em;
+                background-color: #eee;
+                border-top: 1px solid silver;
+                color: gray;
+                font-size: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            #controls {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.5em;
+            }
+            button {
+                padding: 0.5em 0.75em;
+                background-color: #f8f8f8;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                margin: 0.25em 0;
+            }
+            button:hover {
+                background-color: #e8e8e8;
+            }
+            #filename {
+                padding: 0.5em;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+                min-width: 100px;
+                max-width: 200px;
+            }
+            #stats {
+                padding: 0.5em 0;
+            }
+            #open > input {
+                display: none;
+            }
+
+            #readme-popup {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 600px;
+                max-height: 90vh;
+                background: white;
+                border: 1px solid #ccc;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                overflow-y: auto;
+                padding: 20px;
+                border-radius: 5px;
+            }
+            #readme-popup h2 {
+                margin-top: 0;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+            #readme-popup strong {
+                display: block;
+                margin-top: 15px;
+                margin-bottom: 5px;
+            }
+            #readme-content {
+                line-height: 1.5;
+            }
+            #readme-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #666;
+                padding: 0;
+                margin: 0;
+            }
+            #readme-close:hover {
+                color: #000;
+            }
+            #popup-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            @media (max-width: 500px) {
+                nav {
+                    flex-direction: column;
+                    align-items: stretch;
+                    padding: 0.5em;
+                }
+                #controls {
+                    margin-top: 0.5em;
+                    justify-content: space-between;
+                }
+                #filename {
+                    flex-grow: 1;
+                    max-width: none;
+                }
+                #textbox {
+                    bottom: 6rem;
+                }
+                #stats {
+                    text-align: center;
+                }
+            }
+
+            @media (max-width: 350px) {
+                button {
+                    padding: 0.4em 0.5em;
+                    font-size: 12px;
+                }
+                #filename {
+                    font-size: 12px;
+                    padding: 0.4em;
+                }
+            }
+
+            @media print {
+                nav {
+                    display: none;
+                }
+                #textbox {
+                    position: static;
+                    height: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <textarea
+            id="textbox"
+            autofocus="autofocus"
+            placeholder="Start typing here or click ? to learn more."
+        ></textarea>
+        <nav>
+            <span id="stats">
+                <span id="line-pos">1</span>:<span id="char-pos">1</span>
+            </span>
+            <span id="controls">
+                <button id="open">^O</button>
+                <input id="filename" placeholder="bedit.txt" />
+                <button id="save">^S</button>
+                <button id="readme-button">?</button>
+            </span>
+        </nav>
+        <input type="file" id="open-input" style="display: none" />
+
+        <div id="popup-overlay"></div>
+        <div id="readme-popup">
+            <button id="readme-close">×</button>
+            <h2>Readme</h2>
+            <div id="readme-content">
+                <p>
+                    bEdit is a browser based text editor.<br />
+                    bEdit can open, create, and save plaintext files like .TXT,
+                    .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and .PL.<br />
+                    bEdit is designed to be a bare bones basic online text
+                    editor and as such is 'feature complete.'<br />
+                    bEdit has a <a href="tab.html">[tab]</a> version for working
+                    with multiple files simultaneously.<br />
+                    bEdit has a sticky note tool sibling called
+                    <a href="https://bpad.me">bPad</a>.<br />
+                    bEdit was created by <a href="https://barney.me">Barney</a>.
+                </p>
+
+                <h2>Directions</h2>
+                <p>
+                    Open bedit.org in web browser and start writing. Notes are
+                    automatically saved in your browser.<br />
+                    bEdit can be used offline after the first use. Simply reopen
+                    bedit.org in your browser to continue working on your
+                    notes.<br />
+                    Press CTRL + O or click ^O to edit a file from your
+                    computer.<br />
+                    Press CTRL + S or click ^S to download your notes to your
+                    computer. bEdit saves your notes as 'bedit.txt' by default
+                    but you can change it to any name and filetype (EG
+                    rm-rf.sh.)<br />
+                    Click ? to view this Readme file.
+                </p>
+
+                <h2>Plaintext</h2>
+                <p>
+                    Plaintext is the simplest form of digital text, consisting
+                    only of characters without any formatting or special
+                    characters. This makes it universally readable by any
+                    computer or device, regardless of operating system or
+                    software.<br />
+                    <br />
+                    Plaintext files are highly portable and can be easily moved
+                    or copied without losing their integrity or formatting. They
+                    are also designed to be long-lasting, meaning they are
+                    likely to remain readable for years to come, even as
+                    technology evolves.<br />
+                    <br />
+                    Plaintext files are easy to edit and manipulate using basic
+                    text editors, making them ideal for tasks like writing,
+                    coding, or creating configuration files. Unlike rich text
+                    formats, plaintext does not rely on specific software or
+                    proprietary formats, meaning you can always access and edit
+                    your files without worrying about compatibility issues or
+                    software limitations.<br />
+                    <br />
+                    Plaintext encourages a focus on the content itself, rather
+                    than on formatting or visual presentation. This can be
+                    particularly useful for writers or programmers who want to
+                    minimize distractions and focus on the task at hand.<br />
+                    <br />
+                    Plaintext is used in a wide variety of applications,
+                    including coding, scripting, configuration files, and data
+                    storage. Plaintext can be used with markup languages like
+                    Markdown to add basic formatting elements like headings,
+                    bulleted lists, and links, while maintaining simplicity and
+                    readability.
+                </p>
+
+                <h2>Privacy</h2>
+                <p>
+                    bEdit.org does not (and cannot):<br />
+                    - see your notes,<br />
+                    - see any activity on your computer,<br />
+                    - judge your music choices,<br />
+                    - track who you are,<br />
+                    - sell your data.
+                </p>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    const swContent = `
+                    const CACHE_NAME = 'bpad-cache-v1';
+                    const urlsToCache = ['./', './index.html'];
+
+                    self.addEventListener('install', event => {
+                        event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(caches.match(event.request).then(response => {
+                            return response || fetch(event.request);
+                        }));
+                    });
+                `;
+                    const blob = new Blob([swContent], {
+                        type: "application/javascript",
+                    });
+                    const swUrl = URL.createObjectURL(blob);
+                    navigator.serviceWorker.register(swUrl);
+                });
+            }
+
+            const textbox = document.querySelector("#textbox");
+            const filenameBox = document.querySelector("#filename");
+            let timeoutID = null;
+
+            function adjustTextareaHeight() {
+                const navHeight = document.querySelector("nav").offsetHeight;
+                textbox.style.bottom = navHeight + "px";
+            }
+
+            function storeLocally() {
+                const tabId = window.name || "default";
+                localStorage.setItem("bedit_" + tabId, textbox.value);
+            }
+
+            function updateCursorPosition() {
+                const text = textbox.value;
+                const cursorPos = textbox.selectionStart;
+
+                // Calculate line number
+                const textBeforeCursor = text.substring(0, cursorPos);
+                const lineNumber =
+                    (textBeforeCursor.match(/\n/g) || []).length + 1;
+
+                // Calculate character position in current line
+                const lastNewLinePos = textBeforeCursor.lastIndexOf("\n");
+                const charPos =
+                    lastNewLinePos === -1
+                        ? cursorPos + 1
+                        : cursorPos - lastNewLinePos;
+
+                document.querySelector("#line-pos").textContent = lineNumber;
+                document.querySelector("#char-pos").textContent = charPos;
+            }
+
+            window.addEventListener("resize", adjustTextareaHeight);
+            window.addEventListener("load", () => {
+                const tabId = window.name || "default";
+                textbox.value = localStorage.getItem("bedit_" + tabId) || "";
+                textbox.setSelectionRange(
+                    textbox.value.length,
+                    textbox.value.length,
+                );
+                updateCursorPosition();
+                setTimeout(adjustTextareaHeight, 100);
+            });
+
+            window.onbeforeunload = storeLocally;
+
+            textbox.onkeydown = (event) => {
+                if (event.key === "Tab") {
+                    event.preventDefault();
+                    const s = textbox.selectionStart,
+                        e = textbox.selectionEnd;
+                    textbox.value =
+                        textbox.value.substring(0, s) +
+                        "\t" +
+                        textbox.value.substring(e);
+                    textbox.selectionStart = textbox.selectionEnd = s + 1;
+                    updateCursorPosition();
+                }
+            };
+
+            textbox.onkeyup = () => {
+                updateCursorPosition();
+                clearTimeout(timeoutID);
+                timeoutID = setTimeout(storeLocally, 1000);
+            };
+
+            // Update cursor position on mouse click and selection changes
+            textbox.addEventListener("click", updateCursorPosition);
+            textbox.addEventListener("select", updateCursorPosition);
+            textbox.addEventListener("input", updateCursorPosition);
+
+            // Also update on focus, in case the user tabs to the textarea
+            textbox.addEventListener("focus", updateCursorPosition);
+
+            window.addEventListener("keydown", (event) => {
+                if (event.ctrlKey || event.metaKey) {
+                    if (event.key === "o") {
+                        event.preventDefault();
+                        document.querySelector("#open-input").click();
+                    } else if (event.key === "s") {
+                        event.preventDefault();
+                        document.querySelector("#save").click();
+                    }
+                }
+                // Update cursor position on arrow keys
+                if (
+                    [
+                        "ArrowUp",
+                        "ArrowDown",
+                        "ArrowLeft",
+                        "ArrowRight",
+                        "Home",
+                        "End",
+                        "PageUp",
+                        "PageDown",
+                    ].includes(event.key)
+                ) {
+                    setTimeout(updateCursorPosition, 0);
+                }
+            });
+
+            document.querySelector("#save").onclick = () => {
+                const filename = filenameBox.value || "bedit.txt";
+                const blob = new Blob([textbox.value], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            };
+
+            document.querySelector("#open").onclick = () => {
+                document.querySelector("#open-input").click();
+            };
+
+            document.querySelector("#open-input").onchange = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        textbox.value = e.target.result;
+                        updateCursorPosition();
+                        storeLocally();
+                        filenameBox.value = file.name;
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const popup = document.getElementById("readme-popup");
+            const overlay = document.getElementById("popup-overlay");
+
+            document.getElementById("readme-button").onclick = () => {
+                overlay.style.display = "block";
+                popup.style.display = "block";
+            };
+
+            document.getElementById("readme-close").onclick = overlay.onclick =
+                () => {
+                    overlay.style.display = "none";
+                    popup.style.display = "none";
+                };
+        </script>
+    </body>
+</html>

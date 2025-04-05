@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Weditor</title>
+        <style>
+            body,
+            html {
+                height: 100%;
+                margin: 0;
+                font-family: Arial, sans-serif;
+            }
+
+            #editor {
+                width: 100%;
+                height: 95%;
+                font-size: 16px;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+
+            .button-container {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                padding: 0 10px;
+            }
+
+            button {
+                height: 30px;
+                width: 55px;
+                font-size: 14px;
+                padding: 0 10px;
+                border: none;
+                border-radius: 5px;
+                background-color: #2196f3;
+                color: #fff;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background-color: #0b7dda;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 5px;
+                width: 300px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .modal-content h3 {
+                margin-top: 0;
+            }
+
+            .modal-content input {
+                width: 100%;
+                padding: 8px;
+                margin: 10px 0;
+                box-sizing: border-box;
+            }
+
+            .modal-buttons {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <textarea id="editor"></textarea>
+        <div class="button-container">
+            <button id="save-btn">^S</button>
+            <button id="open-btn">^O</button>
+        </div>
+        <input type="file" id="file-input" style="display: none" />
+
+        <div id="save-dialog" class="modal">
+            <div class="modal-content">
+                <h3>Save File</h3>
+                <p>Enter a filename:</p>
+                <input type="text" id="filename-input" value="weditor.txt" />
+                <div class="modal-buttons">
+                    <button id="cancel-save">Cancel</button>
+                    <button id="confirm-save">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const editor = document.getElementById("editor");
+                const saveBtn = document.getElementById("save-btn");
+                const openBtn = document.getElementById("open-btn");
+                const fileInput = document.getElementById("file-input");
+                const saveDialog = document.getElementById("save-dialog");
+                const filenameInput = document.getElementById("filename-input");
+                const confirmSave = document.getElementById("confirm-save");
+                const cancelSave = document.getElementById("cancel-save");
+
+                if (localStorage.getItem("text")) {
+                    editor.value = localStorage.getItem("text");
+                }
+
+                saveBtn.addEventListener("click", function () {
+                    saveDialog.style.display = "flex";
+                    filenameInput.focus();
+                    filenameInput.select();
+                });
+
+                confirmSave.addEventListener("click", function () {
+                    const text = editor.value;
+                    localStorage.setItem("text", text);
+
+                    const filename = filenameInput.value.trim();
+                    const finalFilename = filename ? filename : "weditor.txt";
+                    const filenameTxt = finalFilename.endsWith(".txt")
+                        ? finalFilename
+                        : `${finalFilename}.txt`;
+
+                    const blob = new Blob([text], { type: "text/plain" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filenameTxt;
+                    link.click();
+
+                    saveDialog.style.display = "none";
+                });
+
+                cancelSave.addEventListener("click", function () {
+                    saveDialog.style.display = "none";
+                });
+
+                window.addEventListener("click", function (event) {
+                    if (event.target === saveDialog) {
+                        saveDialog.style.display = "none";
+                    }
+                });
+
+                filenameInput.addEventListener("keyup", function (event) {
+                    if (event.key === "Enter") {
+                        confirmSave.click();
+                    } else if (event.key === "Escape") {
+                        cancelSave.click();
+                    }
+                });
+
+                openBtn.addEventListener("click", function () {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener("change", function (event) {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        editor.value = event.target.result;
+                        localStorage.setItem("text", event.target.result);
+                    };
+                    reader.readAsText(file);
+                });
+
+                document.addEventListener("keydown", function (event) {
+                    if (event.ctrlKey && event.key === "s") {
+                        event.preventDefault();
+                        saveBtn.click();
+                    } else if (event.ctrlKey && event.key === "o") {
+                        event.preventDefault();
+                        fileInput.click();
+                    }
+                });
+            });
+
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register("sw.js")
+                        .then((registration) => {
+                            console.log("Service Worker registered");
+                        })
+                        .catch((registrationError) => {
+                            console.error(
+                                "Service Worker registration failed",
+                                registrationError,
+                            );
+                        });
+                });
+            }
+        </script>
+
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register(
+                            URL.createObjectURL(
+                                new Blob(
+                                    [
+                                        `
+                    self.addEventListener('install', function(event) {
+                        event.waitUntil(
+                            caches.open('text-editor-cache').then(function(cache) {
+                                return cache.addAll([
+                                    '/',
+                                    'index.html',
+                                ]);
+                            })
+                        );
+                    });
+
+                    self.addEventListener('fetch', function(event) {
+                        event.respondWith(
+                            caches.match(event.request).then(function(response) {
+                                return response || fetch(event.request);
+                            })
+                        );
+                    });
+                `,
+                                    ],
+                                    { type: "application/javascript" },
+                                ),
+                            ),
+                        )
+                        .then((registration) => {
+                            console.log("Service Worker registered");
+                        })
+                        .catch((registrationError) => {
+                            console.error(
+                                "Service Worker registration failed",
+                                registrationError,
+                            );
+                        });
+                });
+            }
+        </script>
+    </body>
+</html>

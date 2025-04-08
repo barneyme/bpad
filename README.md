@@ -1,5 +1,9 @@
 **bPad**
 
-bPad.me is a plaintext editor web app. 
+bPad.me is a little notes web app. 
 
-To learn more click "?" on bpad.me.
+Click "+ Add Note" to create a new note.
+
+Click "Export All" to save all notes as a .txt file to your hard drive.
+
+Click "Delete All" to delete ann bPad notes.

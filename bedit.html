@@ -1,5 +1,6 @@
+
 <!doctype html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,63 +14,56 @@
             rel="icon"
             href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg=="
         />
-        <style type="text/css">
+        <style>
             html,
             body {
                 height: 100%;
-                box-sizing: border-box;
                 margin: 0;
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-                    sans-serif;
+                font-family: system-ui, sans-serif;
             }
             * {
-                box-sizing: inherit;
+                box-sizing: border-box;
             }
-            textarea {
-                height: calc(100% - 3rem);
-                border: none;
-                outline: none;
-                resize: none;
-                font-family: monospace;
-                padding: 0.5em;
-                width: 100%;
-                font-size: 16px;
-            }
+
             #textbox {
-                border-right: 1px solid darkgray;
-                background-color: transparent;
-                overflow-y: scroll;
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 bottom: 3rem;
+                width: 100%;
+                font-family: monospace;
+                font-size: 16px;
+                padding: 0.5em;
+                border: none;
+                outline: none;
+                resize: none;
+                overflow-y: auto;
             }
+
             nav {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                height: auto;
                 min-height: 3rem;
                 padding: 0.5em;
                 background-color: #eee;
                 border-top: 1px solid silver;
                 color: gray;
-                font-size: 100%;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 flex-wrap: wrap;
             }
+
             #controls {
                 display: flex;
                 align-items: center;
-                flex-wrap: wrap;
                 gap: 0.5em;
+                flex-wrap: wrap;
             }
+
             button {
                 padding: 0.5em 0.75em;
                 background-color: #f8f8f8;
@@ -77,11 +71,66 @@
                 border-radius: 4px;
                 cursor: pointer;
                 font-size: 14px;
-                margin: 0.25em 0;
             }
+
             button:hover {
                 background-color: #e8e8e8;
             }
+            button:disabled {
+                opacity: 0.5;
+                cursor: default;
+            }
+
+            #open {
+                background-color: #d4efdf;
+                border-color: #d4efdf;
+                color: black;
+            }
+            #open:hover {
+                background-color: #7dcea0;
+            }
+
+            #save {
+                background-color: #d4e6f1;
+                border-color: #d4e6f1;
+                color: black;
+            }
+            #save:hover {
+                background-color: #7fb3d5;
+            }
+
+            #find-replace-button {
+                background-color: #ccd1d1;
+                border-color: #ccd1d1;
+                color: black;
+            }
+            #find-replace-button:hover {
+                background-color: #99a3a4;
+            }
+
+            #undo {
+                background-color: #e67e22;
+                border-color: #e67e22;
+                color: black;
+            }
+            #undo:hover:not(:disabled) {
+                background-color: #e67e22;
+            }
+
+            #undo:not(:disabled) {
+                background-color: #e59866;
+                border-color: #e59866;
+            }
+
+            #readme-button {
+                background-color: #fdebd0;
+                border-color: #fdebd0;
+                color: black;
+            }
+            #readme-button:hover {
+                background-color: #f8c471;
+            }
+
             #filename {
                 padding: 0.5em;
                 border: 1px solid #ddd;
@@ -90,14 +139,8 @@
                 min-width: 100px;
                 max-width: 200px;
             }
-            #stats {
-                padding: 0.5em 0;
-            }
-            #open > input {
-                display: none;
-            }
 
-            #readme-popup {
+            .popup {
                 display: none;
                 position: fixed;
                 top: 50%;
@@ -114,20 +157,14 @@
                 padding: 20px;
                 border-radius: 5px;
             }
-            #readme-popup h2 {
+
+            .popup h2 {
                 margin-top: 0;
                 padding-bottom: 10px;
                 border-bottom: 1px solid #eee;
             }
-            #readme-popup strong {
-                display: block;
-                margin-top: 15px;
-                margin-bottom: 5px;
-            }
-            #readme-content {
-                line-height: 1.5;
-            }
-            #readme-close {
+
+            .close-btn {
                 position: absolute;
                 top: 10px;
                 right: 10px;
@@ -139,9 +176,7 @@
                 padding: 0;
                 margin: 0;
             }
-            #readme-close:hover {
-                color: #000;
-            }
+
             #popup-overlay {
                 display: none;
                 position: fixed;
@@ -153,11 +188,34 @@
                 z-index: 999;
             }
 
+            #find-replace-popup {
+                max-width: 400px;
+            }
+
+            #find-replace-popup input {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
+            #find-replace-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
+
+            #find-count {
+                margin-right: auto;
+                align-self: center;
+                color: #666;
+            }
+
             @media (max-width: 500px) {
                 nav {
                     flex-direction: column;
                     align-items: stretch;
-                    padding: 0.5em;
                 }
                 #controls {
                     margin-top: 0.5em;
@@ -174,15 +232,23 @@
                     text-align: center;
                 }
             }
+            #stats {
+                background-color: #a6acaf;
+                color: white;
+                padding: 0.25em 0.5em;
+                border-radius: 4px;
+            }
+
+            #line-position,
+            #char-position {
+                color: white;
+            }
 
             @media (max-width: 350px) {
-                button {
+                button,
+                #filename {
                     padding: 0.4em 0.5em;
                     font-size: 12px;
-                }
-                #filename {
-                    font-size: 12px;
-                    padding: 0.4em;
                 }
             }
 
@@ -200,215 +266,427 @@
     <body>
         <textarea
             id="textbox"
-            autofocus="autofocus"
+            autofocus
             placeholder="Start typing here or click ? to learn more."
         ></textarea>
         <nav>
-            <span id="stats">
-                <span id="line-pos">1</span>:<span id="char-pos">1</span>
-            </span>
+            <span id="stats"
+                ><span id="line-position">1</span>:<span id="char-position"
+                    >1</span
+                ></span
+            >
             <span id="controls">
                 <button id="open">^O</button>
                 <input id="filename" placeholder="bedit.txt" />
                 <button id="save">^S</button>
+                <button id="find-replace-button">^F</button>
+                <button id="undo" disabled>^Z</button>
                 <button id="readme-button">?</button>
             </span>
         </nav>
         <input type="file" id="open-input" style="display: none" />
 
         <div id="popup-overlay"></div>
-        <div id="readme-popup">
-            <button id="readme-close">×</button>
-            <h2>Readme</h2>
+
+        <div id="readme-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>bEdit.org</h2>
             <div id="readme-content">
                 <p>
-                    bEdit is a browser based text editor.<br />
-                    bEdit can open, create, and save plaintext files like .TXT,
-                    .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and .PL.<br />
-                    bEdit is designed to be a bare bones basic online text
-                    editor and as such is 'feature complete.'<br />
-                    bEdit has a <a href="tab.html">[tab]</a> version for working
-                    with multiple files simultaneously.<br />
-                    bEdit has a sticky note tool sibling called
-                    <a href="https://bpad.me">bPad</a>.<br />
-                    bEdit was created by <a href="https://barney.me">Barney</a>.
+                    bEdit.org is a browser based text editor.<br />
+                    bEdit.org can open, create, and save plaintext files like
+                    .TXT, .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and
+                    .PL.<br />
+                    bEdit.org is designed to be a simple online text editor<br />
+                    you can use in any browser on any computer.'<br />
+                    bEdit.org has a sticky note tool sibling called
+                    <a href="https://bpad.me">bPad.me</a>.<br />
+                    bEdit.org was created by
+                    <a href="https://barney.me">Barney</a>.
                 </p>
 
                 <h2>Directions</h2>
                 <p>
                     Open bedit.org in web browser and start writing. Notes are
                     automatically saved in your browser.<br />
-                    bEdit can be used offline after the first use. Simply reopen
-                    bedit.org in your browser to continue working on your
+                    bEdit.org can be used offline after the first use. Simply
+                    reopen bedit.org in your browser to continue working on your
                     notes.<br />
                     Press CTRL + O or click ^O to edit a file from your
                     computer.<br />
                     Press CTRL + S or click ^S to download your notes to your
-                    computer. bEdit saves your notes as 'bedit.txt' by default
-                    but you can change it to any name and filetype (EG
+                    computer. bEdit.org saves your notes as 'bedit.txt' by
+                    default but you can change it to any name and filetype (EG
                     rm-rf.sh.)<br />
+                    Press CTRL + F or click ^F to find and replace text.<br />
+                    Press CTRL + Z or click ^Z to undo the last change.<br />
                     Click ? to view this Readme file.
-                </p>
-
-                <h2>Plaintext</h2>
-                <p>
-                    Plaintext is the simplest form of digital text, consisting
-                    only of characters without any formatting or special
-                    characters. This makes it universally readable by any
-                    computer or device, regardless of operating system or
-                    software.<br />
-                    <br />
-                    Plaintext files are highly portable and can be easily moved
-                    or copied without losing their integrity or formatting. They
-                    are also designed to be long-lasting, meaning they are
-                    likely to remain readable for years to come, even as
-                    technology evolves.<br />
-                    <br />
-                    Plaintext files are easy to edit and manipulate using basic
-                    text editors, making them ideal for tasks like writing,
-                    coding, or creating configuration files. Unlike rich text
-                    formats, plaintext does not rely on specific software or
-                    proprietary formats, meaning you can always access and edit
-                    your files without worrying about compatibility issues or
-                    software limitations.<br />
-                    <br />
-                    Plaintext encourages a focus on the content itself, rather
-                    than on formatting or visual presentation. This can be
-                    particularly useful for writers or programmers who want to
-                    minimize distractions and focus on the task at hand.<br />
-                    <br />
-                    Plaintext is used in a wide variety of applications,
-                    including coding, scripting, configuration files, and data
-                    storage. Plaintext can be used with markup languages like
-                    Markdown to add basic formatting elements like headings,
-                    bulleted lists, and links, while maintaining simplicity and
-                    readability.
                 </p>
 
                 <h2>Privacy</h2>
                 <p>
                     bEdit.org does not (and cannot):<br />
-                    - see your notes,<br />
-                    - see any activity on your computer,<br />
+                    - access your content,<br />
+                    - criticize your writing or coding,<br />
+                    - track any activity on your computer,<br />
                     - judge your music choices,<br />
-                    - track who you are,<br />
+                    - identify who you are,<br />
                     - sell your data.
                 </p>
             </div>
         </div>
 
-        <script type="text/javascript">
+        <div id="find-replace-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Find\Replace</h2>
+            <div>
+                <input type="text" id="find-text" placeholder="Find..." />
+                <input type="text" id="replace-text" placeholder="Replace..." />
+                <div id="find-replace-buttons">
+                    <span id="find-count"></span>
+                    <button id="find-btn">Find</button>
+                    <button id="replace-btn">Replace</button>
+                    <button id="replace-all-btn">Replace All</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
             if ("serviceWorker" in navigator) {
                 window.addEventListener("load", () => {
-                    const swContent = `
-                    const CACHE_NAME = 'bpad-cache-v1';
-                    const urlsToCache = ['./', './index.html'];
-
-                    self.addEventListener('install', event => {
-                        event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
-                    });
-
-                    self.addEventListener('fetch', event => {
-                        event.respondWith(caches.match(event.request).then(response => {
-                            return response || fetch(event.request);
-                        }));
-                    });
-                `;
-                    const blob = new Blob([swContent], {
-                        type: "application/javascript",
-                    });
-                    const swUrl = URL.createObjectURL(blob);
-                    navigator.serviceWorker.register(swUrl);
+                    navigator.serviceWorker
+                        .register("./service-worker.js")
+                        .catch((error) =>
+                            console.log(
+                                "ServiceWorker registration failed: ",
+                                error,
+                            ),
+                        );
                 });
             }
 
-            const textbox = document.querySelector("#textbox");
-            const filenameBox = document.querySelector("#filename");
-            let timeoutID = null;
+            const textbox = document.getElementById("textbox");
+            const filenameBox = document.getElementById("filename");
+            const linePosition = document.getElementById("line-position");
+            const charPosition = document.getElementById("char-position");
+            const overlay = document.getElementById("popup-overlay");
+            const openInput = document.getElementById("open-input");
+            const findText = document.getElementById("find-text");
+            const replaceText = document.getElementById("replace-text");
+            const findCount = document.getElementById("find-count");
+            const undoButton = document.getElementById("undo");
+
+            const popups = {
+                readme: document.getElementById("readme-popup"),
+                findReplace: document.getElementById("find-replace-popup"),
+            };
+
+            const tabId = window.name || "default";
+            let saveTimer;
+            let currentMatches = [];
+            let currentMatchIndex = -1;
+
+            const MAX_HISTORY = 100;
+            let history = [];
+            let currentHistoryIndex = -1;
+            let isUndoing = false;
+            let initialContentLoaded = false;
 
             function adjustTextareaHeight() {
-                const navHeight = document.querySelector("nav").offsetHeight;
-                textbox.style.bottom = navHeight + "px";
+                textbox.style.bottom =
+                    document.querySelector("nav").offsetHeight + "px";
             }
 
             function storeLocally() {
-                const tabId = window.name || "default";
                 localStorage.setItem("bedit_" + tabId, textbox.value);
             }
 
             function updateCursorPosition() {
                 const text = textbox.value;
                 const cursorPos = textbox.selectionStart;
+                const lines = text.substring(0, cursorPos).split("\n");
 
-                // Calculate line number
-                const textBeforeCursor = text.substring(0, cursorPos);
-                const lineNumber =
-                    (textBeforeCursor.match(/\n/g) || []).length + 1;
-
-                // Calculate character position in current line
-                const lastNewLinePos = textBeforeCursor.lastIndexOf("\n");
-                const charPos =
-                    lastNewLinePos === -1
-                        ? cursorPos + 1
-                        : cursorPos - lastNewLinePos;
-
-                document.querySelector("#line-pos").textContent = lineNumber;
-                document.querySelector("#char-pos").textContent = charPos;
+                linePosition.textContent = lines.length;
+                charPosition.textContent = lines[lines.length - 1].length + 1;
             }
 
-            window.addEventListener("resize", adjustTextareaHeight);
-            window.addEventListener("load", () => {
-                const tabId = window.name || "default";
-                textbox.value = localStorage.getItem("bedit_" + tabId) || "";
-                textbox.setSelectionRange(
-                    textbox.value.length,
-                    textbox.value.length,
+            function handleFileOpen(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (textbox.value) {
+                            addToHistory(textbox.value);
+                        }
+
+                        textbox.value = e.target.result;
+                        updateCursorPosition();
+                        storeLocally();
+                        filenameBox.value = file.name;
+
+                        history = [];
+                        currentHistoryIndex = -1;
+                        addToHistory(textbox.value);
+                        updateUndoButton();
+                    };
+                    reader.readAsText(file);
+                }
+            }
+
+            function saveFile() {
+                const filename = filenameBox.value || "bedit.txt";
+                const blob = new Blob([textbox.value], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+
+            function togglePopup(popupId, show) {
+                for (const key in popups) {
+                    popups[key].style.display = "none";
+                }
+                overlay.style.display = "none";
+
+                if (show && popupId && popups[popupId]) {
+                    popups[popupId].style.display = "block";
+                    overlay.style.display = "block";
+
+                    if (popupId === "findReplace") {
+                        findText.focus();
+                        findText.select();
+                    }
+                }
+            }
+
+            function addToHistory(state) {
+                if (
+                    currentHistoryIndex >= 0 &&
+                    currentHistoryIndex < history.length - 1
+                ) {
+                    history = history.slice(0, currentHistoryIndex + 1);
+                }
+
+                history.push(state);
+
+                if (history.length > MAX_HISTORY) {
+                    history.shift();
+                }
+
+                currentHistoryIndex = history.length - 1;
+                updateUndoButton();
+            }
+
+            function undo() {
+                if (currentHistoryIndex < 0 || history.length === 0) {
+                    return;
+                }
+
+                isUndoing = true;
+
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+
+                    textbox.value = history[currentHistoryIndex];
+                    storeLocally();
+
+                    textbox.focus();
+                    textbox.setSelectionRange(
+                        textbox.value.length,
+                        textbox.value.length,
+                    );
+                    updateCursorPosition();
+                }
+
+                updateUndoButton();
+                isUndoing = false;
+            }
+
+            function updateUndoButton() {
+                undoButton.disabled = currentHistoryIndex <= 0;
+            }
+
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            }
+
+            function findAllMatches(text, term) {
+                if (!term) return [];
+
+                const matches = [];
+                const regex = new RegExp(escapeRegExp(term), "g");
+                let match;
+
+                while ((match = regex.exec(text)) !== null) {
+                    matches.push({
+                        start: match.index,
+                        end: match.index + term.length,
+                    });
+                }
+
+                return matches;
+            }
+
+            function findNext() {
+                const searchTerm = findText.value;
+                if (!searchTerm) {
+                    findCount.textContent = "";
+                    currentMatches = [];
+                    currentMatchIndex = -1;
+                    return;
+                }
+
+                if (currentMatches.length === 0) {
+                    currentMatches = findAllMatches(textbox.value, searchTerm);
+                }
+
+                if (currentMatches.length > 0) {
+                    currentMatchIndex =
+                        (currentMatchIndex + 1) % currentMatches.length;
+                    const match = currentMatches[currentMatchIndex];
+
+                    textbox.focus();
+                    textbox.setSelectionRange(match.start, match.end);
+                    findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                } else {
+                    findCount.textContent = "No matches";
+                }
+            }
+
+            function replaceCurrentMatch() {
+                const searchTerm = findText.value;
+                const replacement = replaceText.value;
+
+                if (
+                    !searchTerm ||
+                    currentMatches.length === 0 ||
+                    currentMatchIndex === -1
+                ) {
+                    return;
+                }
+
+                addToHistory(textbox.value);
+
+                const match = currentMatches[currentMatchIndex];
+                const before = textbox.value.substring(0, match.start);
+                const after = textbox.value.substring(match.end);
+
+                textbox.value = before + replacement + after;
+
+                const lengthDiff =
+                    replacement.length - (match.end - match.start);
+
+                for (
+                    let i = currentMatchIndex + 1;
+                    i < currentMatches.length;
+                    i++
+                ) {
+                    currentMatches[i].start += lengthDiff;
+                    currentMatches[i].end += lengthDiff;
+                }
+
+                currentMatches.splice(currentMatchIndex, 1);
+
+                if (currentMatches.length === 0) {
+                    findCount.textContent = "No matches";
+                    currentMatchIndex = -1;
+                } else {
+                    if (currentMatchIndex >= currentMatches.length) {
+                        currentMatchIndex = 0;
+                    }
+
+                    const newMatch = currentMatches[currentMatchIndex];
+                    textbox.setSelectionRange(newMatch.start, newMatch.end);
+                    findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                }
+
+                storeLocally();
+            }
+
+            function replaceAll() {
+                const searchTerm = findText.value;
+                const replacement = replaceText.value;
+
+                if (!searchTerm) return;
+
+                addToHistory(textbox.value);
+
+                const newText = textbox.value.replace(
+                    new RegExp(escapeRegExp(searchTerm), "g"),
+                    replacement,
                 );
-                updateCursorPosition();
-                setTimeout(adjustTextareaHeight, 100);
-            });
+                const count = (
+                    textbox.value.match(
+                        new RegExp(escapeRegExp(searchTerm), "g"),
+                    ) || []
+                ).length;
 
-            window.onbeforeunload = storeLocally;
+                textbox.value = newText;
+                findCount.textContent = `Replaced ${count} occurrences`;
 
-            textbox.onkeydown = (event) => {
+                currentMatches = [];
+                currentMatchIndex = -1;
+                storeLocally();
+            }
+
+            let lastChangeTime = 0;
+            let lastText = "";
+            const CHANGE_DELAY = 1000;
+
+            function checkForSignificantChange() {
+                const now = Date.now();
+
+                if (isUndoing) return;
+
+                if (lastText === "") {
+                    lastText = textbox.value;
+                    lastChangeTime = now;
+                    return;
+                }
+
+                if (textbox.value !== lastText) {
+                    const diff = Math.abs(
+                        textbox.value.length - lastText.length,
+                    );
+                    const timeDiff = now - lastChangeTime;
+
+                    if (timeDiff > CHANGE_DELAY || diff > 10) {
+                        addToHistory(lastText);
+                        lastText = textbox.value;
+                        lastChangeTime = now;
+                    }
+                }
+            }
+
+            function handleKeyDown(event) {
                 if (event.key === "Tab") {
                     event.preventDefault();
-                    const s = textbox.selectionStart,
-                        e = textbox.selectionEnd;
+                    const s = textbox.selectionStart;
                     textbox.value =
                         textbox.value.substring(0, s) +
                         "\t" +
-                        textbox.value.substring(e);
+                        textbox.value.substring(textbox.selectionEnd);
                     textbox.selectionStart = textbox.selectionEnd = s + 1;
                     updateCursorPosition();
                 }
-            };
 
-            textbox.onkeyup = () => {
-                updateCursorPosition();
-                clearTimeout(timeoutID);
-                timeoutID = setTimeout(storeLocally, 1000);
-            };
-
-            // Update cursor position on mouse click and selection changes
-            textbox.addEventListener("click", updateCursorPosition);
-            textbox.addEventListener("select", updateCursorPosition);
-            textbox.addEventListener("input", updateCursorPosition);
-
-            // Also update on focus, in case the user tabs to the textarea
-            textbox.addEventListener("focus", updateCursorPosition);
-
-            window.addEventListener("keydown", (event) => {
                 if (event.ctrlKey || event.metaKey) {
                     if (event.key === "o") {
                         event.preventDefault();
-                        document.querySelector("#open-input").click();
+                        openInput.click();
                     } else if (event.key === "s") {
                         event.preventDefault();
-                        document.querySelector("#save").click();
+                        saveFile();
+                    } else if (event.key === "f") {
+                        event.preventDefault();
+                        togglePopup("findReplace", true);
+                    } else if (event.key === "z") {
+                        event.preventDefault();
+                        undo();
                     }
                 }
-                // Update cursor position on arrow keys
+
                 if (
                     [
                         "ArrowUp",
@@ -417,57 +695,88 @@
                         "ArrowRight",
                         "Home",
                         "End",
-                        "PageUp",
-                        "PageDown",
                     ].includes(event.key)
                 ) {
                     setTimeout(updateCursorPosition, 0);
                 }
+            }
+
+            function handleTextChange() {
+                updateCursorPosition();
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => {
+                    storeLocally();
+                    checkForSignificantChange();
+                }, 1000);
+
+                currentMatches = [];
+                currentMatchIndex = -1;
+            }
+
+            window.addEventListener("resize", adjustTextareaHeight);
+            window.addEventListener("load", () => {
+                textbox.value = localStorage.getItem("bedit_" + tabId) || "";
+                lastText = textbox.value;
+                if (!initialContentLoaded) {
+                    addToHistory(textbox.value);
+                    initialContentLoaded = true;
+                }
+                textbox.setSelectionRange(
+                    textbox.value.length,
+                    textbox.value.length,
+                );
+                updateCursorPosition();
+                adjustTextareaHeight();
+                updateUndoButton();
+            });
+            window.addEventListener("keydown", handleKeyDown);
+            window.addEventListener("beforeunload", storeLocally);
+
+            textbox.addEventListener("keyup", handleTextChange);
+            textbox.addEventListener("click", updateCursorPosition);
+            textbox.addEventListener("mouseup", updateCursorPosition);
+            textbox.addEventListener("select", updateCursorPosition);
+            textbox.addEventListener("focus", updateCursorPosition);
+            textbox.addEventListener("input", handleTextChange);
+
+            findText.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") findNext();
+                else {
+                    currentMatches = [];
+                    currentMatchIndex = -1;
+                    findCount.textContent = "";
+                }
             });
 
-            document.querySelector("#save").onclick = () => {
-                const filename = filenameBox.value || "bedit.txt";
-                const blob = new Blob([textbox.value], { type: "text/plain" });
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(a.href);
-            };
+            document.getElementById("undo").addEventListener("click", undo);
+            document
+                .getElementById("open")
+                .addEventListener("click", () => openInput.click());
+            document.getElementById("save").addEventListener("click", saveFile);
+            document
+                .getElementById("readme-button")
+                .addEventListener("click", () => togglePopup("readme", true));
+            document
+                .getElementById("find-replace-button")
+                .addEventListener("click", () =>
+                    togglePopup("findReplace", true),
+                );
+            document
+                .getElementById("find-btn")
+                .addEventListener("click", findNext);
+            document
+                .getElementById("replace-btn")
+                .addEventListener("click", replaceCurrentMatch);
+            document
+                .getElementById("replace-all-btn")
+                .addEventListener("click", replaceAll);
+            openInput.addEventListener("change", handleFileOpen);
 
-            document.querySelector("#open").onclick = () => {
-                document.querySelector("#open-input").click();
-            };
+            document.querySelectorAll(".close-btn").forEach((btn) => {
+                btn.addEventListener("click", () => togglePopup(null, false));
+            });
 
-            document.querySelector("#open-input").onchange = (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        textbox.value = e.target.result;
-                        updateCursorPosition();
-                        storeLocally();
-                        filenameBox.value = file.name;
-                    };
-                    reader.readAsText(file);
-                }
-            };
-
-            const popup = document.getElementById("readme-popup");
-            const overlay = document.getElementById("popup-overlay");
-
-            document.getElementById("readme-button").onclick = () => {
-                overlay.style.display = "block";
-                popup.style.display = "block";
-            };
-
-            document.getElementById("readme-close").onclick = overlay.onclick =
-                () => {
-                    overlay.style.display = "none";
-                    popup.style.display = "none";
-                };
+            overlay.addEventListener("click", () => togglePopup(null, false));
         </script>
     </body>
 </html>

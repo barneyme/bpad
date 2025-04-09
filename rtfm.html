@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>RTFM</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                box-sizing: border-box;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+            .toolbar {
+                background-color: #f0f0f0;
+                padding: 10px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            .button-group {
+                display: flex;
+                gap: 2px;
+                margin-right: 10px;
+            }
+            button {
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                cursor: pointer;
+                padding: 5px 10px;
+            }
+            button:hover {
+                background-color: #e9e9e9;
+            }
+            .active {
+                background-color: #ddd;
+            }
+            select {
+                padding: 5px;
+                border-radius: 3px;
+                border: 1px solid #ddd;
+            }
+            #editor {
+                border: 1px solid #ddd;
+                min-height: 400px;
+                padding: 15px;
+                flex: 1;
+                overflow: auto;
+                background-color: white;
+                border-radius: 4px;
+            }
+            .status {
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .file-input {
+                display: none;
+            }
+            .separator {
+                width: 1px;
+                background-color: #ddd;
+                margin: 0 10px;
+            }
+            .color-picker {
+                width: 30px;
+                height: 25px;
+                padding: 0;
+                border: none;
+                cursor: pointer;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 100;
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                width: 400px;
+                max-width: 90%;
+            }
+            .modal-content h2 {
+                margin-top: 0;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+            .form-group input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                box-sizing: border-box;
+            }
+            .form-buttons {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Rich Text File Maker</h1>
+
+            <div class="toolbar">
+                <div class="button-group">
+                    <button id="new" title="New Document">New</button>
+                    <button id="open" title="Open Document">Open</button>
+                    <input
+                        type="file"
+                        id="fileInput"
+                        class="file-input"
+                        accept=".rtf,.txt"
+                    />
+                    <button id="save" title="Save as RTF">Save RTF</button>
+                    <button id="savePdf" title="Save as PDF">Save PDF</button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <button id="undo" title="Undo"><strong>↩</strong></button>
+                    <button id="redo" title="Redo"><strong>↪</strong></button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <select id="fontName">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Tahoma">Tahoma</option>
+                    </select>
+
+                    <select id="fontSize">
+                        <option value="1">8pt</option>
+                        <option value="2">10pt</option>
+                        <option value="3" selected>12pt</option>
+                        <option value="4">14pt</option>
+                        <option value="5">18pt</option>
+                        <option value="6">24pt</option>
+                        <option value="7">36pt</option>
+                    </select>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <button id="bold" title="Bold"><strong>B</strong></button>
+                    <button id="italic" title="Italic"><em>I</em></button>
+                    <button id="underline" title="Underline"><u>U</u></button>
+                    <button id="strikethrough" title="Strikethrough">
+                        <strike>S</strike>
+                    </button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <button id="justifyLeft" title="Align Left">⇤</button>
+                    <button id="justifyCenter" title="Align Center">⬄</button>
+                    <button id="justifyRight" title="Align Right">⇥</button>
+                    <button id="justifyFull" title="Justify">≡</button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <button id="indent" title="Indent">→</button>
+                    <button id="outdent" title="Outdent">←</button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <button id="insertOrderedList" title="Numbered List">
+                        1.
+                    </button>
+                    <button id="insertUnorderedList" title="Bullet List">
+                        •
+                    </button>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="button-group">
+                    <input
+                        type="color"
+                        id="foreColor"
+                        class="color-picker"
+                        title="Text Color"
+                    />
+                    <input
+                        type="color"
+                        id="backColor"
+                        value="#ffffff"
+                        class="color-picker"
+                        title="Background Color"
+                    />
+                </div>
+            </div>
+
+            <div id="editor" contenteditable="true"></div>
+
+            <div class="status">
+                <div id="docStatus">New Document</div>
+                <div id="saveStatus"></div>
+            </div>
+        </div>
+
+        <!-- Save as RTF Modal -->
+        <div id="saveRtfModal" class="modal">
+            <div class="modal-content">
+                <h2>Save as RTF</h2>
+                <div class="form-group">
+                    <label for="rtfFileName">File name:</label>
+                    <input type="text" id="rtfFileName" value="document.rtf" />
+                </div>
+                <div class="form-buttons">
+                    <button id="cancelRtfSave">Cancel</button>
+                    <button id="confirmRtfSave">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save as PDF Modal -->
+        <div id="savePdfModal" class="modal">
+            <div class="modal-content">
+                <h2>Save as PDF</h2>
+                <div class="form-group">
+                    <label for="pdfFileName">File name:</label>
+                    <input type="text" id="pdfFileName" value="document.pdf" />
+                </div>
+                <div class="form-buttons">
+                    <button id="cancelPdfSave">Cancel</button>
+                    <button id="confirmPdfSave">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const editor = document.getElementById("editor");
+                const docStatus = document.getElementById("docStatus");
+                const saveStatus = document.getElementById("saveStatus");
+                const fileInput = document.getElementById("fileInput");
+
+                // Modal elements
+                const saveRtfModal = document.getElementById("saveRtfModal");
+                const savePdfModal = document.getElementById("savePdfModal");
+                const rtfFileName = document.getElementById("rtfFileName");
+                const pdfFileName = document.getElementById("pdfFileName");
+
+                let currentFileName = "Untitled Document";
+                let isDocumentModified = false;
+
+                // Initialize editor with content from localStorage if available
+                if (localStorage.getItem("editorContent")) {
+                    editor.innerHTML = localStorage.getItem("editorContent");
+                    docStatus.textContent =
+                        "Document loaded from browser storage";
+                } else {
+                    editor.innerHTML =
+                        "<p>Welcome to the Simple Rich Text Editor!</p>";
+                }
+
+                // Auto-save to localStorage when editor content changes
+                editor.addEventListener("input", function () {
+                    localStorage.setItem("editorContent", editor.innerHTML);
+                    isDocumentModified = true;
+
+                    // Update save status
+                    saveStatus.textContent = "Saved to browser storage";
+                    setTimeout(() => {
+                        saveStatus.textContent = "";
+                    }, 2000);
+                });
+
+                // Implement toolbar buttons functionality
+                document
+                    .querySelectorAll(
+                        ".toolbar button:not(#new,#open,#save,#savePdf)",
+                    )
+                    .forEach((button) => {
+                        button.addEventListener("click", function () {
+                            const command = this.id;
+
+                            if (command === "undo" || command === "redo") {
+                                document.execCommand(command);
+                            } else {
+                                // Toggle active state for style buttons
+                                if (
+                                    [
+                                        "bold",
+                                        "italic",
+                                        "underline",
+                                        "strikethrough",
+                                    ].includes(command)
+                                ) {
+                                    this.classList.toggle("active");
+                                }
+
+                                // Remove active class from alignment buttons when a new one is clicked
+                                if (
+                                    [
+                                        "justifyLeft",
+                                        "justifyCenter",
+                                        "justifyRight",
+                                        "justifyFull",
+                                    ].includes(command)
+                                ) {
+                                    document
+                                        .querySelectorAll(
+                                            "#justifyLeft, #justifyCenter, #justifyRight, #justifyFull",
+                                        )
+                                        .forEach((btn) => {
+                                            btn.classList.remove("active");
+                                        });
+                                    this.classList.add("active");
+                                }
+
+                                // Execute the command
+                                document.execCommand(command);
+                            }
+
+                            // Ensure editor maintains focus
+                            editor.focus();
+                        });
+                    });
+
+                // Font family selection
+                document
+                    .getElementById("fontName")
+                    .addEventListener("change", function () {
+                        document.execCommand("fontName", false, this.value);
+                        editor.focus();
+                    });
+
+                // Font size selection
+                document
+                    .getElementById("fontSize")
+                    .addEventListener("change", function () {
+                        document.execCommand("fontSize", false, this.value);
+                        editor.focus();
+                    });
+
+                // Text color
+                document
+                    .getElementById("foreColor")
+                    .addEventListener("input", function () {
+                        document.execCommand("foreColor", false, this.value);
+                        editor.focus();
+                    });
+
+                // Background color
+                document
+                    .getElementById("backColor")
+                    .addEventListener("input", function () {
+                        document.execCommand("backColor", false, this.value);
+                        editor.focus();
+                    });
+
+                // New document
+                document
+                    .getElementById("new")
+                    .addEventListener("click", function () {
+                        if (
+                            isDocumentModified &&
+                            !confirm("Discard unsaved changes?")
+                        ) {
+                            return;
+                        }
+
+                        editor.innerHTML = "<p>New document</p>";
+                        currentFileName = "Untitled Document";
+                        docStatus.textContent = "New Document";
+                        isDocumentModified = false;
+                        localStorage.removeItem("editorContent");
+                    });
+
+                // Open button
+                document
+                    .getElementById("open")
+                    .addEventListener("click", function () {
+                        if (
+                            isDocumentModified &&
+                            !confirm("Discard unsaved changes?")
+                        ) {
+                            return;
+                        }
+                        fileInput.click();
+                    });
+
+                // File input change event
+                fileInput.addEventListener("change", function (event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    currentFileName = file.name.replace(/\.[^/.]+$/, "");
+                    docStatus.textContent = `Opened: ${currentFileName}`;
+
+                    // Update file name inputs with the current file name
+                    rtfFileName.value = `${currentFileName}.rtf`;
+                    pdfFileName.value = `${currentFileName}.pdf`;
+
+                    const reader = new FileReader();
+
+                    if (file.name.endsWith(".rtf")) {
+                        reader.onload = function (e) {
+                            // Basic RTF to HTML conversion (extremely simplified)
+                            let rtfContent = e.target.result;
+                            let htmlContent = convertRtfToHtml(rtfContent);
+                            editor.innerHTML = htmlContent;
+                            isDocumentModified = false;
+                        };
+                        reader.readAsText(file);
+                    } else {
+                        // Handle as plain text
+                        reader.onload = function (e) {
+                            let content = e.target.result;
+                            editor.innerHTML = `<p>${content.replace(/\n/g, "<br>")}</p>`;
+                            isDocumentModified = false;
+                        };
+                        reader.readAsText(file);
+                    }
+
+                    // Reset file input
+                    this.value = "";
+                });
+
+                // Show Save RTF Modal
+                document
+                    .getElementById("save")
+                    .addEventListener("click", function () {
+                        // Update file name with current document name
+                        rtfFileName.value = `${currentFileName}.rtf`;
+
+                        // Show modal
+                        saveRtfModal.style.display = "flex";
+                    });
+
+                // Cancel RTF Save
+                document
+                    .getElementById("cancelRtfSave")
+                    .addEventListener("click", function () {
+                        saveRtfModal.style.display = "none";
+                    });
+
+                // Confirm RTF Save
+                document
+                    .getElementById("confirmRtfSave")
+                    .addEventListener("click", function () {
+                        // Get file name from input
+                        let fileName = rtfFileName.value;
+
+                        // Ensure it has .rtf extension
+                        if (!fileName.toLowerCase().endsWith(".rtf")) {
+                            fileName += ".rtf";
+                        }
+
+                        // Extract base name without extension
+                        currentFileName = fileName.replace(/\.rtf$/i, "");
+
+                        // Convert and save
+                        const htmlContent = editor.innerHTML;
+                        const rtfContent = convertHtmlToRtf(htmlContent);
+
+                        const blob = new Blob([rtfContent], {
+                            type: "application/rtf",
+                        });
+                        const url = URL.createObjectURL(blob);
+
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        // Update status
+                        isDocumentModified = false;
+                        docStatus.textContent = `Saved: ${fileName}`;
+
+                        // Hide modal
+                        saveRtfModal.style.display = "none";
+                    });
+
+                // Show Save PDF Modal
+                document
+                    .getElementById("savePdf")
+                    .addEventListener("click", function () {
+                        // Update file name with current document name
+                        pdfFileName.value = `${currentFileName}.pdf`;
+
+                        // Show modal
+                        savePdfModal.style.display = "flex";
+                    });
+
+                // Cancel PDF Save
+                document
+                    .getElementById("cancelPdfSave")
+                    .addEventListener("click", function () {
+                        savePdfModal.style.display = "none";
+                    });
+
+                // Confirm PDF Save
+                document
+                    .getElementById("confirmPdfSave")
+                    .addEventListener("click", function () {
+                        // Get file name from input
+                        let fileName = pdfFileName.value;
+
+                        // Ensure it has .pdf extension
+                        if (!fileName.toLowerCase().endsWith(".pdf")) {
+                            fileName += ".pdf";
+                        }
+
+                        // Extract base name without extension
+                        currentFileName = fileName.replace(/\.pdf$/i, "");
+
+                        // Generate and save PDF
+                        saveStatus.textContent = "Generating PDF...";
+
+                        // Use html2canvas and jsPDF for PDF generation
+                        html2canvas(editor).then((canvas) => {
+                            const imgData = canvas.toDataURL("image/png");
+                            const pdf = new jspdf.jsPDF("p", "mm", "a4");
+
+                            // Calculate dimensions
+                            const imgWidth = 210; // A4 width in mm
+                            const pageHeight = 295; // A4 height in mm
+                            const imgHeight =
+                                (canvas.height * imgWidth) / canvas.width;
+                            let heightLeft = imgHeight;
+
+                            let position = 0;
+
+                            // Add image to PDF
+                            pdf.addImage(
+                                imgData,
+                                "PNG",
+                                0,
+                                position,
+                                imgWidth,
+                                imgHeight,
+                            );
+                            heightLeft -= pageHeight;
+
+                            // Add new pages if content flows over
+                            while (heightLeft >= 0) {
+                                position = heightLeft - imgHeight;
+                                pdf.addPage();
+                                pdf.addImage(
+                                    imgData,
+                                    "PNG",
+                                    0,
+                                    position,
+                                    imgWidth,
+                                    imgHeight,
+                                );
+                                heightLeft -= pageHeight;
+                            }
+
+                            // Save the PDF
+                            pdf.save(fileName);
+                            saveStatus.textContent = "PDF saved";
+                            setTimeout(() => {
+                                saveStatus.textContent = "";
+                            }, 2000);
+
+                            // Update status
+                            docStatus.textContent = `Saved: ${fileName}`;
+                        });
+
+                        // Hide modal
+                        savePdfModal.style.display = "none";
+                    });
+
+                // Close modals when clicking outside
+                window.addEventListener("click", function (event) {
+                    if (event.target === saveRtfModal) {
+                        saveRtfModal.style.display = "none";
+                    }
+                    if (event.target === savePdfModal) {
+                        savePdfModal.style.display = "none";
+                    }
+                });
+
+                // Very basic RTF to HTML conversion (extremely simplified)
+                function convertRtfToHtml(rtf) {
+                    // This is a very basic conversion for demonstration only
+                    // A real implementation would use proper RTF parsing
+
+                    // Remove RTF headers and commands
+                    let html = rtf.replace(/\\[a-z]+\d*/g, "");
+
+                    // Replace curly braces
+                    html = html.replace(/[{}]/g, "");
+
+                    // Replace newlines
+                    html = html.replace(/\\par/g, "<br>");
+
+                    // Wrap in paragraph if needed
+                    if (!html.startsWith("<")) {
+                        html = `<p>${html}</p>`;
+                    }
+
+                    return html;
+                }
+
+                // Very basic HTML to RTF conversion (extremely simplified)
+                function convertHtmlToRtf(html) {
+                    // This is a very basic conversion for demonstration only
+                    // A real implementation would use proper HTML parsing
+
+                    // RTF header
+                    let rtf =
+                        "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2580\\cocoasubrtf220\n";
+                    rtf += "{\\fonttbl\\f0\\fswiss\\fcharset0 Helvetica;}\n";
+                    rtf += "{\\colortbl;\\red0\\green0\\blue0;}\n";
+                    rtf +=
+                        "\\margl1440\\margr1440\\vieww11520\\viewh8400\\viewkind0\n";
+                    rtf +=
+                        "\\pard\\tx720\\tx1440\\tx2160\\tx2880\\tx3600\\tx4320\\tx5040\\tx5760\\tx6480\\tx7200\\tx7920\\tx8640\\pardirnatural\\partightenfactor0\n\n";
+                    rtf += "\\f0\\fs24 \\cf0 ";
+
+                    // Convert basic HTML formatting
+                    let content = html.replace(/<br\s*\/?>/gi, "\\par\n");
+                    content = content.replace(/<p>(.*?)<\/p>/gi, "$1\\par\n");
+                    content = content.replace(/<b>(.*?)<\/b>/gi, "{\\b $1}");
+                    content = content.replace(
+                        /<strong>(.*?)<\/strong>/gi,
+                        "{\\b $1}",
+                    );
+                    content = content.replace(/<i>(.*?)<\/i>/gi, "{\\i $1}");
+                    content = content.replace(/<em>(.*?)<\/em>/gi, "{\\i $1}");
+                    content = content.replace(/<u>(.*?)<\/u>/gi, "{\\ul $1}");
+                    content = content.replace(
+                        /<strike>(.*?)<\/strike>/gi,
+                        "{\\strike $1}",
+                    );
+
+                    // Strip any remaining HTML tags
+                    content = content.replace(/<[^>]+>/g, "");
+
+                    rtf += content;
+                    rtf += "}";
+
+                    return rtf;
+                }
+            });
+        </script>
+    </body>
+</html>

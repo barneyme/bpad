@@ -33,41 +33,34 @@
                 color: #2c3e50;
             }
 
-            .sync-status {
+            .sync-controls {
                 display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 14px;
+                flex-direction: column;
+                gap: 10px;
             }
 
-            .sync-indicator {
-                height: 10px;
-                width: 10px;
-                border-radius: 50%;
-                background-color: #4caf50;
+            .sync-buttons {
+                display: flex;
+                gap: 10px;
             }
 
-            .sync-indicator.offline {
-                background-color: #f44336;
-            }
-
-            #sync-text {
-                font-weight: 500;
-            }
-
-            #sync-id {
-                font-size: 12px;
-                color: #666;
-                margin-top: 4px;
-            }
-
-            #copy-btn {
-                font-size: 12px;
-                padding: 4px 8px;
-                cursor: pointer;
-                background-color: #f0f0f0;
-                border: 1px solid #ddd;
+            .sync-btn {
+                padding: 8px 15px;
+                background-color: #2196f3;
+                color: white;
+                border: none;
                 border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .sync-btn:hover {
+                background-color: #1976d2;
+            }
+
+            #sync-status {
+                font-size: 14px;
+                color: #4caf50;
             }
 
             .container {
@@ -206,29 +199,6 @@
                 background-color: #bbdefb;
             }
 
-            .sync-controls {
-                margin-top: 15px;
-                display: flex;
-                gap: 10px;
-                align-items: center;
-            }
-
-            #sync-id-input {
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                flex-grow: 1;
-            }
-
-            #connect-btn {
-                padding: 8px 15px;
-                background-color: #4caf50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
             .welcome-message {
                 text-align: center;
                 padding: 40px 20px;
@@ -238,6 +208,58 @@
             .welcome-message h2 {
                 margin-bottom: 15px;
                 color: #2c3e50;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 100;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 500px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .modal-close {
+                font-size: 24px;
+                cursor: pointer;
+                color: #666;
+            }
+
+            .modal textarea {
+                width: 100%;
+                height: 200px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 10px;
+                margin-bottom: 15px;
+                font-family: monospace;
+            }
+
+            .modal-buttons {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
             }
 
             @media (max-width: 768px) {
@@ -252,27 +274,26 @@
                     margin-bottom: 20px;
                     height: 50vh;
                 }
+
+                .sync-controls {
+                    margin-top: 10px;
+                }
             }
         </style>
     </head>
     <body>
         <header>
             <h1>bPad Sync</h1>
-            <div>
-                <div class="sync-status">
-                    <div class="sync-indicator" id="sync-indicator"></div>
-                    <span id="sync-text">Generating sync ID...</span>
+            <div class="sync-controls">
+                <div class="sync-buttons">
+                    <button id="export-btn" class="sync-btn">
+                        Export Notes
+                    </button>
+                    <button id="import-btn" class="sync-btn">
+                        Import Notes
+                    </button>
                 </div>
-                <div id="sync-id"></div>
-                <button id="copy-btn" style="display: none">Copy ID</button>
-                <div class="sync-controls">
-                    <input
-                        type="text"
-                        id="sync-id-input"
-                        placeholder="Enter sync ID to connect"
-                    />
-                    <button id="connect-btn">Connect</button>
-                </div>
+                <div id="sync-status"></div>
             </div>
         </header>
 
@@ -284,37 +305,59 @@
 
             <div class="note-editor" id="note-editor">
                 <div class="welcome-message">
-                    <h2>Welcome to bPad Sync</h2>
+                    <h2>Welcome to NotesSync</h2>
                     <p>
                         Create a new note or select an existing one to get
                         started.
                     </p>
-                    <p>
-                        Your notes will automatically sync across devices when
-                        you share your sync ID.
-                    </p>
+                    <p>Use Export/Import to sync your notes across devices.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div class="modal" id="export-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Export Notes</h2>
+                    <span class="modal-close" id="export-close">&times;</span>
+                </div>
+                <p>Copy this code and save it somewhere safe:</p>
+                <textarea id="export-data" readonly></textarea>
+                <div class="modal-buttons">
+                    <button id="copy-export" class="sync-btn">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Modal -->
+        <div class="modal" id="import-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Import Notes</h2>
+                    <span class="modal-close" id="import-close">&times;</span>
+                </div>
+                <p>Paste your notes data here:</p>
+                <textarea
+                    id="import-data"
+                    placeholder="Paste your exported notes data here..."
+                ></textarea>
+                <div class="modal-buttons">
+                    <button id="import-confirm" class="sync-btn">
+                        Import Notes
+                    </button>
                 </div>
             </div>
         </div>
 
         <script>
-            // Generate a random ID for synchronization
-            function generateSyncId() {
-                return Math.random().toString(36).substring(2, 10);
-            }
-
             // Main app class
             class NotesApp {
                 constructor() {
                     this.notes = [];
                     this.currentNote = null;
-                    this.syncId =
-                        localStorage.getItem("notesSyncId") || generateSyncId();
-                    this.channel = null;
-                    this.isConnected = false;
-
-                    // Save sync ID
-                    localStorage.setItem("notesSyncId", this.syncId);
 
                     // Initialize elements
                     this.initElements();
@@ -325,45 +368,56 @@
                     // Setup event listeners
                     this.setupEventListeners();
 
-                    // Initialize sync
-                    this.initSync();
+                    // Setup BroadcastChannel for same-browser sync
+                    this.setupBroadcastChannel();
                 }
 
                 initElements() {
                     this.notesContainer =
                         document.getElementById("notes-container");
                     this.noteEditor = document.getElementById("note-editor");
-                    this.syncIndicator =
-                        document.getElementById("sync-indicator");
-                    this.syncText = document.getElementById("sync-text");
-                    this.syncIdElement = document.getElementById("sync-id");
-                    this.copyBtn = document.getElementById("copy-btn");
-                    this.syncIdInput = document.getElementById("sync-id-input");
-                    this.connectBtn = document.getElementById("connect-btn");
-
-                    // Display sync ID
-                    this.syncIdElement.textContent = `Your Sync ID: ${this.syncId}`;
-                    this.copyBtn.style.display = "inline-block";
+                    this.syncStatus = document.getElementById("sync-status");
+                    this.exportModal = document.getElementById("export-modal");
+                    this.importModal = document.getElementById("import-modal");
+                    this.exportData = document.getElementById("export-data");
+                    this.importData = document.getElementById("import-data");
                 }
 
                 loadNotes() {
                     const savedNotes = localStorage.getItem("notes");
                     if (savedNotes) {
-                        this.notes = JSON.parse(savedNotes);
-                        this.renderNotesList();
+                        try {
+                            this.notes = JSON.parse(savedNotes);
+                            this.renderNotesList();
+                        } catch (e) {
+                            console.error("Failed to parse notes:", e);
+                            this.notes = [];
+                        }
                     }
                 }
 
                 saveNotes() {
                     localStorage.setItem("notes", JSON.stringify(this.notes));
 
-                    // Sync with other devices if connected
-                    if (this.isConnected && this.channel) {
+                    // Broadcast to other tabs/windows
+                    if (this.channel) {
                         this.channel.postMessage({
                             type: "sync",
                             notes: this.notes,
                         });
                     }
+
+                    // Show feedback
+                    this.showSyncStatus("Notes saved locally");
+                }
+
+                showSyncStatus(message) {
+                    this.syncStatus.textContent = message;
+
+                    // Clear after 3 seconds
+                    setTimeout(() => {
+                        this.syncStatus.textContent = "";
+                    }, 3000);
                 }
 
                 setupEventListeners() {
@@ -374,93 +428,95 @@
                             this.createNewNote();
                         });
 
-                    // Copy sync ID
-                    this.copyBtn.addEventListener("click", () => {
-                        navigator.clipboard.writeText(this.syncId).then(() => {
-                            this.copyBtn.textContent = "Copied!";
+                    // Export button
+                    document
+                        .getElementById("export-btn")
+                        .addEventListener("click", () => {
+                            this.exportNotes();
+                        });
+
+                    // Import button
+                    document
+                        .getElementById("import-btn")
+                        .addEventListener("click", () => {
+                            this.showImportModal();
+                        });
+
+                    // Export modal close
+                    document
+                        .getElementById("export-close")
+                        .addEventListener("click", () => {
+                            this.exportModal.style.display = "none";
+                        });
+
+                    // Import modal close
+                    document
+                        .getElementById("import-close")
+                        .addEventListener("click", () => {
+                            this.importModal.style.display = "none";
+                        });
+
+                    // Copy export data
+                    document
+                        .getElementById("copy-export")
+                        .addEventListener("click", () => {
+                            this.exportData.select();
+                            document.execCommand("copy");
+                            document.getElementById("copy-export").textContent =
+                                "Copied!";
                             setTimeout(() => {
-                                this.copyBtn.textContent = "Copy ID";
+                                document.getElementById(
+                                    "copy-export",
+                                ).textContent = "Copy to Clipboard";
                             }, 2000);
                         });
-                    });
 
-                    // Connect to another sync ID
-                    this.connectBtn.addEventListener("click", () => {
-                        const targetId = this.syncIdInput.value.trim();
-                        if (targetId && targetId !== this.syncId) {
-                            this.connectToSyncId(targetId);
+                    // Import confirm
+                    document
+                        .getElementById("import-confirm")
+                        .addEventListener("click", () => {
+                            this.importNotes();
+                        });
+
+                    // Close modals when clicking outside
+                    window.addEventListener("click", (e) => {
+                        if (e.target === this.exportModal) {
+                            this.exportModal.style.display = "none";
+                        }
+                        if (e.target === this.importModal) {
+                            this.importModal.style.display = "none";
                         }
                     });
                 }
 
-                initSync() {
-                    // Check if BroadcastChannel is supported
-                    if (typeof BroadcastChannel === "undefined") {
-                        this.syncIndicator.classList.add("offline");
-                        this.syncText.textContent =
-                            "Sync unavailable (BroadcastChannel not supported)";
-                        return;
-                    }
+                setupBroadcastChannel() {
+                    // Setup BroadcastChannel for same-browser sync
+                    if (typeof BroadcastChannel !== "undefined") {
+                        this.channel = new BroadcastChannel("notes-sync");
 
-                    // Setup BroadcastChannel
-                    this.channel = new BroadcastChannel(
-                        `notes-sync-${this.syncId}`,
-                    );
+                        this.channel.onmessage = (event) => {
+                            if (event.data.type === "sync") {
+                                // Update notes with received data
+                                this.notes = event.data.notes;
+                                this.renderNotesList();
 
-                    this.channel.onmessage = (event) => {
-                        if (event.data.type === "sync") {
-                            // Update notes with received data
-                            this.notes = event.data.notes;
-                            this.renderNotesList();
-
-                            // If a note was being edited, update it
-                            if (this.currentNote) {
-                                const updatedNote = this.notes.find(
-                                    (note) => note.id === this.currentNote.id,
-                                );
-                                if (updatedNote) {
-                                    this.currentNote = updatedNote;
-                                    this.renderNoteEditor(updatedNote);
+                                // If a note was being edited, update it
+                                if (this.currentNote) {
+                                    const updatedNote = this.notes.find(
+                                        (note) =>
+                                            note.id === this.currentNote.id,
+                                    );
+                                    if (updatedNote) {
+                                        this.currentNote = updatedNote;
+                                        this.renderNoteEditor(updatedNote);
+                                    }
                                 }
+
+                                // Show feedback
+                                this.showSyncStatus("Notes synchronized");
                             }
-
-                            // Save locally
-                            localStorage.setItem(
-                                "notes",
-                                JSON.stringify(this.notes),
-                            );
-                        }
-                    };
-
-                    this.isConnected = true;
-                    this.syncText.textContent = "Sync active";
-
-                    // Test connection
-                    this.channel.postMessage({ type: "ping" });
-                }
-
-                connectToSyncId(targetId) {
-                    // Close current channel
-                    if (this.channel) {
-                        this.channel.close();
+                        };
                     }
-
-                    // Update sync ID
-                    this.syncId = targetId;
-                    localStorage.setItem("notesSyncId", this.syncId);
-
-                    // Update display
-                    this.syncIdElement.textContent = `Your Sync ID: ${this.syncId}`;
-                    this.syncText.textContent = "Connected to new sync ID";
-
-                    // Initialize new connection
-                    this.initSync();
-
-                    // Load existing notes for this ID if available
-                    this.loadNotes();
-
-                    // Clear input
-                    this.syncIdInput.value = "";
                 }
 
                 createNewNote() {
@@ -521,7 +577,7 @@
                         <div class="welcome-message">
                             <h2>Welcome to NotesSync</h2>
                             <p>Create a new note or select an existing one to get started.</p>
-                            <p>Your notes will automatically sync across devices when you share your sync ID.</p>
+                            <p>Use Export/Import to sync your notes across devices.</p>
                         </div>
                     `;
                     }
@@ -529,6 +585,15 @@
 
                 renderNotesList() {
                     this.notesContainer.innerHTML = "";
+
+                    if (this.notes.length === 0) {
+                        const emptyMessage = document.createElement("div");
+                        emptyMessage.className = "note-item";
+                        emptyMessage.innerHTML =
+                            '<p style="text-align: center;">No notes yet</p>';
+                        this.notesContainer.appendChild(emptyMessage);
+                        return;
+                    }
 
                     this.notes.forEach((note) => {
                         const noteItem = document.createElement("div");
@@ -620,6 +685,128 @@
 
                     // Focus on content
                     contentTextarea.focus();
+                }
+
+                exportNotes() {
+                    // Create an export object with timestamp
+                    const exportObject = {
+                        version: 1,
+                        timestamp: new Date().toISOString(),
+                        notes: this.notes,
+                    };
+
+                    // Convert to JSON and encode to prevent issues
+                    const exportString = JSON.stringify(exportObject);
+
+                    // Show in modal
+                    this.exportData.value = exportString;
+                    this.exportModal.style.display = "flex";
+                    this.exportData.select();
+
+                    this.showSyncStatus("Notes ready for export");
+                }
+
+                showImportModal() {
+                    this.importModal.style.display = "flex";
+                    this.importData.focus();
+                }
+
+                importNotes() {
+                    const importString = this.importData.value.trim();
+
+                    if (!importString) {
+                        alert("Please paste your notes data first");
+                        return;
+                    }
+
+                    try {
+                        // Parse the import data
+                        const importObject = JSON.parse(importString);
+
+                        // Validate format
+                        if (
+                            !importObject.notes ||
+                            !Array.isArray(importObject.notes)
+                        ) {
+                            throw new Error("Invalid notes format");
+                        }
+
+                        // Merge notes (or replace based on preference)
+                        if (this.notes.length > 0) {
+                            if (
+                                confirm(
+                                    "Do you want to merge with existing notes? Click OK to merge, Cancel to replace all notes.",
+                                )
+                            ) {
+                                // Merge notes by ID
+                                const mergedNotes = [...this.notes];
+
+                                importObject.notes.forEach((importedNote) => {
+                                    const existingIndex = mergedNotes.findIndex(
+                                        (n) => n.id === importedNote.id,
+                                    );
+
+                                    if (existingIndex !== -1) {
+                                        // Compare dates to use the most recent version
+                                        const existingDate = new Date(
+                                            mergedNotes[
+                                                existingIndex
+                                            ].updatedAt,
+                                        );
+                                        const importedDate = new Date(
+                                            importedNote.updatedAt,
+                                        );
+
+                                        if (importedDate > existingDate) {
+                                            mergedNotes[existingIndex] =
+                                                importedNote;
+                                        }
+                                    } else {
+                                        // Add new note
+                                        mergedNotes.push(importedNote);
+                                    }
+                                });
+
+                                // Sort by updatedAt (newest first)
+                                this.notes = mergedNotes.sort((a, b) => {
+                                    return (
+                                        new Date(b.updatedAt) -
+                                        new Date(a.updatedAt)
+                                    );
+                                });
+                            } else {
+                                // Replace all notes
+                                this.notes = importObject.notes;
+                            }
+                        } else {
+                            // Just use imported notes
+                            this.notes = importObject.notes;
+                        }
+
+                        // Save and refresh
+                        this.saveNotes();
+                        this.renderNotesList();
+
+                        // Reset current note
+                        this.currentNote = null;
+                        this.noteEditor.innerHTML = `
+                        <div class="welcome-message">
+                            <h2>Welcome to NotesSync</h2>
+                            <p>Create a new note or select an existing one to get started.</p>
+                            <p>Use Export/Import to sync your notes across devices.</p>
+                        </div>
+                    `;
+
+                        // Close modal
+                        this.importModal.style.display = "none";
+                        this.importData.value = "";
+
+                        // Show success
+                        this.showSyncStatus("Notes imported successfully");
+                    } catch (e) {
+                        alert("Error importing notes: Invalid data format");
+                        console.error("Import error:", e);
+                    }
                 }
             }
 

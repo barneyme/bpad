@@ -136,7 +136,7 @@
                 transition:
                     transform 0.2s ease,
                     box-shadow 0.2s ease;
-                border-top: 5px solid #4361ee;
+                /* Removed the border-top color bar */
             }
 
             .note:hover {
@@ -397,7 +397,7 @@
                 function createNoteElement(note, index) {
                     const noteDiv = document.createElement("div");
                     noteDiv.classList.add("note");
-                    noteDiv.style.borderTopColor = getRandomColor();
+                    // Removed: noteDiv.style.borderTopColor = getRandomColor();
 
                     const titleInput = document.createElement("input");
                     titleInput.classList.add("note-title");

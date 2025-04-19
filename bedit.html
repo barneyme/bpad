@@ -85,7 +85,7 @@
             #save,
             #find-replace-button,
             #undo,
-            #bpad-button,
+            #openNewTab,
             #readme-button {
                 background-color: #2980b9;
                 border-color: #5dade2;
@@ -107,8 +107,13 @@
                 background-color: #2980b9;
                 border-color: #5dade2;
             }
-            #bpad-button:hover {
-                background-color: #5d6d7e;
+            #openNewTab {
+                background-color: #2980b9;
+                border-color: #5dade2;
+                color: white;
+            }
+            #openNewTab:hover {
+                background-color: #5dade2;
             }
             #readme-button:hover {
                 background-color: #85c1e9;
@@ -265,6 +270,7 @@
     <body>
         <nav>
             <span id="controls">
+                <button id="openNewTab" title="Open (CTRL + N)">^ N</button>
                 <button id="open" title="Open (CTRL + O)">^ O</button>
                 <input id="filename" placeholder="bedit.txt" />
                 <button id="save" title="Save (CTRL + S)">^ S</button>
@@ -295,7 +301,7 @@
         <textarea
             id="textbox"
             autofocus
-            placeholder="Start typing here or click ? to learn more."
+            placeholder="Start typing here or click ^ H to learn more."
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
@@ -318,8 +324,8 @@
                     bEdit.org can be used offline after the first use. Simply
                     reopen bedit.org in your browser to continue working on your
                     notes.<br />
-                    Opening bedit.org in another browser tab will let you to
-                    work on another file.<br />
+                    Opening bedit.org in another browser tab will let you work
+                    on another file.<br />
                     &#8595; is current line position, &#8594; is current
                     character position and = is word count.<br />
                     Press CTRL + O or click ^ O to edit a file from your
@@ -469,8 +475,8 @@
                     a.click();
                     URL.revokeObjectURL(a.href);
                 }
-                function openBPad() {
-                    window.open("https://bpad.me", "_blank");
+                function openNewTab() {
+                    window.open("https://bedit.org", "_blank");
                 }
                 function togglePopup(popupId, show) {
                     for (const key in popups) {
@@ -680,7 +686,7 @@
                             undo();
                         } else if (event.key === "n") {
                             event.preventDefault();
-                            openBPad();
+                            openNewTab();
                         } else if (event.key === "h") {
                             event.preventDefault();
                             togglePopup("readme", true);
@@ -830,9 +836,9 @@
                 document
                     .getElementById("save")
                     .addEventListener("click", saveFile);
-                const bpadButton = document.getElementById("bpad-button");
+                const bpadButton = document.getElementById("openNewTab");
                 if (bpadButton) {
-                    bpadButton.addEventListener("click", openBPad);
+                    bpadButton.addEventListener("click", openNewTab);
                 }
                 document
                     .getElementById("readme-button")

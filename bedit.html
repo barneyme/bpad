@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
     <head>
@@ -20,17 +19,18 @@
                 height: 100%;
                 margin: 0;
                 font-family: system-ui, sans-serif;
+                background-color: #eaf3fb;
+                color: #0a3d62;
             }
             * {
                 box-sizing: border-box;
             }
-
             #textbox {
                 position: fixed;
-                top: 0;
+                top: 3rem;
                 left: 0;
                 right: 0;
-                bottom: 3rem;
+                bottom: 0;
                 width: 100%;
                 font-family: monospace;
                 font-size: 16px;
@@ -39,107 +39,90 @@
                 outline: none;
                 resize: none;
                 overflow-y: auto;
+                background-color: #ffffff;
+                color: #0a3d62;
             }
-
             nav {
                 position: fixed;
-                bottom: 0;
+                top: 0;
                 left: 0;
                 width: 100%;
                 min-height: 3rem;
                 padding: 0.5em;
-                background-color: #eee;
-                border-top: 1px solid silver;
-                color: gray;
+                background-color: #2980b9;
+                border-bottom: 1px solid #2471a3;
+                color: white;
                 display: flex;
-                justify-content: space-between;
+                justify-content: center;
                 align-items: center;
                 flex-wrap: wrap;
             }
-
             #controls {
                 display: flex;
                 align-items: center;
                 gap: 0.5em;
                 flex-wrap: wrap;
+                max-width: 800px;
+                margin: 0 auto;
             }
-
             button {
                 padding: 0.5em 0.75em;
-                background-color: #f8f8f8;
-                border: 1px solid #ddd;
+                background-color: #3498db;
+                border: 1px solid #2980b9;
                 border-radius: 4px;
                 cursor: pointer;
                 font-size: 14px;
+                color: white;
             }
-
             button:hover {
-                background-color: #e8e8e8;
+                background-color: #5dade2;
             }
             button:disabled {
                 opacity: 0.5;
                 cursor: default;
             }
-
-            #open {
-                background-color: #d4efdf;
-                border-color: #d4efdf;
-                color: black;
+            #open,
+            #save,
+            #find-replace-button,
+            #undo,
+            #bpad-button,
+            #readme-button {
+                background-color: #2980b9;
+                border-color: #5dade2;
+                color: white;
             }
             #open:hover {
-                background-color: #7dcea0;
-            }
-
-            #save {
-                background-color: #d4e6f1;
-                border-color: #d4e6f1;
-                color: black;
+                background-color: #5dade2;
             }
             #save:hover {
-                background-color: #7fb3d5;
-            }
-
-            #find-replace-button {
-                background-color: #ccd1d1;
-                border-color: #ccd1d1;
-                color: black;
+                background-color: #5dade2;
             }
             #find-replace-button:hover {
-                background-color: #99a3a4;
-            }
-
-            #undo {
-                background-color: #e67e22;
-                border-color: #e67e22;
-                color: black;
+                background-color: #7fb3d5;
             }
             #undo:hover:not(:disabled) {
-                background-color: #e67e22;
+                background-color: #5499c7;
             }
-
             #undo:not(:disabled) {
-                background-color: #e59866;
-                border-color: #e59866;
+                background-color: #2980b9;
+                border-color: #5dade2;
             }
-
-            #readme-button {
-                background-color: #fdebd0;
-                border-color: #fdebd0;
-                color: black;
+            #bpad-button:hover {
+                background-color: #5d6d7e;
             }
             #readme-button:hover {
-                background-color: #f8c471;
+                background-color: #85c1e9;
             }
-
             #filename {
                 padding: 0.5em;
-                border: 1px solid #ddd;
+                border: 1px solid #2980b9;
                 border-radius: 4px;
                 font-size: 14px;
                 min-width: 100px;
                 max-width: 200px;
+                background-color: #d6eaf8;
+                color: #0a3d62;
             }
-
             .popup {
                 display: none;
                 position: fixed;
@@ -149,21 +132,19 @@
                 width: 90%;
                 max-width: 600px;
                 max-height: 90vh;
-                background: white;
-                border: 1px solid #ccc;
+                background: #ffffff;
+                border: 1px solid #aed6f1;
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
                 z-index: 1000;
                 overflow-y: auto;
                 padding: 20px;
                 border-radius: 5px;
             }
-
             .popup h2 {
                 margin-top: 0;
                 padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #d4e6f1;
             }
-
             .close-btn {
                 position: absolute;
                 top: 10px;
@@ -172,11 +153,10 @@
                 border: none;
                 font-size: 20px;
                 cursor: pointer;
-                color: #666;
+                color: #2e86c1;
                 padding: 0;
                 margin: 0;
             }
-
             #popup-overlay {
                 display: none;
                 position: fixed;
@@ -187,71 +167,90 @@
                 background: rgba(0, 0, 0, 0.5);
                 z-index: 999;
             }
-
             #find-replace-popup {
                 max-width: 400px;
             }
-
             #find-replace-popup input {
                 width: 100%;
                 padding: 8px;
                 margin-bottom: 10px;
-                border: 1px solid #ddd;
+                border: 1px solid #a9cce3;
                 border-radius: 4px;
             }
-
             #find-replace-buttons {
                 display: flex;
                 gap: 10px;
                 justify-content: flex-end;
             }
-
             #find-count {
                 margin-right: auto;
                 align-self: center;
-                color: #666;
+                color: #2e86c1;
             }
-
+            #stats {
+                background-color: #2980b9;
+                color: white;
+                padding: 0.25em 0.5em;
+                border-radius: 4px;
+                display: flex;
+                gap: 0.5em;
+            }
+            .stat-item {
+                display: flex;
+                align-items: center;
+                gap: 0.2em;
+            }
+            .stat-label {
+                font-size: 0.85em;
+                opacity: 0.9;
+            }
+            #line-position,
+            #char-position,
+            #word-count {
+                color: white;
+            }
+            .stat-separator {
+                color: #ddd;
+            }
             @media (max-width: 500px) {
                 nav {
                     flex-direction: column;
-                    align-items: stretch;
+                    align-items: center;
+                    padding: 0.5em 0.25em;
                 }
                 #controls {
                     margin-top: 0.5em;
-                    justify-content: space-between;
+                    justify-content: center;
+                    width: 100%;
                 }
                 #filename {
                     flex-grow: 1;
                     max-width: none;
                 }
                 #textbox {
-                    bottom: 6rem;
-                }
-                #stats {
-                    text-align: center;
+                    top: 6rem;
                 }
             }
-            #stats {
-                background-color: #a6acaf;
-                color: white;
-                padding: 0.25em 0.5em;
-                border-radius: 4px;
-            }
-
-            #line-position,
-            #char-position {
-                color: white;
-            }
-
             @media (max-width: 350px) {
                 button,
                 #filename {
                     padding: 0.4em 0.5em;
                     font-size: 12px;
                 }
+                #stats {
+                    flex-direction: column;
+                    gap: 0.25em;
+                    padding: 0.25em;
+                    font-size: 12px;
+                    line-height: 1.2;
+                }
+                .stat-separator {
+                    display: none;
+                }
+                #controls {
+                    gap: 0.3em;
+                }
             }
-
             @media print {
                 nav {
                     display: none;
@@ -264,30 +263,42 @@
         </style>
     </head>
     <body>
+        <nav>
+            <span id="controls">
+                <button id="open" title="Open (CTRL + O)">^ O</button>
+                <input id="filename" placeholder="bedit.txt" />
+                <button id="save" title="Save (CTRL + S)">^ S</button>
+                <button
+                    id="find-replace-button"
+                    title="Find\Replace (CTRL + F)"
+                >
+                    ^ F
+                </button>
+                <button id="undo" disabled title="Undo (CTRL + Z)">^ Z</button>
+                <span id="stats">
+                    <span class="stat-item">
+                        <span class="stat-label">&#8595;</span>
+                        <span id="line-position">1</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="stat-label">&#8594;</span>
+                        <span id="char-position">1</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="stat-label">=</span>
+                        <span id="word-count">0</span>
+                    </span>
+                </span>
+                <button id="readme-button" title="Help (CTRL + H)">^ H</button>
+            </span>
+        </nav>
         <textarea
             id="textbox"
             autofocus
             placeholder="Start typing here or click ? to learn more."
         ></textarea>
-        <nav>
-            <span id="stats"
-                ><span id="line-position">1</span>:<span id="char-position"
-                    >1</span
-                ></span
-            >
-            <span id="controls">
-                <button id="open">^O</button>
-                <input id="filename" placeholder="bedit.txt" />
-                <button id="save">^S</button>
-                <button id="find-replace-button">^F</button>
-                <button id="undo" disabled>^Z</button>
-                <button id="readme-button">?</button>
-            </span>
-        </nav>
         <input type="file" id="open-input" style="display: none" />
-
         <div id="popup-overlay"></div>
-
         <div id="readme-popup" class="popup">
             <button class="close-btn">×</button>
             <h2>bEdit.org</h2>
@@ -297,14 +308,9 @@
                     bEdit.org can open, create, and save plaintext files like
                     .TXT, .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and
                     .PL.<br />
-                    bEdit.org is designed to be a simple online text editor<br />
-                    you can use in any browser on any computer.'<br />
-                    bEdit.org has a sticky note tool sibling called
-                    <a href="https://bpad.me">bPad.me</a>.<br />
-                    bEdit.org was created by
-                    <a href="https://barney.me">Barney</a>.
+                    bEdit.org is designed to be a simple online text editor you
+                    can use in any browser on any computer.
                 </p>
-
                 <h2>Directions</h2>
                 <p>
                     Open bedit.org in web browser and start writing. Notes are
@@ -312,17 +318,20 @@
                     bEdit.org can be used offline after the first use. Simply
                     reopen bedit.org in your browser to continue working on your
                     notes.<br />
-                    Press CTRL + O or click ^O to edit a file from your
+                    Opening bedit.org in another browser tab will let you to
+                    work on another file.<br />
+                    &#8595; is current line position, &#8594; is current
+                    character position and = is word count.<br />
+                    Press CTRL + O or click ^ O to edit a file from your
                     computer.<br />
-                    Press CTRL + S or click ^S to download your notes to your
+                    Press CTRL + S or click ^ S to download your notes to your
                     computer. bEdit.org saves your notes as 'bedit.txt' by
                     default but you can change it to any name and filetype (EG
                     rm-rf.sh.)<br />
-                    Press CTRL + F or click ^F to find and replace text.<br />
-                    Press CTRL + Z or click ^Z to undo the last change.<br />
-                    Click ? to view this Readme file.
+                    Press CTRL + F or click ^ F to find and replace text.<br />
+                    Press CTRL + Z or click ^ Z to undo the last change.<br />
+                    Press CTRL + H or click ^ H to view this help file.
                 </p>
-
                 <h2>Privacy</h2>
                 <p>
                     bEdit.org does not (and cannot):<br />
@@ -333,9 +342,16 @@
                     - identify who you are,<br />
                     - sell your data.
                 </p>
+                <h2>Credit</h2>
+                <p>
+                    bEdit.org was created by
+                    <a href="https://barney.me">Barney</a>.<br />
+                    If you'd like to support bEdit you can buy me a
+                    <a href="https://buymeacoffee.com/barneymatthews">coffee</a
+                    >.
+                </p>
             </div>
         </div>
-
         <div id="find-replace-popup" class="popup">
             <button class="close-btn">×</button>
             <h2>Find\Replace</h2>
@@ -350,371 +366,415 @@
                 </div>
             </div>
         </div>
-
         <script>
-            if ("serviceWorker" in navigator) {
-                window.addEventListener("load", () => {
-                    navigator.serviceWorker
-                        .register("./service-worker.js")
-                        .catch((error) =>
-                            console.log(
-                                "ServiceWorker registration failed: ",
-                                error,
-                            ),
-                        );
-                });
-            }
-
-            const textbox = document.getElementById("textbox");
-            const filenameBox = document.getElementById("filename");
-            const linePosition = document.getElementById("line-position");
-            const charPosition = document.getElementById("char-position");
-            const overlay = document.getElementById("popup-overlay");
-            const openInput = document.getElementById("open-input");
-            const findText = document.getElementById("find-text");
-            const replaceText = document.getElementById("replace-text");
-            const findCount = document.getElementById("find-count");
-            const undoButton = document.getElementById("undo");
-
-            const popups = {
-                readme: document.getElementById("readme-popup"),
-                findReplace: document.getElementById("find-replace-popup"),
-            };
-
-            const tabId = window.name || "default";
-            let saveTimer;
-            let currentMatches = [];
-            let currentMatchIndex = -1;
-
-            const MAX_HISTORY = 100;
-            let history = [];
-            let currentHistoryIndex = -1;
-            let isUndoing = false;
-            let initialContentLoaded = false;
-
-            function adjustTextareaHeight() {
-                textbox.style.bottom =
-                    document.querySelector("nav").offsetHeight + "px";
-            }
-
-            function storeLocally() {
-                localStorage.setItem("bedit_" + tabId, textbox.value);
-            }
-
-            function updateCursorPosition() {
-                const text = textbox.value;
-                const cursorPos = textbox.selectionStart;
-                const lines = text.substring(0, cursorPos).split("\n");
-
-                linePosition.textContent = lines.length;
-                charPosition.textContent = lines[lines.length - 1].length + 1;
-            }
-
-            function handleFileOpen(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        if (textbox.value) {
-                            addToHistory(textbox.value);
-                        }
-
-                        textbox.value = e.target.result;
-                        updateCursorPosition();
-                        storeLocally();
-                        filenameBox.value = file.name;
-
-                        history = [];
-                        currentHistoryIndex = -1;
-                        addToHistory(textbox.value);
-                        updateUndoButton();
-                    };
-                    reader.readAsText(file);
-                }
-            }
-
-            function saveFile() {
-                const filename = filenameBox.value || "bedit.txt";
-                const blob = new Blob([textbox.value], { type: "text/plain" });
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = filename;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }
-
-            function togglePopup(popupId, show) {
-                for (const key in popups) {
-                    popups[key].style.display = "none";
-                }
-                overlay.style.display = "none";
-
-                if (show && popupId && popups[popupId]) {
-                    popups[popupId].style.display = "block";
-                    overlay.style.display = "block";
-
-                    if (popupId === "findReplace") {
-                        findText.focus();
-                        findText.select();
-                    }
-                }
-            }
-
-            function addToHistory(state) {
-                if (
-                    currentHistoryIndex >= 0 &&
-                    currentHistoryIndex < history.length - 1
-                ) {
-                    history = history.slice(0, currentHistoryIndex + 1);
-                }
-
-                history.push(state);
-
-                if (history.length > MAX_HISTORY) {
-                    history.shift();
-                }
-
-                currentHistoryIndex = history.length - 1;
-                updateUndoButton();
-            }
-
-            function undo() {
-                if (currentHistoryIndex < 0 || history.length === 0) {
-                    return;
-                }
-
-                isUndoing = true;
-
-                if (currentHistoryIndex > 0) {
-                    currentHistoryIndex--;
-
-                    textbox.value = history[currentHistoryIndex];
-                    storeLocally();
-
-                    textbox.focus();
-                    textbox.setSelectionRange(
-                        textbox.value.length,
-                        textbox.value.length,
-                    );
-                    updateCursorPosition();
-                }
-
-                updateUndoButton();
-                isUndoing = false;
-            }
-
-            function updateUndoButton() {
-                undoButton.disabled = currentHistoryIndex <= 0;
-            }
-
-            function escapeRegExp(string) {
-                return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            }
-
-            function findAllMatches(text, term) {
-                if (!term) return [];
-
-                const matches = [];
-                const regex = new RegExp(escapeRegExp(term), "g");
-                let match;
-
-                while ((match = regex.exec(text)) !== null) {
-                    matches.push({
-                        start: match.index,
-                        end: match.index + term.length,
+            document.addEventListener("DOMContentLoaded", function () {
+                if ("serviceWorker" in navigator) {
+                    window.addEventListener("load", () => {
+                        navigator.serviceWorker
+                            .register("./service-worker.js")
+                            .catch((error) =>
+                                console.log(
+                                    "ServiceWorker registration failed: ",
+                                    error,
+                                ),
+                            );
                     });
                 }
-
-                return matches;
-            }
-
-            function findNext() {
-                const searchTerm = findText.value;
-                if (!searchTerm) {
-                    findCount.textContent = "";
+                const textbox = document.getElementById("textbox");
+                const filenameBox = document.getElementById("filename");
+                const linePosition = document.getElementById("line-position");
+                const charPosition = document.getElementById("char-position");
+                const wordCount = document.getElementById("word-count");
+                const overlay = document.getElementById("popup-overlay");
+                const openInput = document.getElementById("open-input");
+                const findText = document.getElementById("find-text");
+                const replaceText = document.getElementById("replace-text");
+                const findCount = document.getElementById("find-count");
+                const undoButton = document.getElementById("undo");
+                const popups = {
+                    readme: document.getElementById("readme-popup"),
+                    findReplace: document.getElementById("find-replace-popup"),
+                };
+                if (!window.name) {
+                    window.name =
+                        "bedit-tab-" +
+                        Date.now() +
+                        "-" +
+                        Math.random().toString(36).substr(2, 9);
+                }
+                const tabId = window.name;
+                let saveTimer;
+                let currentMatches = [];
+                let currentMatchIndex = -1;
+                const MAX_HISTORY = 100;
+                let history = [];
+                let currentHistoryIndex = -1;
+                let isUndoing = false;
+                let initialContentLoaded = false;
+                function adjustTextareaHeight() {
+                    textbox.style.top =
+                        document.querySelector("nav").offsetHeight + "px";
+                }
+                function storeLocally() {
+                    localStorage.setItem("bedit_" + tabId, textbox.value);
+                }
+                function updateCursorPosition() {
+                    const text = textbox.value;
+                    const cursorPos = textbox.selectionStart;
+                    const lines = text.substring(0, cursorPos).split("\n");
+                    linePosition.textContent = lines.length;
+                    charPosition.textContent =
+                        lines[lines.length - 1].length + 1;
+                }
+                function updateWordCount() {
+                    const text = textbox.value.trim();
+                    if (!text) {
+                        wordCount.textContent = "0";
+                        return;
+                    }
+                    const words = text
+                        .split(/\s+/)
+                        .filter((word) => word.length > 0);
+                    wordCount.textContent = words.length.toString();
+                }
+                function handleFileOpen(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            if (textbox.value) {
+                                addToHistory(textbox.value);
+                            }
+                            textbox.value = e.target.result;
+                            updateCursorPosition();
+                            updateWordCount();
+                            storeLocally();
+                            filenameBox.value = file.name;
+                            history = [];
+                            currentHistoryIndex = -1;
+                            addToHistory(textbox.value);
+                            updateUndoButton();
+                        };
+                        reader.readAsText(file);
+                    }
+                }
+                function saveFile() {
+                    const filename = filenameBox.value || "bedit.txt";
+                    const blob = new Blob([textbox.value], {
+                        type: "text/plain",
+                    });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+                function openBPad() {
+                    window.open("https://bpad.me", "_blank");
+                }
+                function togglePopup(popupId, show) {
+                    for (const key in popups) {
+                        if (popups[key]) {
+                            popups[key].style.display = "none";
+                        }
+                    }
+                    if (overlay) {
+                        overlay.style.display = "none";
+                    }
+                    if (show && popupId && popups[popupId]) {
+                        popups[popupId].style.display = "block";
+                        if (overlay) {
+                            overlay.style.display = "block";
+                        }
+                        if (popupId === "findReplace" && findText) {
+                            findText.focus();
+                            findText.select();
+                        }
+                    }
+                }
+                function addToHistory(state) {
+                    if (
+                        currentHistoryIndex >= 0 &&
+                        currentHistoryIndex < history.length - 1
+                    ) {
+                        history = history.slice(0, currentHistoryIndex + 1);
+                    }
+                    history.push(state);
+                    if (history.length > MAX_HISTORY) {
+                        history.shift();
+                    }
+                    currentHistoryIndex = history.length - 1;
+                    updateUndoButton();
+                }
+                function undo() {
+                    if (currentHistoryIndex < 0 || history.length === 0) {
+                        return;
+                    }
+                    isUndoing = true;
+                    if (currentHistoryIndex > 0) {
+                        currentHistoryIndex--;
+                        textbox.value = history[currentHistoryIndex];
+                        storeLocally();
+                        updateWordCount();
+                        textbox.focus();
+                        textbox.setSelectionRange(
+                            textbox.value.length,
+                            textbox.value.length,
+                        );
+                        updateCursorPosition();
+                    }
+                    updateUndoButton();
+                    isUndoing = false;
+                }
+                function updateUndoButton() {
+                    undoButton.disabled = currentHistoryIndex <= 0;
+                }
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                }
+                function findAllMatches(text, term) {
+                    if (!term) return [];
+                    const matches = [];
+                    const regex = new RegExp(escapeRegExp(term), "g");
+                    let match;
+                    while ((match = regex.exec(text)) !== null) {
+                        matches.push({
+                            start: match.index,
+                            end: match.index + term.length,
+                        });
+                    }
+                    return matches;
+                }
+                function findNext() {
+                    const searchTerm = findText.value;
+                    if (!searchTerm) {
+                        findCount.textContent = "";
+                        currentMatches = [];
+                        currentMatchIndex = -1;
+                        return;
+                    }
+                    if (currentMatches.length === 0) {
+                        currentMatches = findAllMatches(
+                            textbox.value,
+                            searchTerm,
+                        );
+                    }
+                    if (currentMatches.length > 0) {
+                        currentMatchIndex =
+                            (currentMatchIndex + 1) % currentMatches.length;
+                        const match = currentMatches[currentMatchIndex];
+                        textbox.focus();
+                        textbox.setSelectionRange(match.start, match.end);
+                        findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                    } else {
+                        findCount.textContent = "No matches";
+                    }
+                }
+                function replaceCurrentMatch() {
+                    const searchTerm = findText.value;
+                    const replacement = replaceText.value;
+                    if (
+                        !searchTerm ||
+                        currentMatches.length === 0 ||
+                        currentMatchIndex === -1
+                    ) {
+                        return;
+                    }
+                    addToHistory(textbox.value);
+                    const match = currentMatches[currentMatchIndex];
+                    const before = textbox.value.substring(0, match.start);
+                    const after = textbox.value.substring(match.end);
+                    textbox.value = before + replacement + after;
+                    updateWordCount();
+                    const lengthDiff =
+                        replacement.length - (match.end - match.start);
+                    for (
+                        let i = currentMatchIndex + 1;
+                        i < currentMatches.length;
+                        i++
+                    ) {
+                        currentMatches[i].start += lengthDiff;
+                        currentMatches[i].end += lengthDiff;
+                    }
+                    currentMatches.splice(currentMatchIndex, 1);
+                    if (currentMatches.length === 0) {
+                        findCount.textContent = "No matches";
+                        currentMatchIndex = -1;
+                    } else {
+                        if (currentMatchIndex >= currentMatches.length) {
+                            currentMatchIndex = 0;
+                        }
+                        const newMatch = currentMatches[currentMatchIndex];
+                        textbox.setSelectionRange(newMatch.start, newMatch.end);
+                        findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                    }
+                    storeLocally();
+                }
+                function replaceAll() {
+                    const searchTerm = findText.value;
+                    const replacement = replaceText.value;
+                    if (!searchTerm) return;
+                    addToHistory(textbox.value);
+                    const newText = textbox.value.replace(
+                        new RegExp(escapeRegExp(searchTerm), "g"),
+                        replacement,
+                    );
+                    const count = (
+                        textbox.value.match(
+                            new RegExp(escapeRegExp(searchTerm), "g"),
+                        ) || []
+                    ).length;
+                    textbox.value = newText;
+                    updateWordCount();
+                    findCount.textContent = `Replaced ${count} occurrences`;
                     currentMatches = [];
                     currentMatchIndex = -1;
-                    return;
+                    storeLocally();
                 }
-
-                if (currentMatches.length === 0) {
-                    currentMatches = findAllMatches(textbox.value, searchTerm);
-                }
-
-                if (currentMatches.length > 0) {
-                    currentMatchIndex =
-                        (currentMatchIndex + 1) % currentMatches.length;
-                    const match = currentMatches[currentMatchIndex];
-
-                    textbox.focus();
-                    textbox.setSelectionRange(match.start, match.end);
-                    findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
-                } else {
-                    findCount.textContent = "No matches";
-                }
-            }
-
-            function replaceCurrentMatch() {
-                const searchTerm = findText.value;
-                const replacement = replaceText.value;
-
-                if (
-                    !searchTerm ||
-                    currentMatches.length === 0 ||
-                    currentMatchIndex === -1
-                ) {
-                    return;
-                }
-
-                addToHistory(textbox.value);
-
-                const match = currentMatches[currentMatchIndex];
-                const before = textbox.value.substring(0, match.start);
-                const after = textbox.value.substring(match.end);
-
-                textbox.value = before + replacement + after;
-
-                const lengthDiff =
-                    replacement.length - (match.end - match.start);
-
-                for (
-                    let i = currentMatchIndex + 1;
-                    i < currentMatches.length;
-                    i++
-                ) {
-                    currentMatches[i].start += lengthDiff;
-                    currentMatches[i].end += lengthDiff;
-                }
-
-                currentMatches.splice(currentMatchIndex, 1);
-
-                if (currentMatches.length === 0) {
-                    findCount.textContent = "No matches";
-                    currentMatchIndex = -1;
-                } else {
-                    if (currentMatchIndex >= currentMatches.length) {
-                        currentMatchIndex = 0;
-                    }
-
-                    const newMatch = currentMatches[currentMatchIndex];
-                    textbox.setSelectionRange(newMatch.start, newMatch.end);
-                    findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
-                }
-
-                storeLocally();
-            }
-
-            function replaceAll() {
-                const searchTerm = findText.value;
-                const replacement = replaceText.value;
-
-                if (!searchTerm) return;
-
-                addToHistory(textbox.value);
-
-                const newText = textbox.value.replace(
-                    new RegExp(escapeRegExp(searchTerm), "g"),
-                    replacement,
-                );
-                const count = (
-                    textbox.value.match(
-                        new RegExp(escapeRegExp(searchTerm), "g"),
-                    ) || []
-                ).length;
-
-                textbox.value = newText;
-                findCount.textContent = `Replaced ${count} occurrences`;
-
-                currentMatches = [];
-                currentMatchIndex = -1;
-                storeLocally();
-            }
-
-            let lastChangeTime = 0;
-            let lastText = "";
-            const CHANGE_DELAY = 1000;
-
-            function checkForSignificantChange() {
-                const now = Date.now();
-
-                if (isUndoing) return;
-
-                if (lastText === "") {
-                    lastText = textbox.value;
-                    lastChangeTime = now;
-                    return;
-                }
-
-                if (textbox.value !== lastText) {
-                    const diff = Math.abs(
-                        textbox.value.length - lastText.length,
-                    );
-                    const timeDiff = now - lastChangeTime;
-
-                    if (timeDiff > CHANGE_DELAY || diff > 10) {
-                        addToHistory(lastText);
+                let lastChangeTime = 0;
+                let lastText = "";
+                const CHANGE_DELAY = 1000;
+                function checkForSignificantChange() {
+                    const now = Date.now();
+                    if (isUndoing) return;
+                    if (lastText === "") {
                         lastText = textbox.value;
                         lastChangeTime = now;
+                        return;
+                    }
+                    if (textbox.value !== lastText) {
+                        const diff = Math.abs(
+                            textbox.value.length - lastText.length,
+                        );
+                        const timeDiff = now - lastChangeTime;
+                        if (timeDiff > CHANGE_DELAY || diff > 10) {
+                            addToHistory(lastText);
+                            lastText = textbox.value;
+                            lastChangeTime = now;
+                        }
                     }
                 }
-            }
-
-            function handleKeyDown(event) {
-                if (event.key === "Tab") {
-                    event.preventDefault();
-                    const s = textbox.selectionStart;
-                    textbox.value =
-                        textbox.value.substring(0, s) +
-                        "\t" +
-                        textbox.value.substring(textbox.selectionEnd);
-                    textbox.selectionStart = textbox.selectionEnd = s + 1;
+                function handleKeyDown(event) {
+                    if (event.key === "Tab") {
+                        event.preventDefault();
+                        const s = textbox.selectionStart;
+                        textbox.value =
+                            textbox.value.substring(0, s) +
+                            "\t" +
+                            textbox.value.substring(textbox.selectionEnd);
+                        textbox.selectionStart = textbox.selectionEnd = s + 1;
+                        updateCursorPosition();
+                    }
+                    if (event.ctrlKey || event.metaKey) {
+                        if (event.key === "o") {
+                            event.preventDefault();
+                            openInput.click();
+                        } else if (event.key === "s") {
+                            event.preventDefault();
+                            saveFile();
+                        } else if (event.key === "f") {
+                            event.preventDefault();
+                            togglePopup("findReplace", true);
+                        } else if (event.key === "z") {
+                            event.preventDefault();
+                            undo();
+                        } else if (event.key === "n") {
+                            event.preventDefault();
+                            openBPad();
+                        } else if (event.key === "h") {
+                            event.preventDefault();
+                            togglePopup("readme", true);
+                        }
+                    }
+                    if (
+                        [
+                            "ArrowUp",
+                            "ArrowDown",
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "Home",
+                            "End",
+                        ].includes(event.key)
+                    ) {
+                        setTimeout(updateCursorPosition, 0);
+                    }
+                }
+                function handleTextChange() {
                     updateCursorPosition();
+                    updateWordCount();
+                    clearTimeout(saveTimer);
+                    saveTimer = setTimeout(() => {
+                        storeLocally();
+                        checkForSignificantChange();
+                    }, 1000);
+                    currentMatches = [];
+                    currentMatchIndex = -1;
                 }
 
-                if (event.ctrlKey || event.metaKey) {
-                    if (event.key === "o") {
+                // Handle tab and enter in find/replace popup
+                function handleFindReplaceKeyDown(event) {
+                    const inputs = [findText, replaceText];
+                    const buttons = [
+                        document.getElementById("find-btn"),
+                        document.getElementById("replace-btn"),
+                        document.getElementById("replace-all-btn"),
+                    ];
+
+                    if (event.key === "Tab") {
                         event.preventDefault();
-                        openInput.click();
-                    } else if (event.key === "s") {
+
+                        if (event.target === findText) {
+                            replaceText.focus();
+                            replaceText.select();
+                        } else if (event.target === replaceText) {
+                            if (event.shiftKey) {
+                                findText.focus();
+                                findText.select();
+                            } else {
+                                buttons[0].focus();
+                            }
+                        } else {
+                            // Handle tab navigation through buttons
+                            const currentIndex = buttons.indexOf(event.target);
+                            if (currentIndex !== -1) {
+                                const nextIndex = event.shiftKey
+                                    ? currentIndex === 0
+                                        ? replaceText
+                                        : buttons[currentIndex - 1]
+                                    : currentIndex === buttons.length - 1
+                                      ? findText
+                                      : buttons[currentIndex + 1];
+
+                                if (typeof nextIndex === "number") {
+                                    buttons[nextIndex].focus();
+                                } else {
+                                    nextIndex.focus();
+                                    if (
+                                        nextIndex === findText ||
+                                        nextIndex === replaceText
+                                    ) {
+                                        nextIndex.select();
+                                    }
+                                }
+                            }
+                        }
+                    } else if (event.key === "Enter") {
                         event.preventDefault();
-                        saveFile();
-                    } else if (event.key === "f") {
-                        event.preventDefault();
-                        togglePopup("findReplace", true);
-                    } else if (event.key === "z") {
-                        event.preventDefault();
-                        undo();
+
+                        if (event.target === findText) {
+                            findNext();
+                        } else if (event.target === replaceText) {
+                            replaceCurrentMatch();
+                        } else if (buttons.includes(event.target)) {
+                            event.target.click();
+                        }
+                    } else if (event.key === "Escape") {
+                        togglePopup(null, false);
+                        textbox.focus();
                     }
                 }
 
-                if (
-                    [
-                        "ArrowUp",
-                        "ArrowDown",
-                        "ArrowLeft",
-                        "ArrowRight",
-                        "Home",
-                        "End",
-                    ].includes(event.key)
-                ) {
-                    setTimeout(updateCursorPosition, 0);
-                }
-            }
-
-            function handleTextChange() {
-                updateCursorPosition();
-                clearTimeout(saveTimer);
-                saveTimer = setTimeout(() => {
-                    storeLocally();
-                    checkForSignificantChange();
-                }, 1000);
-
-                currentMatches = [];
-                currentMatchIndex = -1;
-            }
-
-            window.addEventListener("resize", adjustTextareaHeight);
-            window.addEventListener("load", () => {
+                window.addEventListener("resize", adjustTextareaHeight);
                 textbox.value = localStorage.getItem("bedit_" + tabId) || "";
                 lastText = textbox.value;
                 if (!initialContentLoaded) {
@@ -726,57 +786,83 @@
                     textbox.value.length,
                 );
                 updateCursorPosition();
+                updateWordCount();
                 adjustTextareaHeight();
                 updateUndoButton();
-            });
-            window.addEventListener("keydown", handleKeyDown);
-            window.addEventListener("beforeunload", storeLocally);
+                window.addEventListener("keydown", handleKeyDown);
+                window.addEventListener("beforeunload", storeLocally);
+                textbox.addEventListener("keyup", handleTextChange);
+                textbox.addEventListener("click", updateCursorPosition);
+                textbox.addEventListener("mouseup", updateCursorPosition);
+                textbox.addEventListener("select", updateCursorPosition);
+                textbox.addEventListener("focus", updateCursorPosition);
+                textbox.addEventListener("input", handleTextChange);
 
-            textbox.addEventListener("keyup", handleTextChange);
-            textbox.addEventListener("click", updateCursorPosition);
-            textbox.addEventListener("mouseup", updateCursorPosition);
-            textbox.addEventListener("select", updateCursorPosition);
-            textbox.addEventListener("focus", updateCursorPosition);
-            textbox.addEventListener("input", handleTextChange);
-
-            findText.addEventListener("keyup", (e) => {
-                if (e.key === "Enter") findNext();
-                else {
-                    currentMatches = [];
-                    currentMatchIndex = -1;
-                    findCount.textContent = "";
-                }
-            });
-
-            document.getElementById("undo").addEventListener("click", undo);
-            document
-                .getElementById("open")
-                .addEventListener("click", () => openInput.click());
-            document.getElementById("save").addEventListener("click", saveFile);
-            document
-                .getElementById("readme-button")
-                .addEventListener("click", () => togglePopup("readme", true));
-            document
-                .getElementById("find-replace-button")
-                .addEventListener("click", () =>
-                    togglePopup("findReplace", true),
+                // Add keydown event listeners for find/replace inputs and buttons
+                findText.addEventListener("keydown", handleFindReplaceKeyDown);
+                replaceText.addEventListener(
+                    "keydown",
+                    handleFindReplaceKeyDown,
                 );
-            document
-                .getElementById("find-btn")
-                .addEventListener("click", findNext);
-            document
-                .getElementById("replace-btn")
-                .addEventListener("click", replaceCurrentMatch);
-            document
-                .getElementById("replace-all-btn")
-                .addEventListener("click", replaceAll);
-            openInput.addEventListener("change", handleFileOpen);
+                document
+                    .getElementById("find-btn")
+                    .addEventListener("keydown", handleFindReplaceKeyDown);
+                document
+                    .getElementById("replace-btn")
+                    .addEventListener("keydown", handleFindReplaceKeyDown);
+                document
+                    .getElementById("replace-all-btn")
+                    .addEventListener("keydown", handleFindReplaceKeyDown);
 
-            document.querySelectorAll(".close-btn").forEach((btn) => {
-                btn.addEventListener("click", () => togglePopup(null, false));
+                findText.addEventListener("keyup", (e) => {
+                    if (e.key === "Enter") {
+                        // Already handled in keydown
+                    } else {
+                        currentMatches = [];
+                        currentMatchIndex = -1;
+                        findCount.textContent = "";
+                    }
+                });
+                document.getElementById("undo").addEventListener("click", undo);
+                document
+                    .getElementById("open")
+                    .addEventListener("click", () => openInput.click());
+                document
+                    .getElementById("save")
+                    .addEventListener("click", saveFile);
+                const bpadButton = document.getElementById("bpad-button");
+                if (bpadButton) {
+                    bpadButton.addEventListener("click", openBPad);
+                }
+                document
+                    .getElementById("readme-button")
+                    .addEventListener("click", () =>
+                        togglePopup("readme", true),
+                    );
+                document
+                    .getElementById("find-replace-button")
+                    .addEventListener("click", () =>
+                        togglePopup("findReplace", true),
+                    );
+                document
+                    .getElementById("find-btn")
+                    .addEventListener("click", findNext);
+                document
+                    .getElementById("replace-btn")
+                    .addEventListener("click", replaceCurrentMatch);
+                document
+                    .getElementById("replace-all-btn")
+                    .addEventListener("click", replaceAll);
+                openInput.addEventListener("change", handleFileOpen);
+                document.querySelectorAll(".close-btn").forEach((btn) => {
+                    btn.addEventListener("click", () =>
+                        togglePopup(null, false),
+                    );
+                });
+                overlay.addEventListener("click", () =>
+                    togglePopup(null, false),
+                );
             });
-
-            overlay.addEventListener("click", () => togglePopup(null, false));
         </script>
     </body>
 </html>

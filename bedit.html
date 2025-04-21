@@ -270,17 +270,14 @@
     <body>
         <nav>
             <span id="controls">
-                <button id="openNewTab" title="Open (CTRL + N)">^ N</button>
-                <button id="open" title="Open (CTRL + O)">^ O</button>
+                <button id="openNewTab" title="New (CTRL + N)"><strong>N</strong></button>
+                <button id="open" title="Open (CTRL + O)"><strong>O</strong></button>
                 <input id="filename" placeholder="bedit.txt" />
-                <button id="save" title="Save (CTRL + S)">^ S</button>
+                <button id="save" title="Save (CTRL + S)"><strong>S</strong></button>
                 <button
                     id="find-replace-button"
-                    title="Find\Replace (CTRL + F)"
-                >
-                    ^ F
-                </button>
-                <button id="undo" disabled title="Undo (CTRL + Z)">^ Z</button>
+                    title="Find\Replace (CTRL + F)"><strong>F</strong></button>
+                <button id="undo" disabled title="Undo (CTRL + U)"><strong>U</strong></button>
                 <span id="stats">
                     <span class="stat-item">
                         <span class="stat-label">&#8595;</span>
@@ -295,13 +292,13 @@
                         <span id="word-count">0</span>
                     </span>
                 </span>
-                <button id="readme-button" title="Help (CTRL + H)">^ H</button>
+                <button id="readme-button" title="Help (CTRL + H)"><strong>H</strong></button>
             </span>
         </nav>
         <textarea
             id="textbox"
             autofocus
-            placeholder="Start typing here or click ^ H to learn more."
+            placeholder="Welcome to bEdit. Start typing to begin.&#10;CTRL +&#10;N = New&#10;O = Open&#10;S = Save&#10;F = Find&#10;U = Undo&#10;H = Help"
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
@@ -313,46 +310,43 @@
                     bEdit.org is a browser based text editor.<br />
                     bEdit.org can open, create, and save plaintext files like
                     .TXT, .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and
-                    .PL.<br />
-                    bEdit.org is designed to be a simple online text editor you
-                    can use in any browser on any computer.
+                    .PL.
                 </p>
                 <h2>Directions</h2>
                 <p>
-                    Open bedit.org in web browser and start writing. Notes are
+                    Open bedit.org in web browser and start writing. Files are
                     automatically saved in your browser.<br />
-                    bEdit.org can be used offline after the first use. Simply
-                    reopen bedit.org in your browser to continue working on your
+                    It is recommended you save your file after every session.<br />
+                    bEdit.org can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
                     notes.<br />
-                    Opening bedit.org in another browser tab will let you work
-                    on another file.<br />
-                    &#8595; is current line position, &#8594; is current
-                    character position and = is word count.<br />
-                    Press CTRL + O or click ^ O to edit a file from your
-                    computer.<br />
-                    Press CTRL + S or click ^ S to download your notes to your
-                    computer. bEdit.org saves your notes as 'bedit.txt' by
-                    default but you can change it to any name and filetype (EG
-                    rm-rf.sh.)<br />
-                    Press CTRL + F or click ^ F to find and replace text.<br />
-                    Press CTRL + Z or click ^ Z to undo the last change.<br />
-                    Press CTRL + H or click ^ H to view this help file.
+                    Opening bedit.org in another browser tab creates a new  file.<br />
+                    &#8595; displays the current line position.<br />
+                    &#8594; displays the current character position.<br />
+                    = displays the current word count.<br />
+                </p>
+                <h2>Shortcuts</h2>
+                    CTRL + N (N button) to create a new file.<br />
+                    CTRL + O (O button) to open a file from your computer.<br />
+                    CTRL + S (S button) to download a file to your computer.<br />
+                    CTRL + F (F button) to find and replace text.<br />
+                    CTRL + U (U button) to undo the last change.<br />
+                    CTRL + H (H button) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>
                     bEdit.org does not (and cannot):<br />
-                    - access your content,<br />
-                    - criticize your writing or coding,<br />
-                    - track any activity on your computer,<br />
-                    - judge your music choices,<br />
-                    - identify who you are,<br />
-                    - sell your data.
+                    access your content,<br />
+                    criticize your writing or coding,<br />
+                    track any activity on your computer,<br />
+                    judge your music choices,<br />
+                    identify who you are,<br />
+                    sell your data.
                 </p>
                 <h2>Credit</h2>
                 <p>
                     bEdit.org was created by
                     <a href="https://barney.me">Barney</a>.<br />
-                    If you'd like to support bEdit you can buy me a
+                    If you'd like to support bEdit.org you can buy me a
                     <a href="https://buymeacoffee.com/barneymatthews">coffee</a
                     >.
                 </p>

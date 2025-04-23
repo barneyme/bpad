@@ -298,19 +298,18 @@
         <textarea
             id="textbox"
             autofocus
-            placeholder="Start typing to begin or click &#63; help."
+            placeholder="Start typing to begin or click &#63; for help."
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
         <div id="readme-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>bEdit.org</h2>
+            <h2>Help</h2>
             <div id="readme-content">
                 <p>
                     bEdit.org is a browser based text editor.<br />
                     bEdit.org can open, create, and save plaintext files like
-                    .TXT, .CSV, .XML, .MD, .HTML, .CSS, .SH, .PS1, .PY, and
-                    .PL.
+                    .TXT, .CSV, .XML, .MD, .HTML, .CSS, .JS, .JSON, .SH, .BAT, .PS1 and .PY.
                 </p>
                 <h2>Directions</h2>
                 <p>
@@ -367,502 +366,434 @@
             </div>
         </div>
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                if ("serviceWorker" in navigator) {
-                    window.addEventListener("load", () => {
-                        navigator.serviceWorker
-                            .register("./service-worker.js")
-                            .catch((error) =>
-                                console.log(
-                                    "ServiceWorker registration failed: ",
-                                    error,
-                                ),
-                            );
-                    });
+        document.addEventListener("DOMContentLoaded", function () {
+            // Cache all DOM elements at initialization
+            const elements = {
+                textbox: document.getElementById("textbox"),
+                filenameBox: document.getElementById("filename"),
+                linePosition: document.getElementById("line-position"),
+                charPosition: document.getElementById("char-position"),
+                wordCount: document.getElementById("word-count"),
+                overlay: document.getElementById("popup-overlay"),
+                openInput: document.getElementById("open-input"),
+                findText: document.getElementById("find-text"),
+                replaceText: document.getElementById("replace-text"),
+                findCount: document.getElementById("find-count"),
+                undoButton: document.getElementById("undo"),
+                nav: document.querySelector("nav"),
+                findBtn: document.getElementById("find-btn"),
+                replaceBtn: document.getElementById("replace-btn"),
+                replaceAllBtn: document.getElementById("replace-all-btn"),
+                openBtn: document.getElementById("open"),
+                saveBtn: document.getElementById("save"),
+                openNewTabBtn: document.getElementById("openNewTab"),
+                readmeBtn: document.getElementById("readme-button"),
+                findReplaceBtn: document.getElementById("find-replace-button"),
+                closeButtons: document.querySelectorAll(".close-btn")
+            };
+
+            // Cache popups
+            const popups = {
+                readme: document.getElementById("readme-popup"),
+                findReplace: document.getElementById("find-replace-popup"),
+            };
+
+            // Register service worker
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register("./service-worker.js")
+                        .catch((error) =>
+                            console.log("ServiceWorker registration failed: ", error)
+                        );
+                });
+            }
+
+            // Initialize tab ID
+            if (!window.name) {
+                window.name = "bedit-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+            }
+            const tabId = window.name;
+
+            // State variables
+            let saveTimer;
+            let currentMatches = [];
+            let currentMatchIndex = -1;
+            const MAX_HISTORY = 100;
+            let history = [];
+            let currentHistoryIndex = -1;
+            let isUndoing = false;
+            let initialContentLoaded = false;
+            let lastChangeTime = 0;
+            let lastText = "";
+            const CHANGE_DELAY = 1000;
+
+            function adjustTextareaHeight() {
+                elements.textbox.style.top = elements.nav.offsetHeight + "px";
+            }
+
+            function storeLocally() {
+                localStorage.setItem("bedit_" + tabId, elements.textbox.value);
+            }
+
+            function updateCursorPosition() {
+                const text = elements.textbox.value;
+                const cursorPos = elements.textbox.selectionStart;
+                const lines = text.substring(0, cursorPos).split("\n");
+                elements.linePosition.textContent = lines.length;
+                elements.charPosition.textContent = lines[lines.length - 1].length + 1;
+            }
+
+            function updateWordCount() {
+                const text = elements.textbox.value.trim();
+                if (!text) {
+                    elements.wordCount.textContent = "0";
+                    return;
                 }
-                const textbox = document.getElementById("textbox");
-                const filenameBox = document.getElementById("filename");
-                const linePosition = document.getElementById("line-position");
-                const charPosition = document.getElementById("char-position");
-                const wordCount = document.getElementById("word-count");
-                const overlay = document.getElementById("popup-overlay");
-                const openInput = document.getElementById("open-input");
-                const findText = document.getElementById("find-text");
-                const replaceText = document.getElementById("replace-text");
-                const findCount = document.getElementById("find-count");
-                const undoButton = document.getElementById("undo");
-                const popups = {
-                    readme: document.getElementById("readme-popup"),
-                    findReplace: document.getElementById("find-replace-popup"),
-                };
-                if (!window.name) {
-                    window.name =
-                        "bedit-tab-" +
-                        Date.now() +
-                        "-" +
-                        Math.random().toString(36).substr(2, 9);
-                }
-                const tabId = window.name;
-                let saveTimer;
-                let currentMatches = [];
-                let currentMatchIndex = -1;
-                const MAX_HISTORY = 100;
-                let history = [];
-                let currentHistoryIndex = -1;
-                let isUndoing = false;
-                let initialContentLoaded = false;
-                function adjustTextareaHeight() {
-                    textbox.style.top =
-                        document.querySelector("nav").offsetHeight + "px";
-                }
-                function storeLocally() {
-                    localStorage.setItem("bedit_" + tabId, textbox.value);
-                }
-                function updateCursorPosition() {
-                    const text = textbox.value;
-                    const cursorPos = textbox.selectionStart;
-                    const lines = text.substring(0, cursorPos).split("\n");
-                    linePosition.textContent = lines.length;
-                    charPosition.textContent =
-                        lines[lines.length - 1].length + 1;
-                }
-                function updateWordCount() {
-                    const text = textbox.value.trim();
-                    if (!text) {
-                        wordCount.textContent = "0";
-                        return;
-                    }
-                    const words = text
-                        .split(/\s+/)
-                        .filter((word) => word.length > 0);
-                    wordCount.textContent = words.length.toString();
-                }
-                function handleFileOpen(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            if (textbox.value) {
-                                addToHistory(textbox.value);
-                            }
-                            textbox.value = e.target.result;
-                            updateCursorPosition();
-                            updateWordCount();
-                            storeLocally();
-                            filenameBox.value = file.name;
-                            history = [];
-                            currentHistoryIndex = -1;
-                            addToHistory(textbox.value);
-                            updateUndoButton();
-                        };
-                        reader.readAsText(file);
-                    }
-                }
-                function saveFile() {
-                    const filename = filenameBox.value || "bedit.txt";
-                    const blob = new Blob([textbox.value], {
-                        type: "text/plain",
-                    });
-                    const a = document.createElement("a");
-                    a.href = URL.createObjectURL(blob);
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                }
-                function openNewTab() {
-                    window.open("https://bedit.org", "_blank");
-                }
-                function togglePopup(popupId, show) {
-                    for (const key in popups) {
-                        if (popups[key]) {
-                            popups[key].style.display = "none";
+                const words = text.split(/\s+/).filter((word) => word.length > 0);
+                elements.wordCount.textContent = words.length.toString();
+            }
+
+            function handleFileOpen(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (elements.textbox.value) {
+                            addToHistory(elements.textbox.value);
                         }
-                    }
-                    if (overlay) {
-                        overlay.style.display = "none";
-                    }
-                    if (show && popupId && popups[popupId]) {
-                        popups[popupId].style.display = "block";
-                        if (overlay) {
-                            overlay.style.display = "block";
-                        }
-                        if (popupId === "findReplace" && findText) {
-                            findText.focus();
-                            findText.select();
-                        }
-                    }
-                }
-                function addToHistory(state) {
-                    if (
-                        currentHistoryIndex >= 0 &&
-                        currentHistoryIndex < history.length - 1
-                    ) {
-                        history = history.slice(0, currentHistoryIndex + 1);
-                    }
-                    history.push(state);
-                    if (history.length > MAX_HISTORY) {
-                        history.shift();
-                    }
-                    currentHistoryIndex = history.length - 1;
-                    updateUndoButton();
-                }
-                function undo() {
-                    if (currentHistoryIndex < 0 || history.length === 0) {
-                        return;
-                    }
-                    isUndoing = true;
-                    if (currentHistoryIndex > 0) {
-                        currentHistoryIndex--;
-                        textbox.value = history[currentHistoryIndex];
-                        storeLocally();
+                        elements.textbox.value = e.target.result;
+                        updateCursorPosition();
                         updateWordCount();
-                        textbox.focus();
-                        textbox.setSelectionRange(
-                            textbox.value.length,
-                            textbox.value.length,
-                        );
-                        updateCursorPosition();
-                    }
-                    updateUndoButton();
-                    isUndoing = false;
-                }
-                function updateUndoButton() {
-                    undoButton.disabled = currentHistoryIndex <= 0;
-                }
-                function escapeRegExp(string) {
-                    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                }
-                function findAllMatches(text, term) {
-                    if (!term) return [];
-                    const matches = [];
-                    const regex = new RegExp(escapeRegExp(term), "g");
-                    let match;
-                    while ((match = regex.exec(text)) !== null) {
-                        matches.push({
-                            start: match.index,
-                            end: match.index + term.length,
-                        });
-                    }
-                    return matches;
-                }
-                function findNext() {
-                    const searchTerm = findText.value;
-                    if (!searchTerm) {
-                        findCount.textContent = "";
-                        currentMatches = [];
-                        currentMatchIndex = -1;
-                        return;
-                    }
-                    if (currentMatches.length === 0) {
-                        currentMatches = findAllMatches(
-                            textbox.value,
-                            searchTerm,
-                        );
-                    }
-                    if (currentMatches.length > 0) {
-                        currentMatchIndex =
-                            (currentMatchIndex + 1) % currentMatches.length;
-                        const match = currentMatches[currentMatchIndex];
-                        textbox.focus();
-                        textbox.setSelectionRange(match.start, match.end);
-                        findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
-                    } else {
-                        findCount.textContent = "No matches";
-                    }
-                }
-                function replaceCurrentMatch() {
-                    const searchTerm = findText.value;
-                    const replacement = replaceText.value;
-                    if (
-                        !searchTerm ||
-                        currentMatches.length === 0 ||
-                        currentMatchIndex === -1
-                    ) {
-                        return;
-                    }
-                    addToHistory(textbox.value);
-                    const match = currentMatches[currentMatchIndex];
-                    const before = textbox.value.substring(0, match.start);
-                    const after = textbox.value.substring(match.end);
-                    textbox.value = before + replacement + after;
-                    updateWordCount();
-                    const lengthDiff =
-                        replacement.length - (match.end - match.start);
-                    for (
-                        let i = currentMatchIndex + 1;
-                        i < currentMatches.length;
-                        i++
-                    ) {
-                        currentMatches[i].start += lengthDiff;
-                        currentMatches[i].end += lengthDiff;
-                    }
-                    currentMatches.splice(currentMatchIndex, 1);
-                    if (currentMatches.length === 0) {
-                        findCount.textContent = "No matches";
-                        currentMatchIndex = -1;
-                    } else {
-                        if (currentMatchIndex >= currentMatches.length) {
-                            currentMatchIndex = 0;
-                        }
-                        const newMatch = currentMatches[currentMatchIndex];
-                        textbox.setSelectionRange(newMatch.start, newMatch.end);
-                        findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
-                    }
-                    storeLocally();
-                }
-                function replaceAll() {
-                    const searchTerm = findText.value;
-                    const replacement = replaceText.value;
-                    if (!searchTerm) return;
-                    addToHistory(textbox.value);
-                    const newText = textbox.value.replace(
-                        new RegExp(escapeRegExp(searchTerm), "g"),
-                        replacement,
-                    );
-                    const count = (
-                        textbox.value.match(
-                            new RegExp(escapeRegExp(searchTerm), "g"),
-                        ) || []
-                    ).length;
-                    textbox.value = newText;
-                    updateWordCount();
-                    findCount.textContent = `Replaced ${count} occurrences`;
-                    currentMatches = [];
-                    currentMatchIndex = -1;
-                    storeLocally();
-                }
-                let lastChangeTime = 0;
-                let lastText = "";
-                const CHANGE_DELAY = 1000;
-                function checkForSignificantChange() {
-                    const now = Date.now();
-                    if (isUndoing) return;
-                    if (lastText === "") {
-                        lastText = textbox.value;
-                        lastChangeTime = now;
-                        return;
-                    }
-                    if (textbox.value !== lastText) {
-                        const diff = Math.abs(
-                            textbox.value.length - lastText.length,
-                        );
-                        const timeDiff = now - lastChangeTime;
-                        if (timeDiff > CHANGE_DELAY || diff > 10) {
-                            addToHistory(lastText);
-                            lastText = textbox.value;
-                            lastChangeTime = now;
-                        }
-                    }
-                }
-                function handleKeyDown(event) {
-                    if (event.key === "Tab") {
-                        event.preventDefault();
-                        const s = textbox.selectionStart;
-                        textbox.value =
-                            textbox.value.substring(0, s) +
-                            "\t" +
-                            textbox.value.substring(textbox.selectionEnd);
-                        textbox.selectionStart = textbox.selectionEnd = s + 1;
-                        updateCursorPosition();
-                    }
-                    if (event.ctrlKey || event.metaKey) {
-                        if (event.key === "o") {
-                            event.preventDefault();
-                            openInput.click();
-                        } else if (event.key === "s") {
-                            event.preventDefault();
-                            saveFile();
-                        } else if (event.key === "f") {
-                            event.preventDefault();
-                            togglePopup("findReplace", true);
-                        } else if (event.key === "z") {
-                            event.preventDefault();
-                            undo();
-                        } else if (event.key === "n") {
-                            event.preventDefault();
-                            openNewTab();
-                        } else if (event.key === "h") {
-                            event.preventDefault();
-                            togglePopup("readme", true);
-                        }
-                    }
-                    if (
-                        [
-                            "ArrowUp",
-                            "ArrowDown",
-                            "ArrowLeft",
-                            "ArrowRight",
-                            "Home",
-                            "End",
-                        ].includes(event.key)
-                    ) {
-                        setTimeout(updateCursorPosition, 0);
-                    }
-                }
-                function handleTextChange() {
-                    updateCursorPosition();
-                    updateWordCount();
-                    clearTimeout(saveTimer);
-                    saveTimer = setTimeout(() => {
                         storeLocally();
-                        checkForSignificantChange();
-                    }, 1000);
-                    currentMatches = [];
-                    currentMatchIndex = -1;
+                        elements.filenameBox.value = file.name;
+                        history = [];
+                        currentHistoryIndex = -1;
+                        addToHistory(elements.textbox.value);
+                        updateUndoButton();
+                    };
+                    reader.readAsText(file);
                 }
+            }
 
-                // Handle tab and enter in find/replace popup
-                function handleFindReplaceKeyDown(event) {
-                    const inputs = [findText, replaceText];
-                    const buttons = [
-                        document.getElementById("find-btn"),
-                        document.getElementById("replace-btn"),
-                        document.getElementById("replace-all-btn"),
-                    ];
+            function saveFile() {
+                const filename = elements.filenameBox.value || "bedit.txt";
+                const blob = new Blob([elements.textbox.value], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
 
-                    if (event.key === "Tab") {
-                        event.preventDefault();
+            function openNewTab() {
+                window.open("https://bedit.org", "_blank");
+            }
 
-                        if (event.target === findText) {
-                            replaceText.focus();
-                            replaceText.select();
-                        } else if (event.target === replaceText) {
-                            if (event.shiftKey) {
-                                findText.focus();
-                                findText.select();
-                            } else {
-                                buttons[0].focus();
-                            }
-                        } else {
-                            // Handle tab navigation through buttons
-                            const currentIndex = buttons.indexOf(event.target);
-                            if (currentIndex !== -1) {
-                                const nextIndex = event.shiftKey
-                                    ? currentIndex === 0
-                                        ? replaceText
-                                        : buttons[currentIndex - 1]
-                                    : currentIndex === buttons.length - 1
-                                      ? findText
-                                      : buttons[currentIndex + 1];
-
-                                if (typeof nextIndex === "number") {
-                                    buttons[nextIndex].focus();
-                                } else {
-                                    nextIndex.focus();
-                                    if (
-                                        nextIndex === findText ||
-                                        nextIndex === replaceText
-                                    ) {
-                                        nextIndex.select();
-                                    }
-                                }
-                            }
-                        }
-                    } else if (event.key === "Enter") {
-                        event.preventDefault();
-
-                        if (event.target === findText) {
-                            findNext();
-                        } else if (event.target === replaceText) {
-                            replaceCurrentMatch();
-                        } else if (buttons.includes(event.target)) {
-                            event.target.click();
-                        }
-                    } else if (event.key === "Escape") {
-                        togglePopup(null, false);
-                        textbox.focus();
+            function togglePopup(popupId, show) {
+                // Hide all popups
+                for (const key in popups) {
+                    if (popups[key]) {
+                        popups[key].style.display = "none";
                     }
                 }
 
-                window.addEventListener("resize", adjustTextareaHeight);
-                textbox.value = localStorage.getItem("bedit_" + tabId) || "";
-                lastText = textbox.value;
-                if (!initialContentLoaded) {
-                    addToHistory(textbox.value);
-                    initialContentLoaded = true;
+                elements.overlay.style.display = "none";
+
+                if (show && popupId && popups[popupId]) {
+                    popups[popupId].style.display = "block";
+                    elements.overlay.style.display = "block";
+
+                    if (popupId === "findReplace" && elements.findText) {
+                        elements.findText.focus();
+                        elements.findText.select();
+                    }
                 }
-                textbox.setSelectionRange(
-                    textbox.value.length,
-                    textbox.value.length,
+            }
+
+            function addToHistory(state) {
+                if (currentHistoryIndex >= 0 && currentHistoryIndex < history.length - 1) {
+                    history = history.slice(0, currentHistoryIndex + 1);
+                }
+                history.push(state);
+                if (history.length > MAX_HISTORY) {
+                    history.shift();
+                }
+                currentHistoryIndex = history.length - 1;
+                updateUndoButton();
+            }
+
+            function undo() {
+                if (currentHistoryIndex < 0 || history.length === 0) {
+                    return;
+                }
+                isUndoing = true;
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+                    elements.textbox.value = history[currentHistoryIndex];
+                    storeLocally();
+                    updateWordCount();
+                    elements.textbox.focus();
+                    elements.textbox.setSelectionRange(
+                        elements.textbox.value.length,
+                        elements.textbox.value.length
+                    );
+                    updateCursorPosition();
+                }
+                updateUndoButton();
+                isUndoing = false;
+            }
+
+            function updateUndoButton() {
+                elements.undoButton.disabled = currentHistoryIndex <= 0;
+            }
+
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            }
+
+            function findAllMatches(text, term) {
+                if (!term) return [];
+                const matches = [];
+                const regex = new RegExp(escapeRegExp(term), "g");
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                    matches.push({
+                        start: match.index,
+                        end: match.index + term.length,
+                    });
+                }
+                return matches;
+            }
+
+            function findNext() {
+                const searchTerm = elements.findText.value;
+                if (!searchTerm) {
+                    elements.findCount.textContent = "";
+                    currentMatches = [];
+                    currentMatchIndex = -1;
+                    return;
+                }
+
+                if (currentMatches.length === 0) {
+                    currentMatches = findAllMatches(elements.textbox.value, searchTerm);
+                }
+
+                if (currentMatches.length > 0) {
+                    currentMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
+                    const match = currentMatches[currentMatchIndex];
+                    elements.textbox.focus();
+                    elements.textbox.setSelectionRange(match.start, match.end);
+                    elements.findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                } else {
+                    elements.findCount.textContent = "No matches";
+                }
+            }
+
+            function replaceCurrentMatch() {
+                const searchTerm = elements.findText.value;
+                const replacement = elements.replaceText.value;
+
+                if (!searchTerm || currentMatches.length === 0 || currentMatchIndex === -1) {
+                    return;
+                }
+
+                addToHistory(elements.textbox.value);
+                const match = currentMatches[currentMatchIndex];
+                const before = elements.textbox.value.substring(0, match.start);
+                const after = elements.textbox.value.substring(match.end);
+                elements.textbox.value = before + replacement + after;
+                updateWordCount();
+
+                const lengthDiff = replacement.length - (match.end - match.start);
+                for (let i = currentMatchIndex + 1; i < currentMatches.length; i++) {
+                    currentMatches[i].start += lengthDiff;
+                    currentMatches[i].end += lengthDiff;
+                }
+
+                currentMatches.splice(currentMatchIndex, 1);
+
+                if (currentMatches.length === 0) {
+                    elements.findCount.textContent = "No matches";
+                    currentMatchIndex = -1;
+                } else {
+                    if (currentMatchIndex >= currentMatches.length) {
+                        currentMatchIndex = 0;
+                    }
+                    const newMatch = currentMatches[currentMatchIndex];
+                    elements.textbox.setSelectionRange(newMatch.start, newMatch.end);
+                    elements.findCount.textContent = `${currentMatchIndex + 1} of ${currentMatches.length}`;
+                }
+
+                storeLocally();
+            }
+
+            function replaceAll() {
+                const searchTerm = elements.findText.value;
+                const replacement = elements.replaceText.value;
+
+                if (!searchTerm) return;
+
+                addToHistory(elements.textbox.value);
+
+                const newText = elements.textbox.value.replace(
+                    new RegExp(escapeRegExp(searchTerm), "g"),
+                    replacement
                 );
+
+                const count = (
+                    elements.textbox.value.match(new RegExp(escapeRegExp(searchTerm), "g")) || []
+                ).length;
+
+                elements.textbox.value = newText;
+                updateWordCount();
+                elements.findCount.textContent = `Replaced ${count} occurrences`;
+                currentMatches = [];
+                currentMatchIndex = -1;
+                storeLocally();
+            }
+
+            function checkForSignificantChange() {
+                const now = Date.now();
+                if (isUndoing) return;
+
+                if (lastText === "") {
+                    lastText = elements.textbox.value;
+                    lastChangeTime = now;
+                    return;
+                }
+
+                if (elements.textbox.value !== lastText) {
+                    const diff = Math.abs(elements.textbox.value.length - lastText.length);
+                    const timeDiff = now - lastChangeTime;
+
+                    if (timeDiff > CHANGE_DELAY || diff > 10) {
+                        addToHistory(lastText);
+                        lastText = elements.textbox.value;
+                        lastChangeTime = now;
+                    }
+                }
+            }
+
+            function handleKeyDown(event) {
+                if (event.key === "Tab") {
+                    event.preventDefault();
+                    const s = elements.textbox.selectionStart;
+                    elements.textbox.value =
+                        elements.textbox.value.substring(0, s) +
+                        "\t" +
+                        elements.textbox.value.substring(elements.textbox.selectionEnd);
+                    elements.textbox.selectionStart = elements.textbox.selectionEnd = s + 1;
+                    updateCursorPosition();
+                }
+
+                if (event.ctrlKey || event.metaKey) {
+                    if (event.key === "o") {
+                        event.preventDefault();
+                        elements.openInput.click();
+                    } else if (event.key === "s") {
+                        event.preventDefault();
+                        saveFile();
+                    } else if (event.key === "f") {
+                        event.preventDefault();
+                        togglePopup("findReplace", true);
+                    } else if (event.key === "z") {
+                        event.preventDefault();
+                        undo();
+                    } else if (event.key === "n") {
+                        event.preventDefault();
+                        openNewTab();
+                    } else if (event.key === "h") {
+                        event.preventDefault();
+                        togglePopup("readme", true);
+                    }
+                }
+
+                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                    setTimeout(updateCursorPosition, 0);
+                }
+            }
+
+            function handleTextChange() {
                 updateCursorPosition();
                 updateWordCount();
-                adjustTextareaHeight();
-                updateUndoButton();
-                window.addEventListener("keydown", handleKeyDown);
-                window.addEventListener("beforeunload", storeLocally);
-                textbox.addEventListener("keyup", handleTextChange);
-                textbox.addEventListener("click", updateCursorPosition);
-                textbox.addEventListener("mouseup", updateCursorPosition);
-                textbox.addEventListener("select", updateCursorPosition);
-                textbox.addEventListener("focus", updateCursorPosition);
-                textbox.addEventListener("input", handleTextChange);
 
-                // Add keydown event listeners for find/replace inputs and buttons
-                findText.addEventListener("keydown", handleFindReplaceKeyDown);
-                replaceText.addEventListener(
-                    "keydown",
-                    handleFindReplaceKeyDown,
-                );
-                document
-                    .getElementById("find-btn")
-                    .addEventListener("keydown", handleFindReplaceKeyDown);
-                document
-                    .getElementById("replace-btn")
-                    .addEventListener("keydown", handleFindReplaceKeyDown);
-                document
-                    .getElementById("replace-all-btn")
-                    .addEventListener("keydown", handleFindReplaceKeyDown);
+                // Clear previous timers to implement debouncing
+                clearTimeout(saveTimer);
 
-                findText.addEventListener("keyup", (e) => {
-                    if (e.key === "Enter") {
-                        // Already handled in keydown
-                    } else {
-                        currentMatches = [];
-                        currentMatchIndex = -1;
-                        findCount.textContent = "";
-                    }
-                });
-                document.getElementById("undo").addEventListener("click", undo);
-                document
-                    .getElementById("open")
-                    .addEventListener("click", () => openInput.click());
-                document
-                    .getElementById("save")
-                    .addEventListener("click", saveFile);
-                const bpadButton = document.getElementById("openNewTab");
-                if (bpadButton) {
-                    bpadButton.addEventListener("click", openNewTab);
-                }
-                document
-                    .getElementById("readme-button")
-                    .addEventListener("click", () =>
-                        togglePopup("readme", true),
-                    );
-                document
-                    .getElementById("find-replace-button")
-                    .addEventListener("click", () =>
-                        togglePopup("findReplace", true),
-                    );
-                document
-                    .getElementById("find-btn")
-                    .addEventListener("click", findNext);
-                document
-                    .getElementById("replace-btn")
-                    .addEventListener("click", replaceCurrentMatch);
-                document
-                    .getElementById("replace-all-btn")
-                    .addEventListener("click", replaceAll);
-                openInput.addEventListener("change", handleFileOpen);
-                document.querySelectorAll(".close-btn").forEach((btn) => {
-                    btn.addEventListener("click", () =>
-                        togglePopup(null, false),
-                    );
-                });
-                overlay.addEventListener("click", () =>
-                    togglePopup(null, false),
-                );
+                // Set a new timer for saving to localStorage
+                saveTimer = setTimeout(() => {
+                    storeLocally();
+                    // Separate the history tracking from immediate saving
+                    checkForSignificantChange();
+                }, 500); // Reduced to 500ms for more responsive saves
+
+                // Reset search when text changes
+                currentMatches = [];
+                currentMatchIndex = -1;
+            }
+
+            // Add event listeners
+            elements.textbox.addEventListener("input", handleTextChange);
+            elements.textbox.addEventListener("keydown", handleKeyDown);
+            elements.textbox.addEventListener("click", updateCursorPosition);
+            elements.textbox.addEventListener("mouseup", updateCursorPosition);
+            elements.textbox.addEventListener("select", updateCursorPosition);
+            elements.textbox.addEventListener("focus", updateCursorPosition);
+
+            // Button event listeners
+            elements.openBtn.addEventListener("click", function() {
+                elements.openInput.click();
             });
+            elements.openInput.addEventListener("change", handleFileOpen);
+            elements.saveBtn.addEventListener("click", saveFile);
+            elements.findReplaceBtn.addEventListener("click", function() {
+                togglePopup("findReplace", true);
+            });
+            elements.undoButton.addEventListener("click", undo);
+            elements.openNewTabBtn.addEventListener("click", openNewTab);
+            elements.readmeBtn.addEventListener("click", function() {
+                togglePopup("readme", true);
+            });
+
+            // Find/Replace button listeners
+            elements.findBtn.addEventListener("click", findNext);
+            elements.replaceBtn.addEventListener("click", replaceCurrentMatch);
+            elements.replaceAllBtn.addEventListener("click", replaceAll);
+
+            // Close button listeners
+            elements.closeButtons.forEach(button => {
+                button.addEventListener("click", function() {
+                    togglePopup(null, false);
+                });
+            });
+
+            // Overlay click to close popups
+            elements.overlay.addEventListener("click", function() {
+                togglePopup(null, false);
+            });
+
+            // Initial setup
+            adjustTextareaHeight();
+            window.addEventListener("resize", adjustTextareaHeight);
+
+            // Load content from localStorage if available
+            const savedContent = localStorage.getItem("bedit_" + tabId);
+            if (savedContent) {
+                elements.textbox.value = savedContent;
+                updateWordCount();
+                updateCursorPosition();
+                initialContentLoaded = true;
+                lastText = savedContent;
+                addToHistory(savedContent);
+            }
+
+            // Check for URL parameters for "readme" mode
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("readme") === "true") {
+                togglePopup("readme", true);
+            }
+        });
         </script>
     </body>
 </html>

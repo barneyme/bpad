@@ -270,14 +270,14 @@
     <body>
         <nav>
             <span id="controls">
-                <button id="openNewTab" title="New (CTRL + N)"><strong>N</strong></button>
-                <button id="open" title="Open (CTRL + O)"><strong>O</strong></button>
+                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong></button>
+                <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong></button>
                 <input id="filename" placeholder="bedit.txt" />
-                <button id="save" title="Save (CTRL + S)"><strong>S</strong></button>
+                <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong></button>
                 <button
                     id="find-replace-button"
-                    title="Find\Replace (CTRL + F)"><strong>F</strong></button>
-                <button id="undo" disabled title="Undo (CTRL + U)"><strong>U</strong></button>
+                    title="Find\Replace (CTRL + F)"><strong>&#128269;</strong></button>
+                <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong></button>
                 <span id="stats">
                     <span class="stat-item">
                         <span class="stat-label">&#8595;</span>
@@ -292,13 +292,13 @@
                         <span id="word-count">0</span>
                     </span>
                 </span>
-                <button id="readme-button" title="Help (CTRL + H)"><strong>H</strong></button>
+                <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong></button>
             </span>
         </nav>
         <textarea
             id="textbox"
             autofocus
-            placeholder="Welcome to bEdit. Start typing to begin.&#10;CTRL +&#10;N = New&#10;O = Open&#10;S = Save&#10;F = Find&#10;U = Undo&#10;H = Help"
+            placeholder="Start typing to begin or click &#63; help."
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
@@ -325,12 +325,12 @@
                     = displays the current word count.<br />
                 </p>
                 <h2>Shortcuts</h2>
-                    CTRL + N (N button) to create a new file.<br />
-                    CTRL + O (O button) to open a file from your computer.<br />
-                    CTRL + S (S button) to download a file to your computer.<br />
-                    CTRL + F (F button) to find and replace text.<br />
-                    CTRL + U (U button) to undo the last change.<br />
-                    CTRL + H (H button) to view this help file.
+                    CTRL + N (&#128196;) to create a new file.<br />
+                    CTRL + O (&#128194;) to open a file from your computer.<br />
+                    CTRL + S (&#128190;) to save a file to your computer.<br />
+                    CTRL + F (&#128269;) to find and replace text.<br />
+                    CTRL + Z (&#x21A9;) to undo the last change.<br />
+                    CTRL + H (&#63;) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>

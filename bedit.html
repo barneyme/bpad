@@ -11,7 +11,7 @@
         />
         <link
             rel="icon"
-            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIgLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5iPC90ZXh0Pjwvc3ZnPg=="
+            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiByeT0iMjAiIGZpbGw9IiM1NDk5YzciIC8+CiAgPHRleHQgeD0iNTAiIHk9IjY1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI3NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiIgZm9udC13ZWlnaHQ9IjIwMCI+YjwvdGV4dD4KPC9zdmc+"
         />
         <style>
             html,
@@ -279,15 +279,15 @@
                     title="Find\Replace (CTRL + F)"><strong>&#128269;</strong></button>
                 <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong></button>
                 <span id="stats">
-                    <span class="stat-item">
+                    <span class="stat-item" title="Current line number">
                         <span class="stat-label">&#8595;</span>
                         <span id="line-position">1</span>
                     </span>
-                    <span class="stat-item">
+                    <span class="stat-item" title="Current character position">
                         <span class="stat-label">&#8594;</span>
                         <span id="char-position">1</span>
                     </span>
-                    <span class="stat-item">
+                    <span class="stat-item" title="Total word count">
                         <span class="stat-label">=</span>
                         <span id="word-count">0</span>
                     </span>
@@ -298,7 +298,7 @@
         <textarea
             id="textbox"
             autofocus
-            placeholder="Start typing to begin or click &#63; for help."
+            placeholder="Welcome to bEdit.org. Start typing to begin or click &#63; for help."
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
@@ -307,45 +307,48 @@
             <h2>Help</h2>
             <div id="readme-content">
                 <p>
-                    bEdit.org is a browser based text editor.<br />
-                    bEdit.org can open, create, and save plaintext files like
+                    bEdit.org is a browser based text editor. It can open, create, and save plaintext files like
                     .TXT, .CSV, .XML, .MD, .HTML, .CSS, .JS, .JSON, .SH, .BAT, .PS1 and .PY.
                 </p>
                 <h2>Directions</h2>
                 <p>
                     Open bedit.org in web browser and start writing. Files are
-                    automatically saved in your browser.<br />
-                    It is recommended you save your file after every session.<br />
+                    automatically saved in your browser. (You should save your file before clearing browser cache however.)<br />
+                    <br />
                     bEdit.org can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
-                    notes.<br />
-                    Opening bedit.org in another browser tab creates a new  file.<br />
+                    file.<br />
+                    <br />
+                    Opening bedit.org in another browser tab creates a new file.<br />
+                    <br />
                     &#8595; displays the current line position.<br />
                     &#8594; displays the current character position.<br />
                     = displays the current word count.<br />
                 </p>
                 <h2>Shortcuts</h2>
-                    CTRL + N (&#128196;) to create a new file.<br />
-                    CTRL + O (&#128194;) to open a file from your computer.<br />
-                    CTRL + S (&#128190;) to save a file to your computer.<br />
-                    CTRL + F (&#128269;) to find and replace text.<br />
-                    CTRL + Z (&#x21A9;) to undo the last change.<br />
-                    CTRL + H (&#63;) to view this help file.
+                    <b>CTRL + N</b> (&#128196;) to create a new file.<br />
+                    <b>CTRL + O</b> (&#128194;) to open a file from your computer.<br />
+                    <b>CTRL + S</b> (&#128190;) to save a file to your computer.<br />
+                    <b>CTRL + F</b> (&#128269;) to find and replace text.<br />
+                    <b>CTRL + Z</b> (&#x21A9;) to undo the last change.<br />
+                    <b>CTRL + H</b> (&#63;) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>
                     bEdit.org does not (and cannot):<br />
-                    access your content,<br />
-                    criticize your writing or coding,<br />
-                    track any activity on your computer,<br />
-                    judge your music choices,<br />
-                    identify who you are,<br />
-                    sell your data.
+                    <ul>
+                    <li>access your content,</li>
+                    <li>criticize your writing or coding,</li>
+                    <li>track any activity on your computer,</li>
+                    <li>judge your music choices,</li>
+                    <li>identify who you are,</li>
+                    <li>sell your data.</li>
+                    </ul>
                 </p>
                 <h2>Credit</h2>
                 <p>
                     bEdit.org was created by
                     <a href="https://barney.me">Barney</a>.<br />
-                    If you'd like to support bEdit.org you can buy me a
+                    If you want to support bEdit.org buy me a
                     <a href="https://buymeacoffee.com/barneymatthews">coffee</a
                     >.
                 </p>
@@ -367,7 +370,6 @@
         </div>
         <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Cache all DOM elements at initialization
             const elements = {
                 textbox: document.getElementById("textbox"),
                 filenameBox: document.getElementById("filename"),
@@ -392,13 +394,11 @@
                 closeButtons: document.querySelectorAll(".close-btn")
             };
 
-            // Cache popups
             const popups = {
                 readme: document.getElementById("readme-popup"),
                 findReplace: document.getElementById("find-replace-popup"),
             };
 
-            // Register service worker
             if ("serviceWorker" in navigator) {
                 window.addEventListener("load", () => {
                     navigator.serviceWorker
@@ -409,13 +409,11 @@
                 });
             }
 
-            // Initialize tab ID
             if (!window.name) {
                 window.name = "bedit-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
             const tabId = window.name;
 
-            // State variables
             let saveTimer;
             let currentMatches = [];
             let currentMatchIndex = -1;
@@ -427,6 +425,8 @@
             let lastChangeTime = 0;
             let lastText = "";
             const CHANGE_DELAY = 1000;
+
+            let historyCursorPositions = [];
 
             function adjustTextareaHeight() {
                 elements.textbox.style.top = elements.nav.offsetHeight + "px";
@@ -460,7 +460,7 @@
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         if (elements.textbox.value) {
-                            addToHistory(elements.textbox.value);
+                            addToHistory(elements.textbox.value, elements.textbox.selectionStart);
                         }
                         elements.textbox.value = e.target.result;
                         updateCursorPosition();
@@ -468,9 +468,10 @@
                         storeLocally();
                         elements.filenameBox.value = file.name;
                         history = [];
+                        historyCursorPositions = [];
                         currentHistoryIndex = -1;
-                        addToHistory(elements.textbox.value);
-                        updateUndoButton();
+                        addToHistory(elements.textbox.value, 0);
+                        updateUndoRedoButtons();
                     };
                     reader.readAsText(file);
                 }
@@ -491,7 +492,6 @@
             }
 
             function togglePopup(popupId, show) {
-                // Hide all popups
                 for (const key in popups) {
                     if (popups[key]) {
                         popups[key].style.display = "none";
@@ -511,40 +511,64 @@
                 }
             }
 
-            function addToHistory(state) {
-                if (currentHistoryIndex >= 0 && currentHistoryIndex < history.length - 1) {
-                    history = history.slice(0, currentHistoryIndex + 1);
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape") {
+                    togglePopup(null, false);
                 }
+            });
+
+            function addToHistory(state, cursorPosition) {
+                if (history[currentHistoryIndex] === state) {
+                    return;
+                }
+
+                if (currentHistoryIndex < history.length - 1) {
+                    history = history.slice(0, currentHistoryIndex + 1);
+                    historyCursorPositions = historyCursorPositions.slice(0, currentHistoryIndex + 1);
+                }
+
                 history.push(state);
+                historyCursorPositions.push(cursorPosition);
+
                 if (history.length > MAX_HISTORY) {
                     history.shift();
+                    historyCursorPositions.shift();
                 }
+
                 currentHistoryIndex = history.length - 1;
-                updateUndoButton();
+                updateUndoRedoButtons();
             }
 
             function undo() {
-                if (currentHistoryIndex < 0 || history.length === 0) {
-                    return;
-                }
-                isUndoing = true;
                 if (currentHistoryIndex > 0) {
                     currentHistoryIndex--;
-                    elements.textbox.value = history[currentHistoryIndex];
-                    storeLocally();
-                    updateWordCount();
-                    elements.textbox.focus();
-                    elements.textbox.setSelectionRange(
-                        elements.textbox.value.length,
-                        elements.textbox.value.length
-                    );
-                    updateCursorPosition();
+                    restoreState();
                 }
-                updateUndoButton();
+            }
+
+            function redo() {
+                if (currentHistoryIndex < history.length - 1) {
+                    currentHistoryIndex++;
+                    restoreState();
+                }
+            }
+
+            function restoreState() {
+                isUndoing = true;
+                elements.textbox.value = history[currentHistoryIndex];
+                elements.textbox.focus();
+                elements.textbox.setSelectionRange(
+                    historyCursorPositions[currentHistoryIndex],
+                    historyCursorPositions[currentHistoryIndex]
+                );
+                updateCursorPosition();
+                updateWordCount();
+                storeLocally();
+                updateUndoRedoButtons();
                 isUndoing = false;
             }
 
-            function updateUndoButton() {
+            function updateUndoRedoButtons() {
                 elements.undoButton.disabled = currentHistoryIndex <= 0;
             }
 
@@ -598,7 +622,7 @@
                     return;
                 }
 
-                addToHistory(elements.textbox.value);
+                addToHistory(elements.textbox.value, elements.textbox.selectionStart);
                 const match = currentMatches[currentMatchIndex];
                 const before = elements.textbox.value.substring(0, match.start);
                 const after = elements.textbox.value.substring(match.end);
@@ -634,7 +658,7 @@
 
                 if (!searchTerm) return;
 
-                addToHistory(elements.textbox.value);
+                addToHistory(elements.textbox.value, elements.textbox.selectionStart);
 
                 const newText = elements.textbox.value.replace(
                     new RegExp(escapeRegExp(searchTerm), "g"),
@@ -651,28 +675,6 @@
                 currentMatches = [];
                 currentMatchIndex = -1;
                 storeLocally();
-            }
-
-            function checkForSignificantChange() {
-                const now = Date.now();
-                if (isUndoing) return;
-
-                if (lastText === "") {
-                    lastText = elements.textbox.value;
-                    lastChangeTime = now;
-                    return;
-                }
-
-                if (elements.textbox.value !== lastText) {
-                    const diff = Math.abs(elements.textbox.value.length - lastText.length);
-                    const timeDiff = now - lastChangeTime;
-
-                    if (timeDiff > CHANGE_DELAY || diff > 10) {
-                        addToHistory(lastText);
-                        lastText = elements.textbox.value;
-                        lastChangeTime = now;
-                    }
-                }
             }
 
             function handleKeyDown(event) {
@@ -700,6 +702,9 @@
                     } else if (event.key === "z") {
                         event.preventDefault();
                         undo();
+                    } else if (event.key === "y") {
+                        event.preventDefault();
+                        redo();
                     } else if (event.key === "n") {
                         event.preventDefault();
                         openNewTab();
@@ -718,22 +723,20 @@
                 updateCursorPosition();
                 updateWordCount();
 
-                // Clear previous timers to implement debouncing
+                if (!isUndoing) {
+                    addToHistory(elements.textbox.value, elements.textbox.selectionStart);
+                }
+
                 clearTimeout(saveTimer);
 
-                // Set a new timer for saving to localStorage
                 saveTimer = setTimeout(() => {
                     storeLocally();
-                    // Separate the history tracking from immediate saving
-                    checkForSignificantChange();
-                }, 500); // Reduced to 500ms for more responsive saves
+                }, 500);
 
-                // Reset search when text changes
                 currentMatches = [];
                 currentMatchIndex = -1;
             }
 
-            // Add event listeners
             elements.textbox.addEventListener("input", handleTextChange);
             elements.textbox.addEventListener("keydown", handleKeyDown);
             elements.textbox.addEventListener("click", updateCursorPosition);
@@ -741,7 +744,6 @@
             elements.textbox.addEventListener("select", updateCursorPosition);
             elements.textbox.addEventListener("focus", updateCursorPosition);
 
-            // Button event listeners
             elements.openBtn.addEventListener("click", function() {
                 elements.openInput.click();
             });
@@ -756,39 +758,34 @@
                 togglePopup("readme", true);
             });
 
-            // Find/Replace button listeners
             elements.findBtn.addEventListener("click", findNext);
             elements.replaceBtn.addEventListener("click", replaceCurrentMatch);
             elements.replaceAllBtn.addEventListener("click", replaceAll);
 
-            // Close button listeners
             elements.closeButtons.forEach(button => {
                 button.addEventListener("click", function() {
                     togglePopup(null, false);
                 });
             });
 
-            // Overlay click to close popups
             elements.overlay.addEventListener("click", function() {
                 togglePopup(null, false);
             });
 
-            // Initial setup
             adjustTextareaHeight();
             window.addEventListener("resize", adjustTextareaHeight);
 
-            // Load content from localStorage if available
             const savedContent = localStorage.getItem("bedit_" + tabId);
             if (savedContent) {
                 elements.textbox.value = savedContent;
                 updateWordCount();
                 updateCursorPosition();
                 initialContentLoaded = true;
-                lastText = savedContent;
-                addToHistory(savedContent);
+                addToHistory(savedContent, 0);
+            } else {
+                addToHistory(elements.textbox.value, 0);
             }
 
-            // Check for URL parameters for "readme" mode
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get("readme") === "true") {
                 togglePopup("readme", true);

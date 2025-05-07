@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
-        <title>bEdit</title>
+        <title>bEdit : browser Editor</title>
         <link
             rel="manifest"
             href="data:application/manifest+json;base64,eyJuYW1lIjoiYlBhZCIsInNob3J0X25hbWUiOiJiUGFkIiwiZGVzY3JpcHRpb24iOiJBIHNpbXBsZSBvZmZsaW5lIGNhcGFibGUgdGV4dCBlZGl0b3IiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9icGFkLm1lL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0="
@@ -24,6 +24,12 @@
             }
             * {
                 box-sizing: border-box;
+            }
+            #app-name {
+                color: white;
+                font-size: 0.9rem;
+                margin-left: auto;
+                padding-left: 1em;
             }
             #textbox {
                 position: fixed;
@@ -53,7 +59,7 @@
                 border-bottom: 1px solid #2471a3;
                 color: white;
                 display: flex;
-                justify-content: center;
+                justify-content: flex-start;
                 align-items: center;
                 flex-wrap: wrap;
             }
@@ -62,8 +68,7 @@
                 align-items: center;
                 gap: 0.5em;
                 flex-wrap: wrap;
-                max-width: 800px;
-                margin: 0 auto;
+                margin: 0 auto 0 0;
             }
             button {
                 padding: 0.5em 0.75em;
@@ -228,6 +233,10 @@
                     justify-content: center;
                     width: 100%;
                 }
+                #app-name {
+                    margin: 0.25em 0 0 0;
+                    padding: 0;
+                }
                 #filename {
                     flex-grow: 1;
                     max-width: none;
@@ -265,20 +274,36 @@
                     height: 100%;
                 }
             }
+		.button-text {
+  		display: inline;
+		}
+
+		@media (max-width: 768px) {
+  		.button-text {
+		    display: none;
+  		}
+
+    @media (max-width: 768px) {
+        #app-name {
+            display: none;
+        }
+    }
+  		#controls button {
+    		padding: 0.5em;
+		    min-width: 2.5em;
+	  }
+	}
         </style>
     </head>
     <body>
         <nav>
             <span id="controls">
-                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong></button>
-                <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong></button>
-                <input id="filename" placeholder="bedit.txt" />
-                <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong></button>
-                <button
-                    id="find-replace-button"
-                    title="Find\Replace (CTRL + F)"><strong>&#128269;</strong></button>
-                <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong></button>
-                <span id="stats">
+                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
+		<button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
+		<input id="filename" placeholder="bedit.txt" />
+		<button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
+		<button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
+		<button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong> <span class="button-text">Undo</span></button><span id="stats">
                     <span class="stat-item" title="Current line number">
                         <span class="stat-label">&#8595;</span>
                         <span id="line-position">1</span>
@@ -292,13 +317,14 @@
                         <span id="word-count">0</span>
                     </span>
                 </span>
-                <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong></button>
+                <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong> <span class="button-text">Help</span></button>
             </span>
+            <span id="app-name"><strong>bEdit</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
         </nav>
         <textarea
             id="textbox"
             autofocus
-            placeholder="Welcome to bEdit.org. Start typing to begin or click &#63; for help."
+            placeholder="Welcome to bEdit. Start typing to begin or click &#63; Help for help."
         ></textarea>
         <input type="file" id="open-input" style="display: none" />
         <div id="popup-overlay"></div>
@@ -307,30 +333,29 @@
             <h2>Help</h2>
             <div id="readme-content">
                 <p>
-                    bEdit.org is a browser based text editor. It can open, create, and save plaintext files like
-                    .TXT, .CSV, .XML, .MD, .HTML, .CSS, .JS, .JSON, .SH, .BAT, .PS1 and .PY.
+                    bEdit is a browser based text editor. It can open, create, and save basic plaintext files such as .txt; data files such as .csv and .tsv; markup and documentation files such as .md  and .html; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as .py, .js, and .java; and scripts such .bat, ,ps1 and .sh.
                 </p>
                 <h2>Directions</h2>
                 <p>
                     Open bedit.org in web browser and start writing. Files are
-                    automatically saved in your browser. (You should save your file before clearing browser cache however.)<br />
+                    automatically saved in your browser. (Save your file before clearing browser cache however.)<br />
                     <br />
-                    bEdit.org can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
+                    bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
                     file.<br />
                     <br />
-                    Opening bedit.org in another browser tab creates a new file.<br />
+                    To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
                     <br />
                     &#8595; displays the current line position.<br />
                     &#8594; displays the current character position.<br />
                     = displays the current word count.<br />
                 </p>
                 <h2>Shortcuts</h2>
-                    <b>CTRL + N</b> (&#128196;) to create a new file.<br />
-                    <b>CTRL + O</b> (&#128194;) to open a file from your computer.<br />
-                    <b>CTRL + S</b> (&#128190;) to save a file to your computer.<br />
-                    <b>CTRL + F</b> (&#128269;) to find and replace text.<br />
-                    <b>CTRL + Z</b> (&#x21A9;) to undo the last change.<br />
-                    <b>CTRL + H</b> (&#63;) to view this help file.
+                    <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
+                    <b>CTRL + O</b> (&#128194; Open) to open a file from your computer.<br />
+                    <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
+                    <b>CTRL + F</b> (&#128269; Find) to find and replace text.<br />
+                    <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change.<br />
+                    <b>CTRL + H</b> (&#63; Help) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>
@@ -346,9 +371,9 @@
                 </p>
                 <h2>About</h2>
                 <p>
-                    bEdit.org was created by <a href="https://barney.me">me</a>. I created bEdit firstly because I could and it was a fun project to work on. :-)<br />
+                    bEdit was created by <a href="https://barney.me">me</a>. I created bEdit firstly because it was a fun project to work on. :-)<br />
                     <br />
-                    Secondly though I love plain text and I use it every day. Plain text is universal and works on every computer system. Plain text is versatile and can be used for many purposes from scripting to web development to writing. Plain text is lightweight and small in size. Plain text is human readable. Plain text is distraction free because you just have the text to concentrate on.<br />
+                    Secondly though, I love plaintext and I use it every day. Plaintext is universal and works on every computer system. Plaintext is versatile and can be used for many purposes from scripting to web development to writing. Plaintext is lightweight and small in size. Plaintext is human readable. Plaintext is distraction free because you just have the text to concentrate on. Plaintext is best!<br />
                     <br />
                     Lastly bEdit can be used on any computer without having to install anything and with a consistent user interface.<br />
                     <br />

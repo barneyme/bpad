@@ -2,222 +2,47 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>bPad</title>
         <style>
-            :root {
-                --primary-color: #333;
-                --secondary-color: #666;
-                --accent-color: #4a8cff;
-                --bg-color: #fff;
-                --input-bg-color: #f9f9f9;
-            }
-            @media (prefers-color-scheme: dark) {
-                :root {
-                    --primary-color: #e6e6e6;
-                    --secondary-color: #b0b0b0;
-                    --accent-color: #4a8cff;
-                    --bg-color: #222;
-                    --input-bg-color: #333;
-                }
-            }
-            * {
-                box-sizing: border-box;
-            }
             body {
-                margin: 0;
-                padding: 16px;
+                margin: 1em;
                 font-family: monospace;
-                font-size: 16px;
-                line-height: 1.6;
-                max-width: 800px;
-                margin: 0 auto;
-                background-color: var(--bg-color);
-                color: var(--primary-color);
-            }
-            .container {
-                width: 100%;
-                padding: 16px;
-            }
-            h1 {
-                font-size: 24px;
-                margin-bottom: 16px;
-                color: var(--primary-color);
             }
             textarea {
                 width: 100%;
-                height: calc(60vh - 100px);
-                min-height: 200px;
-                margin: 8px 0 16px;
-                padding: 12px;
-                border: 1px solid var(--secondary-color);
-                border-radius: 4px;
-                font-family: monospace;
-                font-size: 16px;
-                background-color: var(--input-bg-color);
-                color: var(--primary-color);
-                resize: vertical;
-            }
-            .form-group {
-                margin-bottom: 16px;
+                height: 300px;
+                margin: 1em 0;
             }
             label {
                 display: block;
-                margin-bottom: 8px;
-                font-weight: bold;
-                color: var(--primary-color);
-            }
-            input[type="text"] {
-                width: 100%;
-                padding: 12px;
-                border: 1px solid var(--secondary-color);
-                border-radius: 4px;
-                font-family: monospace;
-                font-size: 16px;
-                background-color: var(--input-bg-color);
-                color: var(--primary-color);
-            }
-            .actions {
-                display: flex;
-                gap: 16px;
-                flex-wrap: wrap;
-                align-items: center;
-                margin-top: 16px;
-            }
-            .btn {
-                display: inline-block;
-                padding: 8px 16px;
-                border: none;
-                border-radius: 4px;
-                background-color: var(--accent-color);
-                color: white;
-                font-family: monospace;
-                font-size: 16px;
-                text-decoration: none;
-                cursor: pointer;
-                transition: background-color 0.2s ease;
-            }
-            .btn:hover {
-                background-color: #3a7adf;
-            }
-            .btn.secondary {
-                background-color: #ccc;
-                color: #333;
-            }
-            .btn.secondary:hover {
-                background-color: #bbb;
-            }
-            .info {
-                margin-top: 24px;
-                padding-top: 16px;
-                border-top: 1px solid var(--secondary-color);
-                color: var(--secondary-color);
-            }
-            .statusMsg {
-                display: none;
-                margin-top: 8px;
-                padding: 8px;
-                border-radius: 4px;
-                background-color: #e8f5e9;
-                color: #388e3c;
-                text-align: center;
-            }
-            @media (max-width: 600px) {
-                body {
-                    padding: 8px;
-                }
-                .container {
-                    padding: 8px;
-                }
-                textarea {
-                    height: calc(50vh - 80px);
-                }
-                .actions {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 8px;
-                }
-                .btn {
-                    text-align: center;
-                }
+                margin: 1em 0;
             }
         </style>
     </head>
     <body>
-        <div class="container">
-            <h1>bPad</h1>
-            <form id="noteForm" onsubmit="return false;">
-                <div class="form-group">
-                    <label for="noteContent">Note:</label>
-                    <textarea
-                        id="noteContent"
-                        placeholder="Write your note here. Click Save or press CTRL + S to save to your computer."
-                        autofocus
-                    ></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="filename">Filename:</label>
-                    <input type="text" id="filename" value="note.txt" />
-                </div>
-                <div class="actions">
-                    <a
-                        id="downloadLink"
-                        href="#"
-                        class="btn"
-                        onclick="generateDownloadLink()"
-                        >Save</a
-                    >
-                    <button class="btn secondary" onclick="clearNote()">
-                        Clear
-                    </button>
-                </div>
-                <div id="statusMsg" class="statusMsg"></div>
-            </form>
-        </div>
-        <noscript>
-            <div class="info">
-                <hr />
-                <p><strong>For text-based browsers (Lynx, w3m):</strong></p>
-                <p>To save your note:</p>
-                <ol>
-                    <li>Write your note in the text area above</li>
-                    <li>
-                        Copy all the text (typically by selecting it and
-                        pressing keyboard shortcuts)
-                    </li>
-                    <li>
-                        Paste it into a new file using your system's text editor
-                    </li>
-                    <li>Save the file with your preferred name</li>
-                </ol>
-            </div>
-        </noscript>
+        <h1>bPad</h1>
+
+        <form id="noteForm" onsubmit="return false;">
+            <label for="noteContent">Note:</label>
+            <textarea id="noteContent" placeholder="Write here..."></textarea>
+
+            <label for="filename">Name:</label>
+            <input type="text" id="filename" value="note.txt" />
+
+            <p>
+                <a id="downloadLink" href="#" onclick="generateDownloadLink()"
+                    >Save</a
+                >
+                |
+                <a
+                    href="#"
+                    onclick="document.getElementById('noteContent').value=''"
+                    >Clear</a
+                >
+            </p>
+        </form>
+
         <script>
-            window.onload = function () {
-                const savedContent = localStorage.getItem("bpadContent");
-                const savedFilename = localStorage.getItem("bpadFilename");
-                if (savedContent) {
-                    document.getElementById("noteContent").value = savedContent;
-                }
-                if (savedFilename) {
-                    document.getElementById("filename").value = savedFilename;
-                }
-                if (localStorage.getItem("darkMode") === "true") {
-                    document.body.classList.add("dark-mode");
-                }
-                document
-                    .getElementById("noteContent")
-                    .addEventListener("input", autoSave);
-                document
-                    .getElementById("filename")
-                    .addEventListener("input", autoSave);
-            };
-            function autoSave() {
-                const content = document.getElementById("noteContent").value;
-                const filename = document.getElementById("filename").value;
-                localStorage.setItem("bpadContent", content);
-                localStorage.setItem("bpadFilename", filename);
-            }
             function generateDownloadLink() {
                 const text = document.getElementById("noteContent").value;
                 const filename =
@@ -227,27 +52,23 @@
                     "data:text/plain;charset=utf-8," + encodeURIComponent(text);
                 link.href = dataUri;
                 link.setAttribute("download", filename);
-                const statusMsg = document.getElementById("statusMsg");
-                statusMsg.textContent = `Downloading "${filename}"`;
-                statusMsg.style.display = "block";
-
-                setTimeout(() => {
-                    statusMsg.style.display = "none";
-                }, 3000);
             }
-            function clearNote() {
-                if (confirm("Are you sure you want to clear the note?")) {
-                    document.getElementById("noteContent").value = "";
-                    autoSave();
-                }
-            }
-            document.addEventListener("keydown", function (e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-                    e.preventDefault();
-                    generateDownloadLink();
-                    document.getElementById("downloadLink").click();
-                }
-            });
         </script>
+        <noscript>
+            <hr />
+            <p><strong>For text-based browsers (Lynx, w3m):</strong></p>
+            <p>To save your note:</p>
+            <ol>
+                <li>Write your note in the text area above</li>
+                <li>
+                    Copy all the text and paste it into a new file using your system's text editor.
+                </li>
+                <li>Save the file with your preferred name</li>
+            </ol>
+            <p>
+                Most text browsers can't execute JavaScript, but you can still
+                use this page to write notes.
+            </p>
+        </noscript>
     </body>
 </html>

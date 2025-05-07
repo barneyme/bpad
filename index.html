@@ -13,35 +13,24 @@
                 height: 300px;
                 margin: 1em 0;
             }
-            label {
-                display: block;
+            .file-controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 margin: 1em 0;
             }
+
         </style>
     </head>
     <body>
         <h1>bPad</h1>
-
         <form id="noteForm" onsubmit="return false;">
-            <label for="noteContent">Note:</label>
+            <div class="file-controls">
+                <input type="text" id="filename" value="note.txt" />
+                <a id="downloadLink" href="#" onclick="generateDownloadLink()">Save</a>
+            </div>
             <textarea id="noteContent" placeholder="Write here..."></textarea>
-
-            <label for="filename">Name:</label>
-            <input type="text" id="filename" value="note.txt" />
-
-            <p>
-                <a id="downloadLink" href="#" onclick="generateDownloadLink()"
-                    >Save</a
-                >
-                |
-                <a
-                    href="#"
-                    onclick="document.getElementById('noteContent').value=''"
-                    >Clear</a
-                >
-            </p>
         </form>
-
         <script>
             function generateDownloadLink() {
                 const text = document.getElementById("noteContent").value;

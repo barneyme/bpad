@@ -100,25 +100,6 @@
         .tab-content.active {
             display: block;
         }
-        .network-card {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
-        .network-card h3 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-        }
-        .permission-notice {
-            padding: 15px;
-            background-color: #fcf8e3;
-            border-left: 5px solid #f0ad4e;
-            margin-bottom: 20px;
-            border-radius: 3px;
-        }
     </style>
 </head>
 <body>
@@ -127,7 +108,7 @@
         
         <div class="tabs">
             <div class="tab active" data-tab="public-ip">Public IP</div>
-            <div class="tab" data-tab="network-cards">Network Cards</div>
+            <div class="tab" data-tab="browser-info">Browser Info</div>
         </div>
         
         <div id="public-ip" class="tab-content active">
@@ -136,13 +117,9 @@
             </div>
         </div>
         
-        <div id="network-cards" class="tab-content">
-            <div class="permission-notice">
-                <strong>Note:</strong> Accessing network interface information requires secure context (HTTPS) 
-                and may require permission from your browser. Some browsers may not support this feature.
-            </div>
-            <div id="networkInfo" class="info-section">
-                <div class="loading">Loading network interface information...</div>
+        <div id="browser-info" class="tab-content">
+            <div id="browserInfo" class="info-section">
+                <div class="loading">Loading browser information...</div>
             </div>
         </div>
         
@@ -152,11 +129,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             fetchIPInfo();
-            fetchNetworkInfo();
+            fetchBrowserInfo();
             
             document.getElementById('refreshBtn').addEventListener('click', function() {
                 fetchIPInfo();
-                fetchNetworkInfo();
+                fetchBrowserInfo();
             });
             
             // Tab functionality
@@ -181,24 +158,130 @@
             const ipInfoElement = document.getElementById('ipInfo');
             ipInfoElement.innerHTML = '<div class="loading">Loading your public IP information...</div>';
             
-            fetch('https://ipapi.co/json/')
+            // First, use a simple IP API that is more reliable
+            fetchWithTimeout('https://api.ipify.org?format=json', 3000)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    if (!response.ok) throw new Error('Failed to fetch IP');
                     return response.json();
                 })
                 .then(data => {
-                    displayIPInfo(data);
+                    // Just use the IP directly and generate a basic info object
+                    const basicInfo = {
+                        ip: data.ip,
+                        version: data.ip.includes(':') ? 'IPv6' : 'IPv4',
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        // We'll get the rest of the info from a geolocation service or user's browser
+                    };
+                    
+                    // Now try to get geolocation data from a reliable source
+                    return fetchWithTimeout(`https://ipwho.is/${data.ip}`, 3000)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Could not fetch detailed IP information');
+                            return response.json();
+                        })
+                        .then(geoData => {
+                            if (geoData.success === false) {
+                                throw new Error('Geolocation service returned error');
+                            }
+                            
+                            const enhancedData = {
+                                ip: data.ip,
+                                version: data.ip.includes(':') ? 'IPv6' : 'IPv4',
+                                city: geoData.city || 'N/A',
+                                region: geoData.region || 'N/A',
+                                region_code: geoData.region_code || 'N/A',
+                                country_name: geoData.country || 'N/A',
+                                country_code: geoData.country_code || 'N/A',
+                                postal: geoData.postal || 'N/A',
+                                latitude: geoData.latitude || 'N/A',
+                                longitude: geoData.longitude || 'N/A',
+                                timezone: geoData.timezone.id || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                utc_offset: geoData.timezone.utc || 'N/A',
+                                org: geoData.connection.isp || 'N/A',
+                                asn: geoData.connection.asn || 'N/A',
+                                network: geoData.connection.domain || 'N/A'
+                            };
+                            
+                            return enhancedData;
+                        })
+                        .catch(error => {
+                            console.warn('Primary geolocation service failed:', error);
+                            
+                            // Try an alternative geolocation API
+                            return fetchWithTimeout(`https://ipinfo.io/${data.ip}/json`, 3000)
+                                .then(response => {
+                                    if (!response.ok) throw new Error('Alternative geolocation service failed');
+                                    return response.json();
+                                })
+                                .then(backupGeoData => {
+                                    // Format data from backup service
+                                    const loc = backupGeoData.loc ? backupGeoData.loc.split(',') : ['N/A', 'N/A'];
+                                    
+                                    return {
+                                        ip: data.ip,
+                                        version: data.ip.includes(':') ? 'IPv6' : 'IPv4',
+                                        city: backupGeoData.city || 'N/A',
+                                        region: backupGeoData.region || 'N/A',
+                                        region_code: backupGeoData.region || 'N/A',
+                                        country_name: backupGeoData.country || 'N/A',
+                                        country_code: backupGeoData.country || 'N/A',
+                                        postal: backupGeoData.postal || 'N/A',
+                                        latitude: loc[0],
+                                        longitude: loc[1],
+                                        timezone: backupGeoData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                        utc_offset: 'N/A',
+                                        org: backupGeoData.org || 'N/A',
+                                        asn: backupGeoData.asn || 'N/A',
+                                        network: backupGeoData.hostname || 'N/A'
+                                    };
+                                })
+                                .catch(backupError => {
+                                    console.warn('All geolocation services failed:', backupError);
+                                    // Return just the basic IP info without geolocation
+                                    return basicInfo;
+                                });
+                        });
+                })
+                .then(finalData => {
+                    // At this point we should have some data - either complete or just the IP
+                    displayIPInfo(finalData);
+                    
+                    // If we only have basic data, show a warning
+                    if (!finalData.city || finalData.city === 'N/A') {
+                        ipInfoElement.insertAdjacentHTML('afterbegin', `
+                            <div class="warning" style="background-color: #fdf6e3; color: #b58900; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                                Only basic IP information is available. Geolocation services could not be reached.
+                            </div>
+                        `);
+                    }
                 })
                 .catch(error => {
-                    console.error('Error fetching IP info:', error);
+                    console.error('Failed to get IP information:', error);
                     ipInfoElement.innerHTML = `
                         <div class="error">
-                            Unable to fetch IP information. Please try again later.
+                            Unable to determine your IP address. Please check your internet connection.
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Error:</div>
+                            <div class="detail-value">${error.message}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Timezone:</div>
+                            <div class="detail-value">${Intl.DateTimeFormat().resolvedOptions().timeZone}</div>
                         </div>
                     `;
                 });
+        }
+        
+        // Helper function to implement timeout for fetch requests
+        function fetchWithTimeout(url, timeout = 5000) {
+            return Promise.race([
+                fetch(url),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error(`Request to ${url} timed out`)), timeout)
+                )
+            ]);
+        }
         }
 
         function displayIPInfo(data) {
@@ -207,8 +290,18 @@
             // Create detailed information display
             let html = '<h2>Public IP Information</h2>';
             
+            // Handle possible null or undefined data object
+            if (!data) {
+                html += `
+                <div class="error">
+                    No IP information available. Please check your internet connection and try again.
+                </div>`;
+                ipInfoElement.innerHTML = html;
+                return;
+            }
+            
             const infoMap = {
-                'IP Address': data.ip,
+                'IP Address': data.ip || 'N/A',
                 'Network': data.network || 'N/A',
                 'Version': data.version || 'N/A',
                 'City': data.city || 'N/A',
@@ -225,6 +318,21 @@
                 'ASN': data.asn || 'N/A'
             };
             
+            // Create map section
+            if (data.latitude && data.longitude && data.latitude !== 'N/A' && data.longitude !== 'N/A') {
+                html += `
+                <div class="map-container" style="margin: 20px 0;">
+                    <iframe
+                        width="100%"
+                        height="250"
+                        frameborder="0" 
+                        style="border:0;border-radius:5px;"
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${data.longitude - 0.01},${data.latitude - 0.01},${Number(data.longitude) + 0.01},${Number(data.latitude) + 0.01}&layer=mapnik&marker=${data.latitude},${data.longitude}"
+                        allowfullscreen>
+                    </iframe>
+                </div>`;
+            }
+            
             for (const [label, value] of Object.entries(infoMap)) {
                 html += `
                 <div class="detail-row">
@@ -233,192 +341,201 @@
                 </div>`;
             }
             
+            // Add timestamp
+            const now = new Date();
+            html += `
+            <div class="detail-row" style="margin-top: 20px; font-style: italic; color: #666;">
+                <div class="detail-label">Last Updated:</div>
+                <div class="detail-value">${now.toLocaleDateString()} ${now.toLocaleTimeString()}</div>
+            </div>`;
+            
             ipInfoElement.innerHTML = html;
         }
         
-        function fetchNetworkInfo() {
-            const networkInfoElement = document.getElementById('networkInfo');
-            
-            // Check if the RTCPeerConnection API is available
-            if (!window.RTCPeerConnection) {
-                networkInfoElement.innerHTML = `
-                    <div class="error">
-                        Your browser doesn't support the required APIs to fetch network interface information.
-                    </div>
-                `;
-                return;
-            }
+        function fetchBrowserInfo() {
+            const browserInfoElement = document.getElementById('browserInfo');
             
             try {
-                getLocalIPs()
-                    .then(ips => {
-                        displayNetworkInfo(ips);
-                    })
-                    .catch(error => {
-                        console.error('Error getting local IPs:', error);
-                        networkInfoElement.innerHTML = `
-                            <div class="error">
-                                Unable to fetch network interface information: ${error.message}
-                            </div>
-                        `;
-                    });
+                const browserInfo = getBrowserInfo();
+                displayBrowserInfo(browserInfo);
             } catch (error) {
-                console.error('Error in fetchNetworkInfo:', error);
-                networkInfoElement.innerHTML = `
+                console.error('Error fetching browser info:', error);
+                browserInfoElement.innerHTML = `
                     <div class="error">
-                        Error fetching network information: ${error.message}
+                        Unable to fetch browser information: ${error.message}
                     </div>
                 `;
             }
+        }
+        
+        function getBrowserInfo() {
+            const browserInfo = {
+                // Browser information
+                'User Agent': navigator.userAgent,
+                'Browser Name': getBrowserName(),
+                'Browser Version': getBrowserVersion(),
+                'Browser Language': navigator.language || 'N/A',
+                'Languages': navigator.languages ? navigator.languages.join(', ') : 'N/A',
+                'Cookies Enabled': navigator.cookieEnabled ? 'Yes' : 'No',
+                'Do Not Track': navigator.doNotTrack || 'N/A',
+                
+                // Screen information
+                'Screen Resolution': `${window.screen.width} x ${window.screen.height}`,
+                'Available Screen': `${window.screen.availWidth} x ${window.screen.availHeight}`,
+                'Color Depth': `${window.screen.colorDepth} bits`,
+                'Pixel Depth': `${window.screen.pixelDepth} bits`,
+                'Device Pixel Ratio': window.devicePixelRatio || 'N/A',
+                
+                // Platform information
+                'Platform': navigator.platform || 'N/A',
+                'OS': getOperatingSystem(),
+                
+                // Connection information (if available)
+                'Online Status': navigator.onLine ? 'Online' : 'Offline',
+            };
             
-            // Try to get additional network information if available
-            if (navigator && navigator.connection) {
-                try {
-                    const connectionInfo = {
-                        'Connection Type': navigator.connection.type || 'N/A',
-                        'Effective Type': navigator.connection.effectiveType || 'N/A',
-                        'Downlink': (navigator.connection.downlink || 'N/A') + ' Mbps',
-                        'RTT': (navigator.connection.rtt || 'N/A') + ' ms',
-                        'Save Data': navigator.connection.saveData ? 'Enabled' : 'Disabled'
-                    };
-                    
-                    let connectionHtml = '<h2>Connection Information</h2>';
-                    for (const [label, value] of Object.entries(connectionInfo)) {
-                        connectionHtml += `
-                        <div class="detail-row">
-                            <div class="detail-label">${label}:</div>
-                            <div class="detail-value">${value}</div>
-                        </div>`;
-                    }
-                    
-                    const connectionDiv = document.createElement('div');
-                    connectionDiv.className = 'info-section';
-                    connectionDiv.innerHTML = connectionHtml;
-                    document.getElementById('network-cards').appendChild(connectionDiv);
-                } catch (e) {
-                    console.log('Connection API info not available', e);
+            // Add connection information if available
+            if (navigator.connection) {
+                browserInfo['Connection Type'] = navigator.connection.type || 'N/A';
+                browserInfo['Effective Type'] = navigator.connection.effectiveType || 'N/A';
+                browserInfo['Downlink'] = (navigator.connection.downlink || 'N/A') + ' Mbps';
+                browserInfo['RTT'] = (navigator.connection.rtt || 'N/A') + ' ms';
+                browserInfo['Save Data'] = navigator.connection.saveData ? 'Enabled' : 'Disabled';
+            }
+            
+            // Add media capabilities if available
+            if (navigator.hardwareConcurrency) {
+                browserInfo['CPU Cores'] = navigator.hardwareConcurrency;
+            }
+            
+            if (navigator.deviceMemory) {
+                browserInfo['Device Memory'] = navigator.deviceMemory + ' GB';
+            }
+            
+            // Check for touch capability
+            browserInfo['Touch Support'] = 'ontouchstart' in window ? 'Yes' : 'No';
+            
+            return browserInfo;
+        }
+        
+        function getBrowserName() {
+            const userAgent = navigator.userAgent;
+            let browserName;
+            
+            if (userAgent.match(/chrome|chromium|crios/i)) {
+                browserName = "Chrome";
+            } else if (userAgent.match(/firefox|fxios/i)) {
+                browserName = "Firefox";
+            } else if (userAgent.match(/safari/i)) {
+                browserName = "Safari";
+            } else if (userAgent.match(/opr\//i)) {
+                browserName = "Opera";
+            } else if (userAgent.match(/edg/i)) {
+                browserName = "Edge";
+            } else if (userAgent.match(/android/i)) {
+                browserName = "Android Browser";
+            } else if (userAgent.match(/iphone|ipad|ipod/i)) {
+                browserName = "iOS Browser";
+            } else {
+                browserName = "Unknown";
+            }
+            
+            return browserName;
+        }
+        
+        function getBrowserVersion() {
+            const userAgent = navigator.userAgent;
+            let version = "Unknown";
+            
+            // Extract browser version based on common patterns
+            const match = 
+                userAgent.match(/(chrome|chromium|crios|firefox|safari|opr|edge|edg)[\/\s](\d+(\.\d+)?)/i);
+            
+            if (match && match[2]) {
+                version = match[2];
+            }
+            
+            return version;
+        }
+        
+        function getOperatingSystem() {
+            const userAgent = navigator.userAgent;
+            let os = "Unknown";
+            
+            if (userAgent.indexOf("Win") !== -1) os = "Windows";
+            else if (userAgent.indexOf("Mac") !== -1) os = "MacOS";
+            else if (userAgent.indexOf("Linux") !== -1) os = "Linux";
+            else if (userAgent.indexOf("Android") !== -1) os = "Android";
+            else if (userAgent.indexOf("like Mac") !== -1) os = "iOS";
+            
+            // Add version detection for common OSes
+            if (os === "Windows") {
+                if (userAgent.indexOf("Windows NT 10.0") !== -1) os += " 10";
+                else if (userAgent.indexOf("Windows NT 6.3") !== -1) os += " 8.1";
+                else if (userAgent.indexOf("Windows NT 6.2") !== -1) os += " 8";
+                else if (userAgent.indexOf("Windows NT 6.1") !== -1) os += " 7";
+            }
+            
+            return os;
+        }
+        
+        function displayBrowserInfo(browserInfo) {
+            const browserInfoElement = document.getElementById('browserInfo');
+            
+            let html = '<h2>Browser Information</h2>';
+            
+            // Browser section
+            html += '<h3>Browser Details</h3>';
+            for (const [label, value] of Object.entries(browserInfo)) {
+                if (typeof value !== 'undefined') {
+                    html += `
+                    <div class="detail-row">
+                        <div class="detail-label">${label}:</div>
+                        <div class="detail-value">${value}</div>
+                    </div>`;
                 }
             }
-        }
-        
-        function getLocalIPs() {
-            return new Promise((resolve, reject) => {
-                // Using WebRTC to get local IPs
-                const ips = new Set();
-                const pc = new RTCPeerConnection({
-                    iceServers: []
-                });
-                
-                pc.createDataChannel('');
-                
-                // Create an offer to receive the ICE candidates
-                pc.createOffer()
-                    .then(offer => pc.setLocalDescription(offer))
-                    .catch(err => reject(err));
-                
-                // Listen for candidate events
-                pc.onicecandidate = (ice) => {
-                    if (!ice || !ice.candidate || !ice.candidate.candidate) {
-                        pc.close();
-                        if (ips.size === 0) {
-                            reject(new Error('No network interfaces detected'));
-                        } else {
-                            resolve(Array.from(ips));
-                        }
-                        return;
-                    }
-                    
-                    const candidateStr = ice.candidate.candidate;
-                    let ip = candidateStr.split(' ')[4];
-                    
-                    if (ip && ip.indexOf('.') !== -1) {
-                        ips.add({
-                            type: 'IPv4',
-                            address: ip,
-                            raw: candidateStr
-                        });
-                    } else if (ip && ip.indexOf(':') !== -1) {
-                        ips.add({
-                            type: 'IPv6',
-                            address: ip,
-                            raw: candidateStr
-                        });
-                    }
-                };
-                
-                // Set a timeout in case we don't get any candidates
-                setTimeout(() => {
-                    pc.close();
-                    if (ips.size === 0) {
-                        reject(new Error('Timeout: No network interfaces detected'));
-                    } else {
-                        resolve(Array.from(ips));
-                    }
-                }, 2000);
-            });
-        }
-        
-        function displayNetworkInfo(networkInterfaces) {
-            const networkInfoElement = document.getElementById('networkInfo');
             
-            if (networkInterfaces.length === 0) {
-                networkInfoElement.innerHTML = `
-                    <div class="error">
-                        No network interface information detected.
-                    </div>
-                `;
-                return;
-            }
+            // Feature detection section
+            html += '<h3>Browser Features</h3>';
             
-            let html = '<h2>Network Interface Information</h2>';
+            const features = {
+                'Local Storage': typeof Storage !== 'undefined' ? 'Supported' : 'Not Supported',
+                'Session Storage': typeof sessionStorage !== 'undefined' ? 'Supported' : 'Not Supported',
+                'WebGL': (function() {
+                    try {
+                        return !!window.WebGLRenderingContext && 
+                               (!!document.createElement('canvas').getContext('webgl') || 
+                                !!document.createElement('canvas').getContext('experimental-webgl'));
+                    } catch(e) {
+                        return false;
+                    }
+                })() ? 'Supported' : 'Not Supported',
+                'Canvas': (function() {
+                    return !!document.createElement('canvas').getContext;
+                })() ? 'Supported' : 'Not Supported',
+                'WebRTC': (function() {
+                    return navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+                })() ? 'Supported' : 'Not Supported',
+                'Geolocation': 'geolocation' in navigator ? 'Supported' : 'Not Supported',
+                'Web Workers': typeof Worker !== 'undefined' ? 'Supported' : 'Not Supported',
+                'Fetch API': 'fetch' in window ? 'Supported' : 'Not Supported',
+                'Service Workers': 'serviceWorker' in navigator ? 'Supported' : 'Not Supported',
+                'IndexedDB': 'indexedDB' in window ? 'Supported' : 'Not Supported',
+                'Web Audio': 'AudioContext' in window || 'webkitAudioContext' in window ? 'Supported' : 'Not Supported',
+                'Fullscreen API': document.fullscreenEnabled || document.webkitFullscreenEnabled || 
+                                 document.mozFullScreenEnabled || document.msFullscreenEnabled ? 'Supported' : 'Not Supported',
+            };
             
-            networkInterfaces.forEach((iface, index) => {
+            for (const [feature, support] of Object.entries(features)) {
                 html += `
-                <div class="network-card">
-                    <h3>Network Interface ${index + 1}</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">Type:</div>
-                        <div class="detail-value">${iface.type}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">IP Address:</div>
-                        <div class="detail-value">${iface.address}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Raw Info:</div>
-                        <div class="detail-value">${iface.raw}</div>
-                    </div>
-                </div>
-                `;
-            });
-            
-            networkInfoElement.innerHTML = html;
-            
-            // Try to use the newer navigator.mediaDevices.enumerateDevices if available
-            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-                html += '<h2>Media Devices</h2>';
-                navigator.mediaDevices.enumerateDevices()
-                    .then(devices => {
-                        const networkDevices = devices.filter(device => device.kind === 'audiooutput' || device.kind === 'audioinput' || device.kind === 'videoinput');
-                        
-                        if (networkDevices.length > 0) {
-                            let devicesHtml = '<div class="network-card"><h3>Connected Media Devices</h3>';
-                            
-                            networkDevices.forEach((device, index) => {
-                                devicesHtml += `
-                                <div class="detail-row">
-                                    <div class="detail-label">Device ${index + 1}:</div>
-                                    <div class="detail-value">${device.kind}: ${device.label || 'Unknown Device'}</div>
-                                </div>
-                                `;
-                            });
-                            
-                            devicesHtml += '</div>';
-                            networkInfoElement.innerHTML += devicesHtml;
-                        }
-                    })
-                    .catch(err => console.log('Could not enumerate devices', err));
+                <div class="detail-row">
+                    <div class="detail-label">${feature}:</div>
+                    <div class="detail-value">${support}</div>
+                </div>`;
             }
+            
+            browserInfoElement.innerHTML = html;
         }
     </script>
 </body>

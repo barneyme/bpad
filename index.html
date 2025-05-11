@@ -5,61 +5,168 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>bPad Tools</title>
         <style>
-            body {
-                font-family: "Arial", sans-serif;
-                background-color: #e3f2fd; /* Light blue background */
+            :root {
+                --primary: #3498db;
+                --primary-dark: #2980b9;
+                --accent: #e74c3c;
+                --light: #ecf0f1;
+                --dark: #2c3e50;
+                --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            * {
                 margin: 0;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            h1 {
-                color: #0d47a1; /* Dark blue color */
-                margin-bottom: 20px;
-            }
-            ul {
-                list-style-type: none;
                 padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                justify-content: center;
+                padding: 2rem;
             }
-            li {
-                margin: 15px 0;
+            
+            .container {
+                background-color: white;
+                border-radius: 12px;
+                box-shadow: var(--shadow);
+                width: 90%;
+                max-width: 500px;
+                padding: 2rem;
+                text-align: center;
             }
-            a {
+            
+            h1 {
+                color: var(--dark);
+                margin-bottom: 1.5rem;
+                font-size: 2.5rem;
+                position: relative;
+                display: inline-block;
+            }
+            
+            h1::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                bottom: -10px;
+                transform: translateX(-50%);
+                width: 80px;
+                height: 4px;
+                background-color: var(--primary);
+                border-radius: 2px;
+            }
+            
+            .tool-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 1rem;
+                margin: 2rem 0;
+            }
+            
+            .tool-item {
                 text-decoration: none;
+                background-color: white;
+                border: 2px solid var(--primary);
+                color: var(--primary);
+                padding: 1rem 0.5rem;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            
+            .tool-item:hover {
+                background-color: var(--primary);
                 color: white;
-                background-color: #0d47a1; /* Dark blue background */
-                padding: 15px 25px;
-                border-radius: 0; /* Square corners */
-                transition:
-                    background-color 0.3s,
-                    transform 0.3s;
-                font-size: 18px;
-                display: inline-block; /* Ensures padding works correctly */
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
-            a:hover {
-                background-color: #0a3e8c; /* Darker blue on hover */
-                transform: scale(1.05);
+            
+            .icon {
+                font-size: 1.8rem;
+                margin-bottom: 0.5rem;
             }
+            
+            .tool-name {
+                font-weight: 600;
+                font-size: 1rem;
+            }
+            
             footer {
-                margin-top: 30px;
-                font-size: 14px;
-                color: #555;
+                margin-top: 2rem;
+                color: var(--dark);
+                font-size: 0.9rem;
+                opacity: 0.8;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .heart {
+                color: var(--accent);
+                animation: beat 1.4s infinite ease-in-out;
+                display: inline-block;
+                transform-origin: center;
+            }
+            
+            @keyframes beat {
+                0%, 100% { transform: scale(1); }
+                25% { transform: scale(1.2); }
+            }
+            
+            @media (max-width: 480px) {
+                .tool-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                
+                h1 {
+                    font-size: 2rem;
+                }
             }
         </style>
     </head>
     <body>
-        <h1>bPad Tools</h1>
-        <ul>
-            <li><a href="bedit.html">bEdit</a></li>
-            <li><a href="ip.html">IP</a></li>
-            <li><a href="stickies.html">Stickies</a></li>
-            <li><a href="tetris.html">Tetris</a></li>
-            <li><a href="wiki.html">Wiki</a></li>
-        </ul>
-        <footer>Made by Barney.</footer>
+        <div class="container">
+            <h1>bPad Tools</h1>
+            
+            <div class="tool-grid">
+                <a href="bedit.html" class="tool-item">
+                    <div class="icon">✏️</div>
+                    <div class="tool-name">bEdit</div>
+                </a>
+                
+                <a href="ip.html" class="tool-item">
+                    <div class="icon">🌐</div>
+                    <div class="tool-name">IP</div>
+                </a>
+                
+                <a href="stickies.html" class="tool-item">
+                    <div class="icon">📝</div>
+                    <div class="tool-name">Stickies</div>
+                </a>
+                
+                <a href="tetris.html" class="tool-item">
+                    <div class="icon">🎮</div>
+                    <div class="tool-name">Tetris</div>
+                </a>
+                
+                <a href="wiki.html" class="tool-item">
+                    <div class="icon">📚</div>
+                    <div class="tool-name">Wiki</div>
+                </a>
+            </div>
+            
+            <footer>
+                Made with <span class="heart">❤</span> by Barney
+            </footer>
+        </div>
     </body>
 </html>

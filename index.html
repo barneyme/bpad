@@ -3,21 +3,29 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>BasicPad</title>
+        <title>bPad</title>
         <style>
             body,
             html {
                 height: 100%;
                 margin: 0;
-                font-family: Arial, sans-serif;
+                font-family: "Courier New", "Liberation Mono", monospace;
+                background-color: #000;
+                color: #fff;
             }
 
             #editor {
                 width: 100%;
                 height: 95%;
-                font-size: 16px;
+                font-family: "Courier New", "Liberation Mono", monospace;
+                font-size: 14px;
                 padding: 10px;
                 box-sizing: border-box;
+                background-color: #000;
+                color: #fff;
+                border: none;
+                outline: none;
+                resize: none;
             }
 
             .button-container {
@@ -25,22 +33,24 @@
                 justify-content: flex-end;
                 gap: 10px;
                 padding: 0 10px;
+                background-color: #000;
             }
 
             button {
                 height: 30px;
                 width: 55px;
-                font-size: 14px;
+                font-size: 12px;
+                font-family: "Courier New", "Liberation Mono", monospace;
                 padding: 0 10px;
-                border: none;
-                border-radius: 5px;
-                background-color: #2196f3;
+                border: 1px solid #fff;
+                border-radius: 0;
+                background-color: #000;
                 color: #fff;
                 cursor: pointer;
             }
 
             button:hover {
-                background-color: #0b7dda;
+                background-color: #333;
             }
 
             .modal {
@@ -50,22 +60,29 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
+                background-color: rgba(0, 0, 0, 0.8);
                 z-index: 1000;
                 justify-content: center;
                 align-items: center;
             }
 
             .modal-content {
-                background-color: white;
+                background-color: #000;
+                color: #fff;
                 padding: 20px;
-                border-radius: 5px;
+                border: 1px solid #fff;
+                border-radius: 0;
                 width: 300px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                font-family: "Courier New", "Liberation Mono", monospace;
             }
 
             .modal-content h3 {
                 margin-top: 0;
+                color: #fff;
+            }
+
+            .modal-content p {
+                color: #fff;
             }
 
             .modal-content input {
@@ -73,6 +90,12 @@
                 padding: 8px;
                 margin: 10px 0;
                 box-sizing: border-box;
+                background-color: #000;
+                color: #fff;
+                border: 1px solid #fff;
+                border-radius: 0;
+                font-family: "Courier New", "Liberation Mono", monospace;
+                font-size: 14px;
             }
 
             .modal-buttons {
@@ -80,6 +103,20 @@
                 justify-content: flex-end;
                 gap: 10px;
                 margin-top: 15px;
+            }
+
+            .modal-buttons button {
+                background-color: #000;
+                color: #fff;
+                border: 1px solid #fff;
+                border-radius: 0;
+                padding: 8px 12px;
+                font-family: "Courier New", "Liberation Mono", monospace;
+                font-size: 12px;
+            }
+
+            .modal-buttons button:hover {
+                background-color: #333;
             }
         </style>
     </head>
@@ -95,7 +132,7 @@
             <div class="modal-content">
                 <h3>Save</h3>
                 <p>Filename:</p>
-                <input type="text" id="filename-input" value="wedit.txt" />
+                <input type="text" id="filename-input" value="bpad.txt" />
                 <div class="modal-buttons">
                     <button id="cancel-save">Cancel</button>
                     <button id="confirm-save">Save</button>
@@ -114,8 +151,11 @@
                 const confirmSave = document.getElementById("confirm-save");
                 const cancelSave = document.getElementById("cancel-save");
 
-                if (localStorage.getItem("text")) {
-                    editor.value = localStorage.getItem("text");
+                // Store in memory instead of localStorage
+                let savedText = "";
+
+                if (savedText) {
+                    editor.value = savedText;
                 }
 
                 saveBtn.addEventListener("click", function () {
@@ -126,10 +166,10 @@
 
                 confirmSave.addEventListener("click", function () {
                     const text = editor.value;
-                    localStorage.setItem("text", text);
+                    savedText = text; // Store in memory
 
                     const filename = filenameInput.value.trim();
-                    const finalFilename = filename ? filename : "wedit.txt";
+                    const finalFilename = filename ? filename : "bpad.txt";
                     const filenameTxt = finalFilename.endsWith(".txt")
                         ? finalFilename
                         : `${finalFilename}.txt`;
@@ -170,7 +210,7 @@
                     const reader = new FileReader();
                     reader.onload = function (event) {
                         editor.value = event.target.result;
-                        localStorage.setItem("text", event.target.result);
+                        savedText = event.target.result; // Store in memory
                     };
                     reader.readAsText(file);
                 });

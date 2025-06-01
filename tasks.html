@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Prioritizer</title>
+
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#667eea" />
+        <meta
+            name="description"
+            content="Organize your tasks efficiently using the ABC prioritization method"
+        />
+        <link
+            rel="manifest"
+            href="data:application/json;base64,ewogICJuYW1lIjogIlRhc2sgUHJpb3JpdGl6ZXIiLAogICJzaG9ydF9uYW1lIjogIlRhc2tQcmlvIiwKICAiZGVzY3JpcHRpb24iOiAiT3JnYW5pemUgeW91ciB0YXNrcyBlZmZpY2llbnRseSB1c2luZyB0aGUgQUJDIHByaW9yaXRpemF0aW9uIG1ldGhvZCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzY2N2VlYSIsCiAgInRoZW1lX2NvbG9yIjogIiM2NjdlZWEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSGRwWkhSb1BTSXhOakFpSUdobGFXZG9kRDBpTVRZd0lqNE5Dalp4Sk9aeWUwRkJNeGJWYlN4dUxDNGdQa2ZWYS9mTzc4VjN6dnJ5b1J4ek5YaHFReWdYSk5OalZ0NTJvWEtPNGVPczJmMHp6d3hnSnJCMTdUUnZGWGd5TTArRzBuWGEzRlJnRVIwOGg4RmIrQjhRTm91VlFGNkJ3czRDbGdBQWdEZmNuZHRPYzZNNnc4UENGd09TMzFuNkVhOWdLTUNhbVdDMVRtYjJabz0iLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9LAogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaVlXRnVhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSGRwWkROb1BTSXhOVEF3TURBaU1kZ3lkWGczUjBGTmQwOUF3WUFBY0QzOXNmUmZONVptb0lJZ3BYUFFsM3ZrYWZnZjVDbHdBQWlPT3VET0lGOEI4UVBrRm1oOVFGNkN3cFdnQUNBZE5kZU0zdEpmYj0iLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9"
+        />
+        <link
+            rel="apple-touch-icon"
+            href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNjY3ZWVhO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM3NjRiYTI7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0idXJsKCNncmFkaWVudCkiIHJ4PSIyNCIgcnk9IjI0Ii8+CiAgPHRleHQgeD0iOTYiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjcyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+OrzwvdGV4dD4KPC9zdmc+"
+        />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+
+            .install-prompt {
+                background: linear-gradient(135deg, #4299e1, #3182ce);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                display: none;
+                align-items: center;
+                justify-content: space-between;
+                animation: slideIn 0.5s ease-out;
+            }
+
+            .install-prompt.show {
+                display: flex;
+            }
+
+            .install-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+
+            .install-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-1px);
+            }
+
+            .offline-indicator {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #e53e3e;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 600;
+                display: none;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .offline-indicator.show {
+                display: block;
+            }
+
+            .online-indicator {
+                background: #48bb78;
+            }
+
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            h1 {
+                text-align: center;
+                color: #4a5568;
+                margin-bottom: 10px;
+                font-size: 2.5em;
+                font-weight: 700;
+            }
+
+            .description {
+                text-align: center;
+                color: #666;
+                margin-bottom: 30px;
+                font-size: 1.1em;
+                line-height: 1.7;
+                background: rgba(102, 126, 234, 0.1);
+                padding: 20px;
+                border-radius: 15px;
+                border-left: 4px solid #667eea;
+            }
+
+            .task-form {
+                margin-bottom: 30px;
+            }
+
+            .task-row {
+                display: grid;
+                grid-template-columns: 2fr 120px 150px 80px;
+                gap: 15px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.8);
+                border-radius: 12px;
+                border: 2px solid transparent;
+                transition: all 0.3s ease;
+            }
+
+            .task-row:hover {
+                border-color: #667eea;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            }
+
+            .task-input {
+                padding: 12px 16px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                background: white;
+            }
+
+            .task-input:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+            select.task-input {
+                cursor: pointer;
+            }
+
+            .priority-a {
+                border-left: 4px solid #e53e3e;
+            }
+            .priority-b {
+                border-left: 4px solid #dd6b20;
+            }
+            .priority-c {
+                border-left: 4px solid #38a169;
+            }
+
+            .buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin: 30px 0;
+                flex-wrap: wrap;
+            }
+
+            button {
+                padding: 12px 24px;
+                border: none;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+            }
+
+            .btn-secondary {
+                background: linear-gradient(135deg, #4299e1, #3182ce);
+                color: white;
+            }
+
+            .btn-success {
+                background: linear-gradient(135deg, #48bb78, #38a169);
+                color: white;
+            }
+
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+            .results {
+                margin-top: 30px;
+                padding: 25px;
+                background: rgba(247, 250, 252, 0.8);
+                border-radius: 15px;
+                border: 2px solid #e2e8f0;
+            }
+
+            .priority-group {
+                margin-bottom: 25px;
+            }
+
+            .priority-group h3 {
+                color: #2d3748;
+                margin-bottom: 15px;
+                font-size: 1.3em;
+                padding: 10px 15px;
+                border-radius: 8px;
+                font-weight: 700;
+            }
+
+            .priority-a-header {
+                background: rgba(229, 62, 62, 0.1);
+                color: #c53030;
+            }
+            .priority-b-header {
+                background: rgba(221, 107, 32, 0.1);
+                color: #c05621;
+            }
+            .priority-c-header {
+                background: rgba(56, 161, 105, 0.1);
+                color: #2f855a;
+            }
+
+            .task-item {
+                padding: 12px 16px;
+                margin-bottom: 8px;
+                background: white;
+                border-radius: 8px;
+                border-left: 4px solid;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: all 0.3s ease;
+            }
+
+            .task-item:hover {
+                transform: translateX(5px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .quick-badge {
+                background: #48bb78;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            @media (max-width: 768px) {
+                .task-row {
+                    grid-template-columns: 1fr;
+                    gap: 10px;
+                }
+
+                .buttons {
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                button {
+                    width: 100%;
+                    max-width: 300px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Offline/Online Indicator -->
+        <div id="connectionStatus" class="offline-indicator">
+            <span id="statusText"
+                >📡 You're offline - App works without internet!</span
+            >
+        </div>
+
+        <div class="container">
+            <!-- Install Prompt -->
+            <div id="installPrompt" class="install-prompt">
+                <div>
+                    <strong>📱 Install Task Prioritizer</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9">
+                        Add to your home screen for quick access
+                    </p>
+                </div>
+                <button id="installBtn" class="install-btn">Install</button>
+            </div>
+
+            <h1>🎯 Task Prioritizer</h1>
+            <div class="description">
+                <p>
+                    <strong
+                        >Organize your tasks efficiently using the ABC
+                        prioritization method!</strong
+                    >
+                </p>
+                <p>
+                    Categorize your tasks as <strong>A</strong> (Must do -
+                    urgent & important), <strong>B</strong> (Should do -
+                    important but not urgent), or <strong>C</strong> (Nice to do
+                    - neither urgent nor important). Mark tasks that take 5
+                    minutes or less to tackle quick wins first. Click
+                    "Prioritize Tasks" to automatically sort them by priority
+                    and duration.
+                </p>
+            </div>
+
+            <div class="task-form">
+                <div id="taskRows">
+                    <!-- Initial 5 task rows will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="addTaskRow()"
+                >
+                    ➕ Add More Tasks
+                </button>
+                <button
+                    type="button"
+                    class="btn-primary"
+                    onclick="prioritizeTasks()"
+                >
+                    🔄 Prioritize Tasks
+                </button>
+                <button
+                    type="button"
+                    class="btn-success hidden"
+                    id="downloadBtn"
+                    onclick="downloadTasks()"
+                >
+                    📥 Download as .txt
+                </button>
+            </div>
+
+            <div id="results" class="results hidden">
+                <!-- Prioritized tasks will appear here -->
+            </div>
+        </div>
+
+        <script>
+            let taskCount = 0;
+            let prioritizedTasks = [];
+
+            function createTaskRow() {
+                taskCount++;
+                return `
+                <div class="task-row" id="task-${taskCount}">
+                    <input type="text" class="task-input" placeholder="Enter your task..." id="task-text-${taskCount}">
+                    <select class="task-input" id="task-priority-${taskCount}">
+                        <option value="">Priority</option>
+                        <option value="A">A - Must Do</option>
+                        <option value="B">B - Should Do</option>
+                        <option value="C">C - Nice to Do</option>
+                    </select>
+                    <select class="task-input" id="task-duration-${taskCount}">
+                        <option value="">Duration</option>
+                        <option value="quick">under 5 minutes</option>
+                        <option value="longer">over 5 minutes</option>
+                    </select>
+                    <button type="button" onclick="removeTask(${taskCount})" style="background: #e53e3e; color: white; padding: 8px; border-radius: 6px;">✕</button>
+                </div>
+            `;
+            }
+
+            function initializeTasks() {
+                const container = document.getElementById("taskRows");
+                for (let i = 0; i < 5; i++) {
+                    container.innerHTML += createTaskRow();
+                }
+            }
+
+            function addTaskRow() {
+                const container = document.getElementById("taskRows");
+                container.innerHTML += createTaskRow();
+            }
+
+            function removeTask(taskId) {
+                const taskRow = document.getElementById(`task-${taskId}`);
+                if (taskRow) {
+                    taskRow.remove();
+                }
+            }
+
+            function collectTasks() {
+                const tasks = [];
+                const taskRows = document.querySelectorAll(".task-row");
+
+                taskRows.forEach((row) => {
+                    const taskText = row
+                        .querySelector('input[type="text"]')
+                        .value.trim();
+                    const priority = row.querySelector(
+                        "select:nth-of-type(1)",
+                    ).value;
+                    const duration = row.querySelector(
+                        "select:nth-of-type(2)",
+                    ).value;
+
+                    if (taskText && priority && duration) {
+                        tasks.push({
+                            text: taskText,
+                            priority: priority,
+                            isQuick: duration === "quick",
+                        });
+                    }
+                });
+
+                return tasks;
+            }
+
+            function prioritizeTasks() {
+                const tasks = collectTasks();
+
+                if (tasks.length === 0) {
+                    alert(
+                        "Please add at least one complete task with priority and duration.",
+                    );
+                    return;
+                }
+
+                // Sort tasks: A tasks first, then B, then C. Within each priority, quick tasks first
+                const sortedTasks = tasks.sort((a, b) => {
+                    if (a.priority !== b.priority) {
+                        return a.priority.localeCompare(b.priority);
+                    }
+                    if (a.isQuick !== b.isQuick) {
+                        return b.isQuick ? 1 : -1; // Quick tasks first
+                    }
+                    return 0;
+                });
+
+                prioritizedTasks = sortedTasks;
+                displayResults(sortedTasks);
+            }
+
+            function displayResults(tasks) {
+                const resultsDiv = document.getElementById("results");
+                const downloadBtn = document.getElementById("downloadBtn");
+
+                let html =
+                    '<h2 style="margin-bottom: 20px; color: #2d3748;">📋 Your Prioritized Tasks</h2>';
+
+                ["A", "B", "C"].forEach((priority) => {
+                    const priorityTasks = tasks.filter(
+                        (task) => task.priority === priority,
+                    );
+                    if (priorityTasks.length > 0) {
+                        const priorityLabels = {
+                            A: "Priority A - Must Do (Urgent & Important)",
+                            B: "Priority B - Should Do (Important)",
+                            C: "Priority C - Nice to Do (Neither urgent nor important)",
+                        };
+
+                        html += `<div class="priority-group">`;
+                        html += `<h3 class="priority-${priority.toLowerCase()}-header">${priorityLabels[priority]}</h3>`;
+
+                        priorityTasks.forEach((task) => {
+                            html += `<div class="task-item priority-${priority.toLowerCase()}">`;
+                            html += `<span>${task.text}</span>`;
+                            if (task.isQuick) {
+                                html += `<span class="quick-badge">⚡ Quick</span>`;
+                            }
+                            html += `</div>`;
+                        });
+
+                        html += `</div>`;
+                    }
+                });
+
+                resultsDiv.innerHTML = html;
+                resultsDiv.classList.remove("hidden");
+                downloadBtn.classList.remove("hidden");
+            }
+
+            function downloadTasks() {
+                if (prioritizedTasks.length === 0) {
+                    alert(
+                        "No tasks to download. Please prioritize your tasks first.",
+                    );
+                    return;
+                }
+
+                let content = "MY PRIORITIZED TASKS\n";
+                content += "=".repeat(50) + "\n\n";
+                content +=
+                    "Generated on: " + new Date().toLocaleDateString() + "\n\n";
+
+                ["A", "B", "C"].forEach((priority) => {
+                    const priorityTasks = prioritizedTasks.filter(
+                        (task) => task.priority === priority,
+                    );
+                    if (priorityTasks.length > 0) {
+                        const priorityLabels = {
+                            A: "PRIORITY A - MUST DO (Urgent & Important)",
+                            B: "PRIORITY B - SHOULD DO (Important)",
+                            C: "PRIORITY C - NICE TO DO (Neither urgent nor important)",
+                        };
+
+                        content += priorityLabels[priority] + "\n";
+                        content +=
+                            "-".repeat(priorityLabels[priority].length) + "\n";
+
+                        priorityTasks.forEach((task, index) => {
+                            content += `${index + 1}. ${task.text}`;
+                            if (task.isQuick) {
+                                content += " ⚡ (Quick - ≤5 min)";
+                            }
+                            content += "\n";
+                        });
+
+                        content += "\n";
+                    }
+                });
+
+                content +=
+                    "\nTip: Start with Priority A tasks, focusing on quick ones first to build momentum!\n";
+
+                const blob = new Blob([content], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "prioritized-tasks.txt";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Initialize the app
+            initializeTasks();
+        </script>
+    </body>
+</html>

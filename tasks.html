@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Task Prioritizer</title>
+        <title>Tasks</title>
 
         <!-- PWA Meta Tags -->
         <meta name="theme-color" content="#667eea" />
@@ -319,7 +319,7 @@
             <!-- Install Prompt -->
             <div id="installPrompt" class="install-prompt">
                 <div>
-                    <strong>📱 Install Task Prioritizer</strong>
+                    <strong>📱 Install Tasks</strong>
                     <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9">
                         Add to your home screen for quick access
                     </p>
@@ -327,23 +327,23 @@
                 <button id="installBtn" class="install-btn">Install</button>
             </div>
 
-            <h1>🎯 Task Prioritizer</h1>
+            <h1>🎯 Tasks</h1>
             <div class="description">
                 <p>
                     <strong
-                        >Organize your tasks efficiently using the ABC
-                        prioritization method!</strong
+                        >Feeling like you have too much to do? Organize your
+                        tasks efficiently using the ABC prioritization
+                        method!</strong
                     >
                 </p>
                 <p>
-                    If you are feeling like you have too much to do you can use
-                    this tool to help. Categorize your tasks as
-                    <strong>A</strong> (Must do - urgent & important),
-                    <strong>B</strong> (Should do - important but not urgent),
-                    or <strong>C</strong> (Nice to do - neither urgent nor
-                    important). Mark tasks that take 5 minutes or less to tackle
-                    quick wins first. Click "Prioritize Tasks" to automatically
-                    sort them by priority and duration.
+                    Categorize your tasks as <strong>A</strong> (Must do -
+                    urgent & important), <strong>B</strong> (Should do -
+                    important but not urgent), or <strong>C</strong> (Nice to do
+                    - neither urgent nor important). Mark tasks that take 5
+                    minutes or less to tackle quick wins first. Click
+                    "Prioritize Tasks" to automatically sort them by priority
+                    and duration.
                 </p>
             </div>
 
@@ -366,7 +366,7 @@
                     class="btn-primary"
                     onclick="prioritizeTasks()"
                 >
-                    🔄 Prioritize Tasks
+                    🔄 Prioritize
                 </button>
                 <button
                     type="button"
@@ -374,7 +374,7 @@
                     id="downloadBtn"
                     onclick="downloadTasks()"
                 >
-                    📥 Download as .txt
+                    📥 Download
                 </button>
             </div>
 
@@ -400,8 +400,8 @@
                     </select>
                     <select class="task-input" id="task-duration-${taskCount}">
                         <option value="">Duration</option>
-                        <option value="quick">under 5 minutes</option>
-                        <option value="longer">over 5 minutes</option>
+                        <option value="quick">≤ 5 minutes</option>
+                        <option value="longer">> 5 minutes</option>
                     </select>
                     <button type="button" onclick="removeTask(${taskCount})" style="background: #e53e3e; color: white; padding: 8px; border-radius: 6px;">✕</button>
                 </div>

@@ -338,274 +338,272 @@ Reuters = https://reuters.com</pre
         </div>
 
         <script>
-                // Global state for persistent data
-                let menuData = {
-                    'System': {
-                        'About': 'javascript:showAbout()'
-                    },
-                    'Web': {
-                        'Google': 'https://google.com',
-                        'Facebook': 'https://facebook.com',
-                        'Reddit': 'https://old.reddit.com'
-                    },
-                    'News': {
-                        'AP': 'https://apnews.com',
-                        'NPR': 'https://text.npr.org'
-                    }
-                };
-
+            // Global state for persistent data
+            let menuData = {
+                'System': {
+                    'About': 'javascript:showAbout()'
+                },
+                'Web': {
+                    'Google': 'https://google.com',
+                    'Facebook': 'https://facebook.com',
+                    'Reddit': 'https://old.reddit.com'
+                },
+                'News': {
+                    'AP': 'https://apnews.com',
+                    'NPR': 'https://text.npr.org'
+                },
                 'Tools': {
                     'bEdit': 'https://bedit.org',
                     'bPad': 'https://bpad.me'
                 }
             };
 
-                // Context menu management
-                function showContextMenu(e) {
-                    e.preventDefault();
-                    const menu = document.getElementById('contextMenu');
+            // Context menu management
+            function showContextMenu(e) {
+                e.preventDefault();
+                const menu = document.getElementById('contextMenu');
 
-                    menu.innerHTML = generateMenuHTML();
-                    menu.style.display = 'block';
-                    menu.style.left = e.pageX + 'px';
-                    menu.style.top = e.pageY + 'px';
+                menu.innerHTML = generateMenuHTML();
+                menu.style.display = 'block';
+                menu.style.left = e.pageX + 'px';
+                menu.style.top = e.pageY + 'px';
 
-                    // Adjust position if menu goes off screen
-                    const rect = menu.getBoundingClientRect();
-                    if (rect.right > window.innerWidth) {
-                        menu.style.left = (e.pageX - rect.width) + 'px';
-                    }
-                    if (rect.bottom > window.innerHeight) {
-                        menu.style.top = (e.pageY - rect.height) + 'px';
-                    }
-
-                    attachMenuListeners();
+                // Adjust position if menu goes off screen
+                const rect = menu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    menu.style.left = (e.pageX - rect.width) + 'px';
+                }
+                if (rect.bottom > window.innerHeight) {
+                    menu.style.top = (e.pageY - rect.height) + 'px';
                 }
 
-                function generateMenuHTML() {
-                    let html = '';
+                attachMenuListeners();
+            }
 
-                    // Add folder submenus
-                    for (const [folder, links] of Object.entries(menuData)) {
-                        html += `<div class="menu-item has-submenu" data-folder="${folder}">
-                            ${folder}
-                            <div class="submenu">`;
+            function generateMenuHTML() {
+                let html = '';
 
-                        for (const [title, url] of Object.entries(links)) {
-                            html += `<div class="submenu-item" data-url="${url}">${title}</div>`;
+                // Add folder submenus
+                for (const [folder, links] of Object.entries(menuData)) {
+                    html += `<div class="menu-item has-submenu" data-folder="${folder}">
+                        ${folder}
+                        <div class="submenu">`;
+
+                    for (const [title, url] of Object.entries(links)) {
+                        html += `<div class="submenu-item" data-url="${url}">${title}</div>`;
+                    }
+
+                    html += `</div></div>`;
+                }
+
+                // Add management options
+                html += `<div class="menu-item" onclick="showImportModal()">Import Links</div>`;
+                html += `<div class="menu-item" onclick="showHelpModal()">Help</div>`;
+                html += `<div class="menu-item" onclick="exportLinks()">Export Links</div>`;
+                html += `<div class="menu-item" onclick="clearAllLinks()">Clear All</div>`;
+
+                return html;
+            }
+
+            function attachMenuListeners() {
+                const menuItems = document.querySelectorAll('.menu-item.has-submenu');
+                const submenuItems = document.querySelectorAll('.submenu-item');
+
+                menuItems.forEach(item => {
+                    const submenu = item.querySelector('.submenu');
+
+                    item.addEventListener('mouseenter', () => {
+                        submenu.style.display = 'block';
+                    });
+
+                    item.addEventListener('mouseleave', () => {
+                        submenu.style.display = 'none';
+                    });
+                });
+
+                submenuItems.forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const url = item.getAttribute('data-url');
+                        if (url.startsWith('javascript:')) {
+                            eval(url.substring(11));
+                        } else {
+                            window.open(url, '_blank');
                         }
+                        hideContextMenu();
+                    });
+                });
+            }
 
-                        html += `</div></div>`;
+            function hideContextMenu() {
+                document.getElementById('contextMenu').style.display = 'none';
+            }
+
+            // Modal management
+            function showImportModal() {
+                document.getElementById('importModal').style.display = 'flex';
+                hideContextMenu();
+            }
+
+            function closeImportModal() {
+                document.getElementById('importModal').style.display = 'none';
+                document.getElementById('importStatus').innerHTML = '';
+            }
+
+            function showHelpModal() {
+                document.getElementById('helpModal').style.display = 'flex';
+                hideContextMenu();
+            }
+
+            function closeHelpModal() {
+                document.getElementById('helpModal').style.display = 'none';
+            }
+
+            // File import functionality
+            function processImport() {
+                const fileInput = document.getElementById('fileInput');
+                const statusDiv = document.getElementById('importStatus');
+
+                if (!fileInput.files.length) {
+                    statusDiv.innerHTML = '<div class="status error">Please select a file first.</div>';
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const parsed = parseImportFile(content);
+
+                        if (parsed.success) {
+                            // Merge with existing data
+                            Object.assign(menuData, parsed.data);
+                            statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
+
+                            setTimeout(() => {
+                                closeImportModal();
+                            }, 2000);
+                        } else {
+                            statusDiv.innerHTML = `<div class="status error">${parsed.error}</div>`;
+                        }
+                    } catch (error) {
+                        statusDiv.innerHTML = `<div class="status error">Error reading file: ${error.message}</div>`;
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+
+            function parseImportFile(content) {
+                const lines = content.split('\n');
+                const result = {};
+                let currentFolder = null;
+                let linkCount = 0;
+
+                for (let line of lines) {
+                    line = line.trim();
+
+                    // Skip empty lines and comments
+                    if (!line || line.startsWith('#')) continue;
+
+                    // Check for folder header
+                    if (line.startsWith('[') && line.endsWith(']')) {
+                        currentFolder = line.slice(1, -1);
+                        if (!result[currentFolder]) {
+                            result[currentFolder] = {};
+                        }
+                        continue;
                     }
 
-                    // Add management options
-                    html += `<div class="menu-item" onclick="showImportModal()">Import Links</div>`;
-                    html += `<div class="menu-item" onclick="showHelpModal()">Help</div>`;
-                    html += `<div class="menu-item" onclick="exportLinks()">Export Links</div>`;
-                    html += `<div class="menu-item" onclick="clearAllLinks()">Clear All</div>`;
-
-                    return html;
-                }
-
-                function attachMenuListeners() {
-                    const menuItems = document.querySelectorAll('.menu-item.has-submenu');
-                    const submenuItems = document.querySelectorAll('.submenu-item');
-
-                    menuItems.forEach(item => {
-                        const submenu = item.querySelector('.submenu');
-
-                        item.addEventListener('mouseenter', () => {
-                            submenu.style.display = 'block';
-                        });
-
-                        item.addEventListener('mouseleave', () => {
-                            submenu.style.display = 'none';
-                        });
-                    });
-
-                    submenuItems.forEach(item => {
-                        item.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const url = item.getAttribute('data-url');
-                            if (url.startsWith('javascript:')) {
-                                eval(url.substring(11));
-                            } else {
-                                window.open(url, '_blank');
-                            }
-                            hideContextMenu();
-                        });
-                    });
-                }
-
-                function hideContextMenu() {
-                    document.getElementById('contextMenu').style.display = 'none';
-                }
-
-                // Modal management
-                function showImportModal() {
-                    document.getElementById('importModal').style.display = 'flex';
-                    hideContextMenu();
-                }
-
-                function closeImportModal() {
-                    document.getElementById('importModal').style.display = 'none';
-                    document.getElementById('importStatus').innerHTML = '';
-                }
-
-                function showHelpModal() {
-                    document.getElementById('helpModal').style.display = 'flex';
-                    hideContextMenu();
-                }
-
-                function closeHelpModal() {
-                    document.getElementById('helpModal').style.display = 'none';
-                }
-
-                // File import functionality
-                function processImport() {
-                    const fileInput = document.getElementById('fileInput');
-                    const statusDiv = document.getElementById('importStatus');
-
-                    if (!fileInput.files.length) {
-                        statusDiv.innerHTML = '<div class="status error">Please select a file first.</div>';
-                        return;
+                    // Parse link
+                    if (currentFolder && line.includes('=')) {
+                        const [title, url] = line.split('=').map(s => s.trim());
+                        if (title && url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('javascript:'))) {
+                            result[currentFolder][title] = url;
+                            linkCount++;
+                        }
                     }
+                }
 
-                    const file = fileInput.files[0];
-                    const reader = new FileReader();
+                if (linkCount === 0) {
+                    return { success: false, error: 'No valid links found. Please check the file format.' };
+                }
 
-                    reader.onload = function(e) {
-                        try {
-                            const content = e.target.result;
-                            const parsed = parseImportFile(content);
+                return { success: true, data: result, count: linkCount };
+            }
 
-                            if (parsed.success) {
-                                // Merge with existing data
-                                Object.assign(menuData, parsed.data);
-                                statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
+            // Export functionality
+            function exportLinks() {
+                let content = '# Exported Weblinks\n# Generated on ' + new Date().toLocaleString() + '\n\n';
 
-                                setTimeout(() => {
-                                    closeImportModal();
-                                }, 2000);
-                            } else {
-                                statusDiv.innerHTML = `<div class="status error">${parsed.error}</div>`;
-                            }
-                        } catch (error) {
-                            statusDiv.innerHTML = `<div class="status error">Error reading file: ${error.message}</div>`;
+                for (const [folder, links] of Object.entries(menuData)) {
+                    content += `[${folder}]\n`;
+                    for (const [title, url] of Object.entries(links)) {
+                        content += `${title} = ${url}\n`;
+                    }
+                    content += '\n';
+                }
+
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'openboxmarks.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+
+                hideContextMenu();
+            }
+
+            function clearAllLinks() {
+                if (confirm('Are you sure you want to clear all links? This cannot be undone.')) {
+                    menuData = {
+                        'System': {
+                            'About': 'javascript:showAbout()'
                         }
                     };
-
-                    reader.readAsText(file);
                 }
+                hideContextMenu();
+            }
 
-                function parseImportFile(content) {
-                    const lines = content.split('\n');
-                    const result = {};
-                    let currentFolder = null;
-                    let linkCount = 0;
+            function showAbout() {
+                alert('Openbox Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent storage during session');
+            }
 
-                    for (let line of lines) {
-                        line = line.trim();
+            // Update timestamp
+            function updateTimestamp() {
+                document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            }
 
-                        // Skip empty lines and comments
-                        if (!line || line.startsWith('#')) continue;
+            // Event listeners
+            document.addEventListener('DOMContentLoaded', function() {
+                const desktop = document.getElementById('desktop');
 
-                        // Check for folder header
-                        if (line.startsWith('[') && line.endsWith(']')) {
-                            currentFolder = line.slice(1, -1);
-                            if (!result[currentFolder]) {
-                                result[currentFolder] = {};
-                            }
-                            continue;
-                        }
+                desktop.addEventListener('contextmenu', showContextMenu);
+                document.addEventListener('click', hideContextMenu);
 
-                        // Parse link
-                        if (currentFolder && line.includes('=')) {
-                            const [title, url] = line.split('=').map(s => s.trim());
-                            if (title && url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('javascript:'))) {
-                                result[currentFolder][title] = url;
-                                linkCount++;
-                            }
-                        }
-                    }
+                // File drag and drop
+                const fileInput = document.getElementById('fileInput');
+                const modal = document.getElementById('importModal');
 
-                    if (linkCount === 0) {
-                        return { success: false, error: 'No valid links found. Please check the file format.' };
-                    }
-
-                    return { success: true, data: result, count: linkCount };
-                }
-
-                // Export functionality
-                function exportLinks() {
-                    let content = '# Exported Weblinks\n# Generated on ' + new Date().toLocaleString() + '\n\n';
-
-                    for (const [folder, links] of Object.entries(menuData)) {
-                        content += `[${folder}]\n`;
-                        for (const [title, url] of Object.entries(links)) {
-                            content += `${title} = ${url}\n`;
-                        }
-                        content += '\n';
-                    }
-
-                    const blob = new Blob([content], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'openboxmarks.txt';
-                    a.click();
-                    URL.revokeObjectURL(url);
-
-                    hideContextMenu();
-                }
-
-                function clearAllLinks() {
-                    if (confirm('Are you sure you want to clear all links? This cannot be undone.')) {
-                        menuData = {
-                            'System': {
-                                'About': 'javascript:showAbout()'
-                            }
-                        };
-                    }
-                    hideContextMenu();
-                }
-
-                function showAbout() {
-                    alert('Openbox Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent storage during session');
-                }
-
-                // Update timestamp
-                function updateTimestamp() {
-                    document.getElementById('timestamp').textContent = new Date().toLocaleString();
-                }
-
-                // Event listeners
-                document.addEventListener('DOMContentLoaded', function() {
-                    const desktop = document.getElementById('desktop');
-
-                    desktop.addEventListener('contextmenu', showContextMenu);
-                    document.addEventListener('click', hideContextMenu);
-
-                    // File drag and drop
-                    const fileInput = document.getElementById('fileInput');
-                    const modal = document.getElementById('importModal');
-
-                    modal.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'copy';
-                    });
-
-                    modal.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        const files = e.dataTransfer.files;
-                        if (files.length > 0 && files[0].type === 'text/plain') {
-                            fileInput.files = files;
-                        }
-                    });
-
-                    setInterval(updateTimestamp, 1000);
-                    updateTimestamp();
+                modal.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
                 });
+
+                modal.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0 && files[0].type === 'text/plain') {
+                        fileInput.files = files;
+                    }
+                });
+
+                setInterval(updateTimestamp, 1000);
+                updateTimestamp();
+            });
         </script>
     </body>
 </html>

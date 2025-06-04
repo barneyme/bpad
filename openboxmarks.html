@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Openbox Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            cursor: default;
+            user-select: none;
+        }
+
+        .desktop {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .context-menu {
+            position: fixed;
+            background: rgba(40, 44, 52, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            color: #e6e6e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(74, 144, 226, 0.3);
+            color: white;
+        }
+
+        .menu-item.has-submenu::after {
+            content: '▶';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+        }
+
+        .submenu {
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background: rgba(40, 44, 52, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            min-width: 180px;
+            display: none;
+        }
+
+        .submenu-item {
+            padding: 10px 14px;
+            color: #e6e6e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .submenu-item:last-child {
+            border-bottom: none;
+        }
+
+        .submenu-item:hover {
+            background: rgba(74, 144, 226, 0.3);
+            color: white;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            color: #ecf0f1;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .modal h3 {
+            color: #3498db;
+            margin: 16px 0 8px 0;
+            font-size: 18px;
+        }
+
+        .modal p, .modal li {
+            color: #bdc3c7;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .modal ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .modal code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+
+        .modal pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+            color: #e74c3c;
+            font-family: 'Courier New', monospace;
+        }
+
+        .file-input {
+            margin: 16px 0;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .file-input input {
+            display: none;
+        }
+
+        .file-input label {
+            color: #3498db;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 4px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .button.secondary {
+            background: #7f8c8d;
+        }
+
+        .button.secondary:hover {
+            background: #6c7b7d;
+        }
+
+        .status {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .status.error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .timestamp {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop" id="desktop">
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <div class="context-menu" id="contextMenu"></div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <h2>Import Weblinks</h2>
+            
+            <div class="file-input">
+                <input type="file" id="fileInput" accept=".txt">
+                <label for="fileInput">Click to select a text file or drag and drop</label>
+            </div>
+            
+            <div id="importStatus"></div>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="button secondary" onclick="closeImportModal()">Cancel</button>
+                <button class="button" onclick="processImport()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h2>Help - Import Format</h2>
+            
+            <h3>File Format</h3>
+            <p>Create a text file (.txt) with your weblinks organized by folders. Use the following format:</p>
+            
+            <pre>[Folder Name]
+Link Title = https://example.com
+Another Link = https://another-site.com
+
+[Development]
+GitHub = https://github.com
+Stack Overflow = https://stackoverflow.com
+MDN Docs = https://developer.mozilla.org
+
+[News]
+BBC News = https://bbc.com
+Reuters = https://reuters.com</pre>
+
+            <h3>Format Rules</h3>
+            <ul>
+                <li>Folder names are enclosed in square brackets: <code>[Folder Name]</code></li>
+                <li>Links follow the format: <code>Link Title = URL</code></li>
+                <li>URLs must include http:// or https://</li>
+                <li>Empty lines are ignored</li>
+                <li>Lines starting with # are treated as comments and ignored</li>
+            </ul>
+
+            <h3>Example Structure</h3>
+            <ul>
+                <li>Each folder section starts with a name in brackets</li>
+                <li>All links after a folder heading belong to that folder</li>
+                <li>You can have multiple folders in one file</li>
+                <li>Existing folders will be merged with imported ones</li>
+            </ul>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="button" onclick="closeHelpModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state for persistent data
+        let menuData = {
+            'System': {
+                'Settings': 'javascript:alert("Settings would open here")',
+                'About': 'javascript:showAbout()'
+            },
+            'Web': {
+                'Google': 'https://google.com',
+                'YouTube': 'https://youtube.com',
+                'GitHub': 'https://github.com'
+            },
+            'Development': {
+                'MDN Docs': 'https://developer.mozilla.org',
+                'Stack Overflow': 'https://stackoverflow.com'
+            }
+        };
+
+        // Context menu management
+        function showContextMenu(e) {
+            e.preventDefault();
+            const menu = document.getElementById('contextMenu');
+            
+            menu.innerHTML = generateMenuHTML();
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+
+            // Adjust position if menu goes off screen
+            const rect = menu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                menu.style.left = (e.pageX - rect.width) + 'px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                menu.style.top = (e.pageY - rect.height) + 'px';
+            }
+
+            attachMenuListeners();
+        }
+
+        function generateMenuHTML() {
+            let html = '';
+            
+            // Add folder submenus
+            for (const [folder, links] of Object.entries(menuData)) {
+                html += `<div class="menu-item has-submenu" data-folder="${folder}">
+                    ${folder}
+                    <div class="submenu">`;
+                
+                for (const [title, url] of Object.entries(links)) {
+                    html += `<div class="submenu-item" data-url="${url}">${title}</div>`;
+                }
+                
+                html += `</div></div>`;
+            }
+
+            // Add management options
+            html += `<div class="menu-item" onclick="showImportModal()">Import Links</div>`;
+            html += `<div class="menu-item" onclick="showHelpModal()">Help</div>`;
+            html += `<div class="menu-item" onclick="exportLinks()">Export Links</div>`;
+            html += `<div class="menu-item" onclick="clearAllLinks()">Clear All</div>`;
+
+            return html;
+        }
+
+        function attachMenuListeners() {
+            const menuItems = document.querySelectorAll('.menu-item.has-submenu');
+            const submenuItems = document.querySelectorAll('.submenu-item');
+
+            menuItems.forEach(item => {
+                const submenu = item.querySelector('.submenu');
+                
+                item.addEventListener('mouseenter', () => {
+                    submenu.style.display = 'block';
+                });
+                
+                item.addEventListener('mouseleave', () => {
+                    submenu.style.display = 'none';
+                });
+            });
+
+            submenuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const url = item.getAttribute('data-url');
+                    if (url.startsWith('javascript:')) {
+                        eval(url.substring(11));
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                    hideContextMenu();
+                });
+            });
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // Modal management
+        function showImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+            hideContextMenu();
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            document.getElementById('importStatus').innerHTML = '';
+        }
+
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+            hideContextMenu();
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        // File import functionality
+        function processImport() {
+            const fileInput = document.getElementById('fileInput');
+            const statusDiv = document.getElementById('importStatus');
+            
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '<div class="status error">Please select a file first.</div>';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const parsed = parseImportFile(content);
+                    
+                    if (parsed.success) {
+                        // Merge with existing data
+                        Object.assign(menuData, parsed.data);
+                        statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
+                        
+                        setTimeout(() => {
+                            closeImportModal();
+                        }, 2000);
+                    } else {
+                        statusDiv.innerHTML = `<div class="status error">${parsed.error}</div>`;
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = `<div class="status error">Error reading file: ${error.message}</div>`;
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function parseImportFile(content) {
+            const lines = content.split('\n');
+            const result = {};
+            let currentFolder = null;
+            let linkCount = 0;
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // Skip empty lines and comments
+                if (!line || line.startsWith('#')) continue;
+                
+                // Check for folder header
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    currentFolder = line.slice(1, -1);
+                    if (!result[currentFolder]) {
+                        result[currentFolder] = {};
+                    }
+                    continue;
+                }
+                
+                // Parse link
+                if (currentFolder && line.includes('=')) {
+                    const [title, url] = line.split('=').map(s => s.trim());
+                    if (title && url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('javascript:'))) {
+                        result[currentFolder][title] = url;
+                        linkCount++;
+                    }
+                }
+            }
+            
+            if (linkCount === 0) {
+                return { success: false, error: 'No valid links found. Please check the file format.' };
+            }
+            
+            return { success: true, data: result, count: linkCount };
+        }
+
+        // Export functionality
+        function exportLinks() {
+            let content = '# Exported Weblinks\n# Generated on ' + new Date().toLocaleString() + '\n\n';
+            
+            for (const [folder, links] of Object.entries(menuData)) {
+                content += `[${folder}]\n`;
+                for (const [title, url] of Object.entries(links)) {
+                    content += `${title} = ${url}\n`;
+                }
+                content += '\n';
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'weblinks-export.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            hideContextMenu();
+        }
+
+        function clearAllLinks() {
+            if (confirm('Are you sure you want to clear all links? This cannot be undone.')) {
+                menuData = {
+                    'System': {
+                        'About': 'javascript:showAbout()'
+                    }
+                };
+            }
+            hideContextMenu();
+        }
+
+        function showAbout() {
+            alert('Openbox Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent storage during session');
+        }
+
+        // Update timestamp
+        function updateTimestamp() {
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const desktop = document.getElementById('desktop');
+            
+            desktop.addEventListener('contextmenu', showContextMenu);
+            document.addEventListener('click', hideContextMenu);
+            
+            // File drag and drop
+            const fileInput = document.getElementById('fileInput');
+            const modal = document.getElementById('importModal');
+            
+            modal.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+            
+            modal.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type === 'text/plain') {
+                    fileInput.files = files;
+                }
+            });
+            
+            setInterval(updateTimestamp, 1000);
+            updateTimestamp();
+        });
+    </script>
+</body>
+</html>

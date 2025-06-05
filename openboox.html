@@ -28,6 +28,19 @@
                 width: 100%;
                 height: 100%;
                 position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 72px;
+                font-weight: 300;
+                color: rgba(255, 255, 255, 0.2);
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+                pointer-events: none;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                letter-spacing: 4px;
             }
 
             .context-menu {
@@ -264,6 +277,7 @@
     </head>
     <body>
         <div class="desktop" id="desktop">
+            <div class="logo">OpenBoox</div>
             <div class="timestamp" id="timestamp"></div>
             <div class="sync-status" id="syncStatus">● Initializing...</div>
         </div>
@@ -455,6 +469,10 @@ NPR = https://n.pr</pre
             let menuData = {
                 System: {
                     About: "javascript:showAbout()",
+                    Import: "javascript:showImportModal()",
+                    Export: "javascript:exportLinks()",
+                    Clear: "javascript:clearAllLinks()",
+                    Help: "javascript:showHelpModal()",
                 },
                 Web: {
                     Google: "https://google.com",
@@ -551,11 +569,6 @@ NPR = https://n.pr</pre
                     html += `</div></div>`;
                 }
 
-                // Add management options
-                html += `<div class="menu-item" onclick="showImportModal()">Import</div>`;
-                html += `<div class="menu-item" onclick="exportLinks()">Export</div>`;
-                html += `<div class="menu-item" onclick="clearAllLinks()">Clear</div>`;
-                html += `<div class="menu-item" onclick="showHelpModal()">Help</div>`;
                 return html;
             }
 
@@ -635,8 +648,10 @@ NPR = https://n.pr</pre
                         const parsed = parseImportFile(content);
 
                         if (parsed.success) {
-                            // Merge with existing data
+                            // Merge with existing data, but preserve System folder
+                            const systemItems = menuData.System;
                             Object.assign(menuData, parsed.data);
+                            menuData.System = { ...systemItems, ...parsed.data.System };
                             await saveMenuData();
                             statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
 
@@ -738,6 +753,10 @@ NPR = https://n.pr</pre
                     menuData = {
                         System: {
                             About: "javascript:showAbout()",
+                            Import: "javascript:showImportModal()",
+                            Export: "javascript:exportLinks()",
+                            Clear: "javascript:clearAllLinks()",
+                            Help: "javascript:showHelpModal()",
                         },
                     };
                     await saveMenuData();

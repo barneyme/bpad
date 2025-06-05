@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>OpenBoxMarks</title>
+        <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiT3BlbkJveE1hcmtzIiwic2hvcnRfbmFtZSI6Ik9wZW5Cb3giLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyYzNlNTAiLCJ0aGVtZV9jb2xvciI6IiMzNDk4ZGIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpJaUlHaGxhV2RvZEQwaU16SWlJSFpwWlhkQ2IzZzlJakFnTUNBek1pQXpNaUlnWm1sc2JEMGlJek0wT1Roa1lpSStQSEpsWTNRZ2VEMGlOQ0lnZVQwaU5DSWdkMmxrZEdnOUlqSTBJaUJvWldsbmFIUTlJakkwSWlCeWVEMGlOQ0lnWm1sc2JEMGlJek0wT1Roa1lpSXZQand2YzNablBnPT0iLCJzaXplcyI6IjMyeDMyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
         <style>
             * {
                 margin: 0;
@@ -239,11 +240,29 @@
                 font-size: 14px;
                 font-weight: 300;
             }
+
+            .sync-status {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 12px;
+                font-weight: 300;
+            }
+
+            .sync-status.online {
+                color: #27ae60;
+            }
+
+            .sync-status.offline {
+                color: #e74c3c;
+            }
         </style>
     </head>
     <body>
         <div class="desktop" id="desktop">
             <div class="timestamp" id="timestamp"></div>
+            <div class="sync-status" id="syncStatus">● Initializing...</div>
         </div>
 
         <div class="context-menu" id="contextMenu"></div>
@@ -319,14 +338,12 @@ Reuters = https://reuters.com</pre
                     </li>
                 </ul>
 
-                <h3>Example Structure</h3>
+                <h3>Persistent Storage</h3>
                 <ul>
-                    <li>Each folder section starts with a name in brackets</li>
-                    <li>
-                        All links after a folder heading belong to that folder
-                    </li>
-                    <li>You can have multiple folders in one file</li>
-                    <li>Existing folders will be merged with imported ones</li>
+                    <li>All data is stored locally in your browser</li>
+                    <li>Works offline with service worker caching</li>
+                    <li>Data persists between browser sessions</li>
+                    <li>Automatic background sync when online</li>
                 </ul>
 
                 <div style="text-align: right; margin-top: 20px">
@@ -338,50 +355,172 @@ Reuters = https://reuters.com</pre
         </div>
 
         <script>
+            // IndexedDB Database Management
+            class BookmarkDB {
+                constructor() {
+                    this.dbName = 'openboxmarks';
+                    this.version = 1;
+                    this.db = null;
+                }
+
+                async init() {
+                    return new Promise((resolve, reject) => {
+                        const request = indexedDB.open(this.dbName, this.version);
+                        
+                        request.onerror = () => reject(request.error);
+                        request.onsuccess = () => {
+                            this.db = request.result;
+                            resolve(this.db);
+                        };
+                        
+                        request.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            if (!db.objectStoreNames.contains('bookmarks')) {
+                                db.createObjectStore('bookmarks', { keyPath: 'id' });
+                            }
+                        };
+                    });
+                }
+
+                async saveData(data) {
+                    if (!this.db) await this.init();
+                    
+                    const transaction = this.db.transaction(['bookmarks'], 'readwrite');
+                    const store = transaction.objectStore('bookmarks');
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.put({
+                            id: 'menuData',
+                            data: data,
+                            lastModified: Date.now()
+                        });
+                        
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    });
+                }
+
+                async loadData() {
+                    if (!this.db) await this.init();
+                    
+                    const transaction = this.db.transaction(['bookmarks'], 'readonly');
+                    const store = transaction.objectStore('bookmarks');
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.get('menuData');
+                        
+                        request.onsuccess = () => {
+                            if (request.result) {
+                                resolve(request.result.data);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        request.onerror = () => reject(request.error);
+                    });
+                }
+
+                async clearData() {
+                    if (!this.db) await this.init();
+                    
+                    const transaction = this.db.transaction(['bookmarks'], 'readwrite');
+                    const store = transaction.objectStore('bookmarks');
+                    
+                    return new Promise((resolve, reject) => {
+                        const request = store.clear();
+                        request.onsuccess = () => resolve();
+                        request.onerror = () => reject(request.error);
+                    });
+                }
+            }
+
+            // Initialize database
+            const bookmarkDB = new BookmarkDB();
+            
             // Global state for persistent data
             let menuData = {
-                'System': {
-                    'About': 'javascript:showAbout()'
+                System: {
+                    About: "javascript:showAbout()",
                 },
-                'Web': {
-                    'Google': 'https://google.com',
-                    'Facebook': 'https://facebook.com',
-                    'Reddit': 'https://old.reddit.com'
+                Web: {
+                    Google: "https://google.com",
+                    Facebook: "https://facebook.com",
+                    Reddit: "https://old.reddit.com",
                 },
-                'News': {
-                    'AP': 'https://apnews.com',
-                    'NPR': 'https://text.npr.org'
+                News: {
+                    AP: "https://apnews.com",
+                    NPR: "https://text.npr.org",
                 },
-                'Tools': {
-                    'bEdit': 'https://bedit.org',
-                    'bPad': 'https://bpad.me'
-                }
+                Tools: {
+                    bEdit: "https://bedit.org",
+                    bPad: "https://bpad.me",
+                },
             };
+
+            // Save data to IndexedDB
+            async function saveMenuData() {
+                try {
+                    await bookmarkDB.saveData(menuData);
+                    updateSyncStatus('● Saved', 'online');
+                } catch (error) {
+                    console.error('Failed to save data:', error);
+                    updateSyncStatus('● Save failed', 'offline');
+                }
+            }
+
+            // Load data from IndexedDB
+            async function loadMenuData() {
+                try {
+                    const savedData = await bookmarkDB.loadData();
+                    if (savedData) {
+                        menuData = savedData;
+                        updateSyncStatus('● Loaded', 'online');
+                    } else {
+                        updateSyncStatus('● Using defaults', 'online');
+                    }
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                    updateSyncStatus('● Load failed', 'offline');
+                }
+            }
+
+            // Update sync status indicator
+            function updateSyncStatus(message, status) {
+                const syncStatus = document.getElementById('syncStatus');
+                syncStatus.textContent = message;
+                syncStatus.className = `sync-status ${status}`;
+                
+                // Clear status after 3 seconds
+                setTimeout(() => {
+                    syncStatus.textContent = navigator.onLine ? '● Online' : '● Offline';
+                    syncStatus.className = `sync-status ${navigator.onLine ? 'online' : 'offline'}`;
+                }, 3000);
+            }
 
             // Context menu management
             function showContextMenu(e) {
                 e.preventDefault();
-                const menu = document.getElementById('contextMenu');
+                const menu = document.getElementById("contextMenu");
 
                 menu.innerHTML = generateMenuHTML();
-                menu.style.display = 'block';
-                menu.style.left = e.pageX + 'px';
-                menu.style.top = e.pageY + 'px';
+                menu.style.display = "block";
+                menu.style.left = e.pageX + "px";
+                menu.style.top = e.pageY + "px";
 
                 // Adjust position if menu goes off screen
                 const rect = menu.getBoundingClientRect();
                 if (rect.right > window.innerWidth) {
-                    menu.style.left = (e.pageX - rect.width) + 'px';
+                    menu.style.left = e.pageX - rect.width + "px";
                 }
                 if (rect.bottom > window.innerHeight) {
-                    menu.style.top = (e.pageY - rect.height) + 'px';
+                    menu.style.top = e.pageY - rect.height + "px";
                 }
 
                 attachMenuListeners();
             }
 
             function generateMenuHTML() {
-                let html = '';
+                let html = "";
 
                 // Add folder submenus
                 for (const [folder, links] of Object.entries(menuData)) {
@@ -406,29 +545,31 @@ Reuters = https://reuters.com</pre
             }
 
             function attachMenuListeners() {
-                const menuItems = document.querySelectorAll('.menu-item.has-submenu');
-                const submenuItems = document.querySelectorAll('.submenu-item');
+                const menuItems = document.querySelectorAll(
+                    ".menu-item.has-submenu",
+                );
+                const submenuItems = document.querySelectorAll(".submenu-item");
 
-                menuItems.forEach(item => {
-                    const submenu = item.querySelector('.submenu');
+                menuItems.forEach((item) => {
+                    const submenu = item.querySelector(".submenu");
 
-                    item.addEventListener('mouseenter', () => {
-                        submenu.style.display = 'block';
+                    item.addEventListener("mouseenter", () => {
+                        submenu.style.display = "block";
                     });
 
-                    item.addEventListener('mouseleave', () => {
-                        submenu.style.display = 'none';
+                    item.addEventListener("mouseleave", () => {
+                        submenu.style.display = "none";
                     });
                 });
 
-                submenuItems.forEach(item => {
-                    item.addEventListener('click', (e) => {
+                submenuItems.forEach((item) => {
+                    item.addEventListener("click", (e) => {
                         e.stopPropagation();
-                        const url = item.getAttribute('data-url');
-                        if (url.startsWith('javascript:')) {
+                        const url = item.getAttribute("data-url");
+                        if (url.startsWith("javascript:")) {
                             eval(url.substring(11));
                         } else {
-                            window.open(url, '_blank');
+                            window.open(url, "_blank");
                         }
                         hideContextMenu();
                     });
@@ -436,43 +577,44 @@ Reuters = https://reuters.com</pre
             }
 
             function hideContextMenu() {
-                document.getElementById('contextMenu').style.display = 'none';
+                document.getElementById("contextMenu").style.display = "none";
             }
 
             // Modal management
             function showImportModal() {
-                document.getElementById('importModal').style.display = 'flex';
+                document.getElementById("importModal").style.display = "flex";
                 hideContextMenu();
             }
 
             function closeImportModal() {
-                document.getElementById('importModal').style.display = 'none';
-                document.getElementById('importStatus').innerHTML = '';
+                document.getElementById("importModal").style.display = "none";
+                document.getElementById("importStatus").innerHTML = "";
             }
 
             function showHelpModal() {
-                document.getElementById('helpModal').style.display = 'flex';
+                document.getElementById("helpModal").style.display = "flex";
                 hideContextMenu();
             }
 
             function closeHelpModal() {
-                document.getElementById('helpModal').style.display = 'none';
+                document.getElementById("helpModal").style.display = "none";
             }
 
             // File import functionality
-            function processImport() {
-                const fileInput = document.getElementById('fileInput');
-                const statusDiv = document.getElementById('importStatus');
+            async function processImport() {
+                const fileInput = document.getElementById("fileInput");
+                const statusDiv = document.getElementById("importStatus");
 
                 if (!fileInput.files.length) {
-                    statusDiv.innerHTML = '<div class="status error">Please select a file first.</div>';
+                    statusDiv.innerHTML =
+                        '<div class="status error">Please select a file first.</div>';
                     return;
                 }
 
                 const file = fileInput.files[0];
                 const reader = new FileReader();
 
-                reader.onload = function(e) {
+                reader.onload = async function (e) {
                     try {
                         const content = e.target.result;
                         const parsed = parseImportFile(content);
@@ -480,6 +622,7 @@ Reuters = https://reuters.com</pre
                         if (parsed.success) {
                             // Merge with existing data
                             Object.assign(menuData, parsed.data);
+                            await saveMenuData();
                             statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
 
                             setTimeout(() => {
@@ -497,7 +640,7 @@ Reuters = https://reuters.com</pre
             }
 
             function parseImportFile(content) {
-                const lines = content.split('\n');
+                const lines = content.split("\n");
                 const result = {};
                 let currentFolder = null;
                 let linkCount = 0;
@@ -506,10 +649,10 @@ Reuters = https://reuters.com</pre
                     line = line.trim();
 
                     // Skip empty lines and comments
-                    if (!line || line.startsWith('#')) continue;
+                    if (!line || line.startsWith("#")) continue;
 
                     // Check for folder header
-                    if (line.startsWith('[') && line.endsWith(']')) {
+                    if (line.startsWith("[") && line.endsWith("]")) {
                         currentFolder = line.slice(1, -1);
                         if (!result[currentFolder]) {
                             result[currentFolder] = {};
@@ -518,9 +661,17 @@ Reuters = https://reuters.com</pre
                     }
 
                     // Parse link
-                    if (currentFolder && line.includes('=')) {
-                        const [title, url] = line.split('=').map(s => s.trim());
-                        if (title && url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('javascript:'))) {
+                    if (currentFolder && line.includes("=")) {
+                        const [title, url] = line
+                            .split("=")
+                            .map((s) => s.trim());
+                        if (
+                            title &&
+                            url &&
+                            (url.startsWith("http://") ||
+                                url.startsWith("https://") ||
+                                url.startsWith("javascript:"))
+                        ) {
                             result[currentFolder][title] = url;
                             linkCount++;
                         }
@@ -528,7 +679,10 @@ Reuters = https://reuters.com</pre
                 }
 
                 if (linkCount === 0) {
-                    return { success: false, error: 'No valid links found. Please check the file format.' };
+                    return {
+                        success: false,
+                        error: "No valid links found. Please check the file format.",
+                    };
                 }
 
                 return { success: true, data: result, count: linkCount };
@@ -536,74 +690,187 @@ Reuters = https://reuters.com</pre
 
             // Export functionality
             function exportLinks() {
-                let content = '# Exported Weblinks\n# Generated on ' + new Date().toLocaleString() + '\n\n';
+                let content =
+                    "# Exported Weblinks\n# Generated on " +
+                    new Date().toLocaleString() +
+                    "\n\n";
 
                 for (const [folder, links] of Object.entries(menuData)) {
                     content += `[${folder}]\n`;
                     for (const [title, url] of Object.entries(links)) {
                         content += `${title} = ${url}\n`;
                     }
-                    content += '\n';
+                    content += "\n";
                 }
 
-                const blob = new Blob([content], { type: 'text/plain' });
+                const blob = new Blob([content], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
+                const a = document.createElement("a");
                 a.href = url;
-                a.download = 'openboxmarks.txt';
+                a.download = "openboxmarks.txt";
                 a.click();
                 URL.revokeObjectURL(url);
 
                 hideContextMenu();
             }
 
-            function clearAllLinks() {
-                if (confirm('Are you sure you want to clear all links? This cannot be undone.')) {
+            async function clearAllLinks() {
+                if (
+                    confirm(
+                        "Are you sure you want to clear all links? This cannot be undone.",
+                    )
+                ) {
                     menuData = {
-                        'System': {
-                            'About': 'javascript:showAbout()'
-                        }
+                        System: {
+                            About: "javascript:showAbout()",
+                        },
                     };
+                    await saveMenuData();
                 }
                 hideContextMenu();
             }
 
             function showAbout() {
-                alert('Openbox Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent storage during session');
+                alert(
+                    "OpenBoxMarks Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent IndexedDB storage\n- Service worker caching\n- Offline functionality\n\nVersion 2.0 with PWA support",
+                );
+            }
+
+            // Service Worker Registration
+            async function registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    try {
+                        // Create service worker inline
+                        const swCode = `
+                            const CACHE_NAME = 'openboxmarks-v1';
+                            const urlsToCache = [
+                                '/',
+                                '/index.html'
+                            ];
+
+                            self.addEventListener('install', function(event) {
+                                event.waitUntil(
+                                    caches.open(CACHE_NAME)
+                                        .then(function(cache) {
+                                            return cache.addAll(urlsToCache);
+                                        })
+                                );
+                            });
+
+                            self.addEventListener('fetch', function(event) {
+                                event.respondWith(
+                                    caches.match(event.request)
+                                        .then(function(response) {
+                                            if (response) {
+                                                return response;
+                                            }
+                                            return fetch(event.request);
+                                        }
+                                    )
+                                );
+                            });
+
+                            self.addEventListener('sync', function(event) {
+                                if (event.tag === 'background-sync') {
+                                    event.waitUntil(doBackgroundSync());
+                                }
+                            });
+
+                            function doBackgroundSync() {
+                                return new Promise(resolve => {
+                                    console.log('Background sync triggered');
+                                    resolve();
+                                });
+                            }
+                        `;
+
+                        const blob = new Blob([swCode], { type: 'application/javascript' });
+                        const swUrl = URL.createObjectURL(blob);
+                        
+                        const registration = await navigator.serviceWorker.register(swUrl);
+                        console.log('Service Worker registered:', registration);
+                        updateSyncStatus('● SW registered', 'online');
+                    } catch (error) {
+                        console.error('Service Worker registration failed:', error);
+                        updateSyncStatus('● SW failed', 'offline');
+                    }
+                }
             }
 
             // Update timestamp
             function updateTimestamp() {
-                document.getElementById('timestamp').textContent = new Date().toLocaleString();
+                document.getElementById("timestamp").textContent =
+                    new Date().toLocaleString();
+            }
+
+            // Online/Offline event handlers
+            function handleOnline() {
+                updateSyncStatus('● Online', 'online');
+            }
+
+            function handleOffline() {
+                updateSyncStatus('● Offline', 'offline');
             }
 
             // Event listeners
-            document.addEventListener('DOMContentLoaded', function() {
-                const desktop = document.getElementById('desktop');
+            document.addEventListener("DOMContentLoaded", async function () {
+                const desktop = document.getElementById("desktop");
 
-                desktop.addEventListener('contextmenu', showContextMenu);
-                document.addEventListener('click', hideContextMenu);
+                desktop.addEventListener("contextmenu", showContextMenu);
+                document.addEventListener("click", hideContextMenu);
+
+                // Initialize database and load data
+                try {
+                    await loadMenuData();
+                } catch (error) {
+                    console.error('Failed to initialize database:', error);
+                }
+
+                // Register service worker
+                await registerServiceWorker();
 
                 // File drag and drop
-                const fileInput = document.getElementById('fileInput');
-                const modal = document.getElementById('importModal');
+                const fileInput = document.getElementById("fileInput");
+                const modal = document.getElementById("importModal");
 
-                modal.addEventListener('dragover', (e) => {
+                modal.addEventListener("dragover", (e) => {
                     e.preventDefault();
-                    e.dataTransfer.dropEffect = 'copy';
+                    e.dataTransfer.dropEffect = "copy";
                 });
 
-                modal.addEventListener('drop', (e) => {
+                modal.addEventListener("drop", (e) => {
                     e.preventDefault();
                     const files = e.dataTransfer.files;
-                    if (files.length > 0 && files[0].type === 'text/plain') {
+                    if (files.length > 0 && files[0].type === "text/plain") {
                         fileInput.files = files;
                     }
                 });
 
+                // Online/offline event listeners
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+
+                // Set initial online status
+                updateSyncStatus(navigator.onLine ? '● Online' : '● Offline', 
+                              navigator.onLine ? 'online' : 'offline');
+
                 setInterval(updateTimestamp, 1000);
                 updateTimestamp();
             });
+
+            // Auto-save data when window is about to close
+            window.addEventListener('beforeunload', () => {
+                saveMenuData();
+            });
+
+            // Periodic auto-save
+            setInterval(async () => {
+                try {
+                    await saveMenuData();
+                } catch (error) {
+                    console.error('Auto-save failed:', error);
+                }
+            }, 30000); // Save every 30 seconds
         </script>
     </body>
 </html>

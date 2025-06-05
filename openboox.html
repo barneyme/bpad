@@ -3,8 +3,11 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>OpenBoxMarks</title>
-        <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiT3BlbkJveE1hcmtzIiwic2hvcnRfbmFtZSI6Ik9wZW5Cb3giLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyYzNlNTAiLCJ0aGVtZV9jb2xvciI6IiMzNDk4ZGIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpJaUlHaGxhV2RvZEQwaU16SWlJSFpwWlhkQ2IzZzlJakFnTUNBek1pQXpNaUlnWm1sc2JEMGlJek0wT1Roa1lpSStQSEpsWTNRZ2VEMGlOQ0lnZVQwaU5DSWdkMmxrZEdnOUlqSTBJaUJvWldsbmFIUTlJakkwSWlCeWVEMGlOQ0lnWm1sc2JEMGlJek0wT1Roa1lpSXZQand2YzNablBnPT0iLCJzaXplcyI6IjMyeDMyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+        <title>OpenBoox</title>
+        <link
+            rel="manifest"
+            href="data:application/json;base64,eyJuYW1lIjoiT3BlbkJveE1hcmtzIiwic2hvcnRfbmFtZSI6Ik9wZW5Cb3giLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyYzNlNTAiLCJ0aGVtZV9jb2xvciI6IiMzNDk4ZGIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpJaUlHaGxhV2RvZEQwaU16SWlJSFpwWlhkQ2IzZzlJakFnTUNBek1pQXpNaUlnWm1sc2JEMGlJek0wT1Roa1lpSStQSEpsWTNRZ2VEMGlOQ0lnZVQwaU5DSWdkMmxrZEdnOUlqSTBJaUJvWldsbmFIUTlJakkwSWlCeWVEMGlOQ0lnWm1sc2JEMGlJek0wT1Roa1lpSXZQand2YzNablBnPT0iLCJzaXplcyI6IjMyeDMyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19"
+        />
         <style>
             * {
                 margin: 0;
@@ -298,7 +301,7 @@
         <!-- Help Modal -->
         <div class="modal" id="helpModal">
             <div class="modal-content">
-                <h2>Help - Import Format</h2>
+                <h2>Help - Importing bookmarks</h2>
 
                 <h3>File Format</h3>
                 <p>
@@ -308,17 +311,16 @@
 
                 <pre>
 [Folder Name]
-Link Title = https://example.com
-Another Link = https://another-site.com
+First Link = https://firstlink.com
+Second Link = https://secondlink.com
 
-[Development]
-GitHub = https://github.com
-Stack Overflow = https://stackoverflow.com
-MDN Docs = https://developer.mozilla.org
+[Search]
+DuckDuckGo = https://ddg.gg
+Goosh = https://goosh.org
 
 [News]
-BBC News = https://bbc.com
-Reuters = https://reuters.com</pre
+AP News = https://apnews.com
+NPR = https://n.pr</pre
                 >
 
                 <h3>Format Rules</h3>
@@ -341,9 +343,7 @@ Reuters = https://reuters.com</pre
                 <h3>Persistent Storage</h3>
                 <ul>
                     <li>All data is stored locally in your browser</li>
-                    <li>Works offline with service worker caching</li>
-                    <li>Data persists between browser sessions</li>
-                    <li>Automatic background sync when online</li>
+                    <li>Note: Export links before clearing brower cache</li>
                 </ul>
 
                 <div style="text-align: right; margin-top: 20px">
@@ -358,25 +358,30 @@ Reuters = https://reuters.com</pre
             // IndexedDB Database Management
             class BookmarkDB {
                 constructor() {
-                    this.dbName = 'openboxmarks';
+                    this.dbName = "openboxmarks";
                     this.version = 1;
                     this.db = null;
                 }
 
                 async init() {
                     return new Promise((resolve, reject) => {
-                        const request = indexedDB.open(this.dbName, this.version);
-                        
+                        const request = indexedDB.open(
+                            this.dbName,
+                            this.version,
+                        );
+
                         request.onerror = () => reject(request.error);
                         request.onsuccess = () => {
                             this.db = request.result;
                             resolve(this.db);
                         };
-                        
+
                         request.onupgradeneeded = (event) => {
                             const db = event.target.result;
-                            if (!db.objectStoreNames.contains('bookmarks')) {
-                                db.createObjectStore('bookmarks', { keyPath: 'id' });
+                            if (!db.objectStoreNames.contains("bookmarks")) {
+                                db.createObjectStore("bookmarks", {
+                                    keyPath: "id",
+                                });
                             }
                         };
                     });
@@ -384,17 +389,20 @@ Reuters = https://reuters.com</pre
 
                 async saveData(data) {
                     if (!this.db) await this.init();
-                    
-                    const transaction = this.db.transaction(['bookmarks'], 'readwrite');
-                    const store = transaction.objectStore('bookmarks');
-                    
+
+                    const transaction = this.db.transaction(
+                        ["bookmarks"],
+                        "readwrite",
+                    );
+                    const store = transaction.objectStore("bookmarks");
+
                     return new Promise((resolve, reject) => {
                         const request = store.put({
-                            id: 'menuData',
+                            id: "menuData",
                             data: data,
-                            lastModified: Date.now()
+                            lastModified: Date.now(),
                         });
-                        
+
                         request.onsuccess = () => resolve(request.result);
                         request.onerror = () => reject(request.error);
                     });
@@ -402,13 +410,16 @@ Reuters = https://reuters.com</pre
 
                 async loadData() {
                     if (!this.db) await this.init();
-                    
-                    const transaction = this.db.transaction(['bookmarks'], 'readonly');
-                    const store = transaction.objectStore('bookmarks');
-                    
+
+                    const transaction = this.db.transaction(
+                        ["bookmarks"],
+                        "readonly",
+                    );
+                    const store = transaction.objectStore("bookmarks");
+
                     return new Promise((resolve, reject) => {
-                        const request = store.get('menuData');
-                        
+                        const request = store.get("menuData");
+
                         request.onsuccess = () => {
                             if (request.result) {
                                 resolve(request.result.data);
@@ -422,10 +433,13 @@ Reuters = https://reuters.com</pre
 
                 async clearData() {
                     if (!this.db) await this.init();
-                    
-                    const transaction = this.db.transaction(['bookmarks'], 'readwrite');
-                    const store = transaction.objectStore('bookmarks');
-                    
+
+                    const transaction = this.db.transaction(
+                        ["bookmarks"],
+                        "readwrite",
+                    );
+                    const store = transaction.objectStore("bookmarks");
+
                     return new Promise((resolve, reject) => {
                         const request = store.clear();
                         request.onsuccess = () => resolve();
@@ -436,7 +450,7 @@ Reuters = https://reuters.com</pre
 
             // Initialize database
             const bookmarkDB = new BookmarkDB();
-            
+
             // Global state for persistent data
             let menuData = {
                 System: {
@@ -461,10 +475,10 @@ Reuters = https://reuters.com</pre
             async function saveMenuData() {
                 try {
                     await bookmarkDB.saveData(menuData);
-                    updateSyncStatus('● Saved', 'online');
+                    updateSyncStatus("● Saved", "online");
                 } catch (error) {
-                    console.error('Failed to save data:', error);
-                    updateSyncStatus('● Save failed', 'offline');
+                    console.error("Failed to save data:", error);
+                    updateSyncStatus("● Save failed", "offline");
                 }
             }
 
@@ -474,26 +488,28 @@ Reuters = https://reuters.com</pre
                     const savedData = await bookmarkDB.loadData();
                     if (savedData) {
                         menuData = savedData;
-                        updateSyncStatus('● Loaded', 'online');
+                        updateSyncStatus("● Loaded", "online");
                     } else {
-                        updateSyncStatus('● Using defaults', 'online');
+                        updateSyncStatus("● Using defaults", "online");
                     }
                 } catch (error) {
-                    console.error('Failed to load data:', error);
-                    updateSyncStatus('● Load failed', 'offline');
+                    console.error("Failed to load data:", error);
+                    updateSyncStatus("● Load failed", "offline");
                 }
             }
 
             // Update sync status indicator
             function updateSyncStatus(message, status) {
-                const syncStatus = document.getElementById('syncStatus');
+                const syncStatus = document.getElementById("syncStatus");
                 syncStatus.textContent = message;
                 syncStatus.className = `sync-status ${status}`;
-                
+
                 // Clear status after 3 seconds
                 setTimeout(() => {
-                    syncStatus.textContent = navigator.onLine ? '● Online' : '● Offline';
-                    syncStatus.className = `sync-status ${navigator.onLine ? 'online' : 'offline'}`;
+                    syncStatus.textContent = navigator.onLine
+                        ? "● Online"
+                        : "● Offline";
+                    syncStatus.className = `sync-status ${navigator.onLine ? "online" : "offline"}`;
                 }, 3000);
             }
 
@@ -732,13 +748,13 @@ Reuters = https://reuters.com</pre
 
             function showAbout() {
                 alert(
-                    "OpenBoxMarks Desktop Manager\n\nA web-based desktop environment inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Import/Export functionality\n- Persistent IndexedDB storage\n- Service worker caching\n- Offline functionality\n\nVersion 2.0 with PWA support",
+                    "OpenBoox Desktop Manager\n\nA web-based bookmarks tool inspired by the Openbox window manager.\n\nFeatures:\n- Right-click context menu\n- Organized folder structure\n- Offline functionality\n\nMade by barney.me",
                 );
             }
 
             // Service Worker Registration
             async function registerServiceWorker() {
-                if ('serviceWorker' in navigator) {
+                if ("serviceWorker" in navigator) {
                     try {
                         // Create service worker inline
                         const swCode = `
@@ -784,15 +800,21 @@ Reuters = https://reuters.com</pre
                             }
                         `;
 
-                        const blob = new Blob([swCode], { type: 'application/javascript' });
+                        const blob = new Blob([swCode], {
+                            type: "application/javascript",
+                        });
                         const swUrl = URL.createObjectURL(blob);
-                        
-                        const registration = await navigator.serviceWorker.register(swUrl);
-                        console.log('Service Worker registered:', registration);
-                        updateSyncStatus('● SW registered', 'online');
+
+                        const registration =
+                            await navigator.serviceWorker.register(swUrl);
+                        console.log("Service Worker registered:", registration);
+                        updateSyncStatus("● SW registered", "online");
                     } catch (error) {
-                        console.error('Service Worker registration failed:', error);
-                        updateSyncStatus('● SW failed', 'offline');
+                        console.error(
+                            "Service Worker registration failed:",
+                            error,
+                        );
+                        updateSyncStatus("● SW failed", "offline");
                     }
                 }
             }
@@ -805,11 +827,11 @@ Reuters = https://reuters.com</pre
 
             // Online/Offline event handlers
             function handleOnline() {
-                updateSyncStatus('● Online', 'online');
+                updateSyncStatus("● Online", "online");
             }
 
             function handleOffline() {
-                updateSyncStatus('● Offline', 'offline');
+                updateSyncStatus("● Offline", "offline");
             }
 
             // Event listeners
@@ -823,7 +845,7 @@ Reuters = https://reuters.com</pre
                 try {
                     await loadMenuData();
                 } catch (error) {
-                    console.error('Failed to initialize database:', error);
+                    console.error("Failed to initialize database:", error);
                 }
 
                 // Register service worker
@@ -847,19 +869,21 @@ Reuters = https://reuters.com</pre
                 });
 
                 // Online/offline event listeners
-                window.addEventListener('online', handleOnline);
-                window.addEventListener('offline', handleOffline);
+                window.addEventListener("online", handleOnline);
+                window.addEventListener("offline", handleOffline);
 
                 // Set initial online status
-                updateSyncStatus(navigator.onLine ? '● Online' : '● Offline', 
-                              navigator.onLine ? 'online' : 'offline');
+                updateSyncStatus(
+                    navigator.onLine ? "● Online" : "● Offline",
+                    navigator.onLine ? "online" : "offline",
+                );
 
                 setInterval(updateTimestamp, 1000);
                 updateTimestamp();
             });
 
             // Auto-save data when window is about to close
-            window.addEventListener('beforeunload', () => {
+            window.addEventListener("beforeunload", () => {
                 saveMenuData();
             });
 
@@ -868,7 +892,7 @@ Reuters = https://reuters.com</pre
                 try {
                     await saveMenuData();
                 } catch (error) {
-                    console.error('Auto-save failed:', error);
+                    console.error("Auto-save failed:", error);
                 }
             }, 30000); // Save every 30 seconds
         </script>

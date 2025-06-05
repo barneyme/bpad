@@ -552,11 +552,10 @@ NPR = https://n.pr</pre
                 }
 
                 // Add management options
-                html += `<div class="menu-item" onclick="showImportModal()">Import Links</div>`;
+                html += `<div class="menu-item" onclick="showImportModal()">Import</div>`;
+                html += `<div class="menu-item" onclick="exportLinks()">Export</div>`;
+                html += `<div class="menu-item" onclick="clearAllLinks()">Clear</div>`;
                 html += `<div class="menu-item" onclick="showHelpModal()">Help</div>`;
-                html += `<div class="menu-item" onclick="exportLinks()">Export Links</div>`;
-                html += `<div class="menu-item" onclick="clearAllLinks()">Clear All</div>`;
-
                 return html;
             }
 

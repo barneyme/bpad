@@ -372,7 +372,7 @@ NPR = https://n.pr</pre
             // IndexedDB Database Management
             class BookmarkDB {
                 constructor() {
-                    this.dbName = "openboxmarks";
+                    this.dbName = "openboox";
                     this.version = 1;
                     this.db = null;
                 }
@@ -468,20 +468,27 @@ NPR = https://n.pr</pre
             // Global state for persistent data
             let menuData = {
                 System: {
-                    About: "javascript:showAbout()",
                     Import: "javascript:showImportModal()",
                     Export: "javascript:exportLinks()",
                     Clear: "javascript:clearAllLinks()",
                     Help: "javascript:showHelpModal()",
+                    About: "javascript:showAbout()",
                 },
                 Web: {
-                    Google: "https://google.com",
+                    DDG: "https://ddg.gg/lite",
+                    "Duck.ai": "https://duck.ai",
+                    DuckDuckGo: "https://ddg.gg",
                     Facebook: "https://facebook.com",
+                    Google: "https://google.com",
                     Reddit: "https://old.reddit.com",
+                    Youtube: "https://youtube.com",
                 },
                 News: {
+                    "68k News": "https://68k.news",
                     AP: "https://apnews.com",
                     NPR: "https://text.npr.org",
+                    Timef: "https://timef.com",
+                    WTTR: "https://wttr.in",
                 },
                 Tools: {
                     bEdit: "https://bedit.org",
@@ -489,10 +496,22 @@ NPR = https://n.pr</pre
                 },
             };
 
-            // Save data to IndexedDB
-            async function saveMenuData() {
+            // Save data to local storage
+            function saveMenuData() {
                 try {
-                    await bookmarkDB.saveData(menuData);
+                    const dataToSave = JSON.stringify(menuData);
+                    const data = {
+                        menuData: dataToSave,
+                        lastModified: Date.now(),
+                    };
+                    Object.keys(data).forEach((key) => {
+                        window.sessionStorage?.setItem(
+                            `openboox_${key}`,
+                            typeof data[key] === "string"
+                                ? data[key]
+                                : JSON.stringify(data[key]),
+                        );
+                    });
                     updateSyncStatus("● Saved", "online");
                 } catch (error) {
                     console.error("Failed to save data:", error);
@@ -500,12 +519,13 @@ NPR = https://n.pr</pre
                 }
             }
 
-            // Load data from IndexedDB
-            async function loadMenuData() {
+            // Load data from local storage
+            function loadMenuData() {
                 try {
-                    const savedData = await bookmarkDB.loadData();
+                    const savedData =
+                        window.sessionStorage?.getItem("openboox_menuData");
                     if (savedData) {
-                        menuData = savedData;
+                        menuData = JSON.parse(savedData);
                         updateSyncStatus("● Loaded", "online");
                     } else {
                         updateSyncStatus("● Using defaults", "online");
@@ -519,22 +539,30 @@ NPR = https://n.pr</pre
             // Update sync status indicator
             function updateSyncStatus(message, status) {
                 const syncStatus = document.getElementById("syncStatus");
-                syncStatus.textContent = message;
-                syncStatus.className = `sync-status ${status}`;
+                if (syncStatus) {
+                    syncStatus.textContent = message;
+                    syncStatus.className = `sync-status ${status}`;
 
-                // Clear status after 3 seconds
-                setTimeout(() => {
-                    syncStatus.textContent = navigator.onLine
-                        ? "● Online"
-                        : "● Offline";
-                    syncStatus.className = `sync-status ${navigator.onLine ? "online" : "offline"}`;
-                }, 3000);
+                    // Clear status after 3 seconds
+                    setTimeout(() => {
+                        syncStatus.textContent = navigator.onLine
+                            ? "● Online"
+                            : "● Offline";
+                        syncStatus.className = `sync-status ${navigator.onLine ? "online" : "offline"}`;
+                    }, 3000);
+                }
             }
 
             // Context menu management
             function showContextMenu(e) {
                 e.preventDefault();
+                console.log("Context menu triggered at:", e.pageX, e.pageY);
+
                 const menu = document.getElementById("contextMenu");
+                if (!menu) {
+                    console.error("Context menu element not found");
+                    return;
+                }
 
                 menu.innerHTML = generateMenuHTML();
                 menu.style.display = "block";
@@ -580,14 +608,15 @@ NPR = https://n.pr</pre
 
                 menuItems.forEach((item) => {
                     const submenu = item.querySelector(".submenu");
+                    if (submenu) {
+                        item.addEventListener("mouseenter", () => {
+                            submenu.style.display = "block";
+                        });
 
-                    item.addEventListener("mouseenter", () => {
-                        submenu.style.display = "block";
-                    });
-
-                    item.addEventListener("mouseleave", () => {
-                        submenu.style.display = "none";
-                    });
+                        item.addEventListener("mouseleave", () => {
+                            submenu.style.display = "none";
+                        });
+                    }
                 });
 
                 submenuItems.forEach((item) => {
@@ -595,7 +624,14 @@ NPR = https://n.pr</pre
                         e.stopPropagation();
                         const url = item.getAttribute("data-url");
                         if (url.startsWith("javascript:")) {
-                            eval(url.substring(11));
+                            try {
+                                eval(url.substring(11));
+                            } catch (error) {
+                                console.error(
+                                    "Error executing javascript:",
+                                    error,
+                                );
+                            }
                         } else {
                             window.open(url, "_blank");
                         }
@@ -605,33 +641,53 @@ NPR = https://n.pr</pre
             }
 
             function hideContextMenu() {
-                document.getElementById("contextMenu").style.display = "none";
+                const menu = document.getElementById("contextMenu");
+                if (menu) {
+                    menu.style.display = "none";
+                }
             }
 
             // Modal management
             function showImportModal() {
-                document.getElementById("importModal").style.display = "flex";
+                const modal = document.getElementById("importModal");
+                if (modal) {
+                    modal.style.display = "flex";
+                }
                 hideContextMenu();
             }
 
             function closeImportModal() {
-                document.getElementById("importModal").style.display = "none";
-                document.getElementById("importStatus").innerHTML = "";
+                const modal = document.getElementById("importModal");
+                if (modal) {
+                    modal.style.display = "none";
+                }
+                const statusDiv = document.getElementById("importStatus");
+                if (statusDiv) {
+                    statusDiv.innerHTML = "";
+                }
             }
 
             function showHelpModal() {
-                document.getElementById("helpModal").style.display = "flex";
+                const modal = document.getElementById("helpModal");
+                if (modal) {
+                    modal.style.display = "flex";
+                }
                 hideContextMenu();
             }
 
             function closeHelpModal() {
-                document.getElementById("helpModal").style.display = "none";
+                const modal = document.getElementById("helpModal");
+                if (modal) {
+                    modal.style.display = "none";
+                }
             }
 
             // File import functionality
-            async function processImport() {
+            function processImport() {
                 const fileInput = document.getElementById("fileInput");
                 const statusDiv = document.getElementById("importStatus");
+
+                if (!fileInput || !statusDiv) return;
 
                 if (!fileInput.files.length) {
                     statusDiv.innerHTML =
@@ -642,7 +698,7 @@ NPR = https://n.pr</pre
                 const file = fileInput.files[0];
                 const reader = new FileReader();
 
-                reader.onload = async function (e) {
+                reader.onload = function (e) {
                     try {
                         const content = e.target.result;
                         const parsed = parseImportFile(content);
@@ -651,8 +707,11 @@ NPR = https://n.pr</pre
                             // Merge with existing data, but preserve System folder
                             const systemItems = menuData.System;
                             Object.assign(menuData, parsed.data);
-                            menuData.System = { ...systemItems, ...parsed.data.System };
-                            await saveMenuData();
+                            menuData.System = {
+                                ...systemItems,
+                                ...parsed.data.System,
+                            };
+                            saveMenuData();
                             statusDiv.innerHTML = `<div class="status success">Successfully imported ${parsed.count} links across ${Object.keys(parsed.data).length} folders.</div>`;
 
                             setTimeout(() => {
@@ -737,14 +796,14 @@ NPR = https://n.pr</pre
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "openboxmarks.txt";
+                a.download = "openboox.txt";
                 a.click();
                 URL.revokeObjectURL(url);
 
                 hideContextMenu();
             }
 
-            async function clearAllLinks() {
+            function clearAllLinks() {
                 if (
                     confirm(
                         "Are you sure you want to clear all links? This cannot be undone.",
@@ -759,7 +818,7 @@ NPR = https://n.pr</pre
                             Help: "javascript:showHelpModal()",
                         },
                     };
-                    await saveMenuData();
+                    saveMenuData();
                 }
                 hideContextMenu();
             }
@@ -770,77 +829,12 @@ NPR = https://n.pr</pre
                 );
             }
 
-            // Service Worker Registration
-            async function registerServiceWorker() {
-                if ("serviceWorker" in navigator) {
-                    try {
-                        // Create service worker inline
-                        const swCode = `
-                            const CACHE_NAME = 'openboxmarks-v1';
-                            const urlsToCache = [
-                                '/',
-                                '/index.html'
-                            ];
-
-                            self.addEventListener('install', function(event) {
-                                event.waitUntil(
-                                    caches.open(CACHE_NAME)
-                                        .then(function(cache) {
-                                            return cache.addAll(urlsToCache);
-                                        })
-                                );
-                            });
-
-                            self.addEventListener('fetch', function(event) {
-                                event.respondWith(
-                                    caches.match(event.request)
-                                        .then(function(response) {
-                                            if (response) {
-                                                return response;
-                                            }
-                                            return fetch(event.request);
-                                        }
-                                    )
-                                );
-                            });
-
-                            self.addEventListener('sync', function(event) {
-                                if (event.tag === 'background-sync') {
-                                    event.waitUntil(doBackgroundSync());
-                                }
-                            });
-
-                            function doBackgroundSync() {
-                                return new Promise(resolve => {
-                                    console.log('Background sync triggered');
-                                    resolve();
-                                });
-                            }
-                        `;
-
-                        const blob = new Blob([swCode], {
-                            type: "application/javascript",
-                        });
-                        const swUrl = URL.createObjectURL(blob);
-
-                        const registration =
-                            await navigator.serviceWorker.register(swUrl);
-                        console.log("Service Worker registered:", registration);
-                        updateSyncStatus("● SW registered", "online");
-                    } catch (error) {
-                        console.error(
-                            "Service Worker registration failed:",
-                            error,
-                        );
-                        updateSyncStatus("● SW failed", "offline");
-                    }
-                }
-            }
-
             // Update timestamp
             function updateTimestamp() {
-                document.getElementById("timestamp").textContent =
-                    new Date().toLocaleString();
+                const timestamp = document.getElementById("timestamp");
+                if (timestamp) {
+                    timestamp.textContent = new Date().toLocaleString();
+                }
             }
 
             // Online/Offline event handlers
@@ -853,38 +847,67 @@ NPR = https://n.pr</pre
             }
 
             // Event listeners
-            document.addEventListener("DOMContentLoaded", async function () {
+            document.addEventListener("DOMContentLoaded", function () {
+                console.log("DOM loaded, initializing...");
+
                 const desktop = document.getElementById("desktop");
-
-                desktop.addEventListener("contextmenu", showContextMenu);
-                document.addEventListener("click", hideContextMenu);
-
-                // Initialize database and load data
-                try {
-                    await loadMenuData();
-                } catch (error) {
-                    console.error("Failed to initialize database:", error);
+                if (!desktop) {
+                    console.error("Desktop element not found");
+                    return;
                 }
 
-                // Register service worker
-                await registerServiceWorker();
+                // Add right-click listener to desktop
+                desktop.addEventListener("contextmenu", showContextMenu);
+
+                // Add backup right-click listener to document
+                document.addEventListener("contextmenu", function (e) {
+                    // Only show context menu if right-clicking on desktop or body
+                    if (
+                        e.target === desktop ||
+                        e.target === document.body ||
+                        e.target.classList.contains("logo")
+                    ) {
+                        showContextMenu(e);
+                    }
+                });
+
+                // Hide context menu on left click
+                document.addEventListener("click", function (e) {
+                    // Don't hide if clicking on the context menu itself
+                    if (!e.target.closest(".context-menu")) {
+                        hideContextMenu();
+                    }
+                });
+
+                // Initialize data
+                try {
+                    loadMenuData();
+                } catch (error) {
+                    console.error("Failed to load data:", error);
+                }
 
                 // File drag and drop
                 const fileInput = document.getElementById("fileInput");
                 const modal = document.getElementById("importModal");
 
-                modal.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "copy";
-                });
+                if (modal) {
+                    modal.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "copy";
+                    });
 
-                modal.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0 && files[0].type === "text/plain") {
-                        fileInput.files = files;
-                    }
-                });
+                    modal.addEventListener("drop", (e) => {
+                        e.preventDefault();
+                        const files = e.dataTransfer.files;
+                        if (
+                            files.length > 0 &&
+                            files[0].type === "text/plain" &&
+                            fileInput
+                        ) {
+                            fileInput.files = files;
+                        }
+                    });
+                }
 
                 // Online/offline event listeners
                 window.addEventListener("online", handleOnline);
@@ -896,8 +919,11 @@ NPR = https://n.pr</pre
                     navigator.onLine ? "online" : "offline",
                 );
 
+                // Start timestamp updates
                 setInterval(updateTimestamp, 1000);
                 updateTimestamp();
+
+                console.log("Initialization complete");
             });
 
             // Auto-save data when window is about to close
@@ -906,9 +932,9 @@ NPR = https://n.pr</pre
             });
 
             // Periodic auto-save
-            setInterval(async () => {
+            setInterval(() => {
                 try {
-                    await saveMenuData();
+                    saveMenuData();
                 } catch (error) {
                     console.error("Auto-save failed:", error);
                 }

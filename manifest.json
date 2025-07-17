@@ -1,6 +1,6 @@
 {
   "name": "bEdit - browser Editor",
-  "short_name": "bEdit",
+  "short_name": "bPad",
   "description": "Browser based plaintext editor",
   "start_url": "./",
   "display": "standalone",

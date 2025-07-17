@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#2980b9" />
+        <meta name="description" content="bpad - browser text editor">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="bpad">
+        <title>bPad : browser Pad</title>
+        <link rel="manifest" href="manifest.json" />
+        <link rel="stylesheet" href="style.css">
+	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
+	<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
+	<link rel="shortcut icon" href="./bpad192.png">
+	<link rel="apple-touch-icon" href="./bpad192.png">
+    </head>
+    <body>
+        <div class="snow-container">
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+        </div>
+        <nav>
+            <span id="controls">
+                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
+                <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
+                <span id="filename-container">
+                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
+                    <datalist id="recent-files-datalist-1"></datalist>
+                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <datalist id="recent-files-datalist-2"></datalist>
+                </span>
+                <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
+                <button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
+                <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong> <span class="button-text">Undo</span></button>
+                <button id="text-expansion-btn" title="Text Expander (CTRL + E)"><strong>&#x2328;</strong> <span class="button-text">Text</span></button>
+                <button id="split-view-btn" title="Split View (CTRL + I)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
+                        <path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/>
+                        <path d="M7.75 15.5V.5h.5v15h-.5z"/>
+                    </svg>
+                  <span class="button-text">Split</span>
+                </button>
+		<button id="theme-toggle" title="Mode (CTRL + M)"><strong>&#127769;</strong> <span class="button-text">Mode</span></button>
+                <span id="stats">
+                    <span class="stat-item" title="Current line number">
+                        <span class="stat-label">&#8595;</span>
+                        <span id="line-position">1</span>
+                    </span>
+                    <span class="stat-item" title="Current character position">
+                        <span class="stat-label">&#8594;</span>
+                        <span id="char-position">1</span>
+                    </span>
+                    <span class="stat-item" title="Total word count">
+                        <span class="stat-label">=</span>
+                        <span id="word-count">0</span>
+                    </span>
+                </span>
+                <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
+                <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong> <span class="button-text">Help</span></button>
+            </span>
+            <span id="app-name"><strong>bpad</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
+        </nav>
+        <div id="editor-container">
+            <div class="editor-pane" id="editor-pane-1">
+                <div id="active-line-1" class="active-line"></div>
+                <div id="highlight-layer-1" class="highlight-layer"></div>
+                <textarea
+                    id="textbox-1"
+                    class="textbox"
+                    autofocus
+                    placeholder="Welcome to bpad. Start typing to begin or click &#63; Help for help."
+                ></textarea>
+            </div>
+            <div class="editor-pane" id="editor-pane-2" style="display: none;">
+                <div id="active-line-2" class="active-line"></div>
+                <div id="highlight-layer-2" class="highlight-layer"></div>
+                <textarea
+                    id="textbox-2"
+                    class="textbox"
+                    placeholder="Open a second file or start typing."
+                ></textarea>
+            </div>
+        </div>
+        <input type="file" id="open-input-1" style="display: none" />
+        <input type="file" id="open-input-2" style="display: none" />
+        <div id="popup-overlay"></div>
+        <div id="readme-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Help</h2>
+            <div id="readme-content">
+                <p>
+                    bpad is a browser editor. It can open, create, and save basic plaintext files such as .txt; data files such as .csv and .tsv; markup and documentation files such as .html; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as .py, .js, and .java; and scripts such .bat, ,ps1 and .sh.
+                </p>
+                <h2>Directions</h2>
+                <p>
+                    Open bpad.me in web browser and start writing. Changes are
+                    automatically saved in your browser. (Save your file before clearing browser cache.)<br />
+                    <br />
+                    bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
+                    file.<br />
+                    <br />
+                    Files can be drag and dropped to bpad or added using Open button.<br />
+                    <br />
+                    To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
+                    <br />
+                    &#8595; displays the current line number.<br />
+                    &#8594; displays the current character position.<br />
+                    = displays the current word count.<br />
+                    &#x2B07; PWA installs bpad as an offline Progressive Web App.<br />
+                </p>
+                <h2>Shortcuts</h2>
+                    <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
+                    <b>CTRL + O</b> (&#128194; Open) to open a file from your computer.<br />
+                    <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
+                    <b>CTRL + I</b> (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg> Split) to toggle split view.<br />
+                    <b>CTRL + F</b> (&#128269; Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
+                    <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change.<br />
+                    <b>CTRL + E</b> (&#x2328; Text) to open the text expander.<br />
+                    <b>CTRL + M</b> (&#127769; Mode) to cycle through Light, Dark, and Snow modes.<br />
+                    <b>CTRL + H</b> (&#63; Help) to view this help file.
+                </p>
+                <h2>Privacy</h2>
+                <p>
+                    bpad.me does not (and cannot):<br />
+                    <ul>
+                    <li>access your content,</li>
+                    <li>criticize your writing or coding,</li>
+                    <li>track any activity on your computer,</li>
+                    <li>judge your music choices,</li>
+                    <li>identify who you are,</li>
+                    <li>sell your data.</li>
+                    </ul>
+                </p>
+                <h2>About</h2>
+                <p>
+                    bpad was created by <a href="https://barney.me">Barney</a>.<br />
+                    I hope you find bpad useful. If you want to support bpad.me buy me a
+                    <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
+                </p>
+            </div>
+        </div>
+        <div id="find-replace-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Find & Replace</h2>
+            <div>
+                <div class="find-replace-input-group">
+                    <input type="text" id="find-text" placeholder="Find" />
+                    <div class="find-options">
+                        <label title="Case-sensitive">
+                            <input type="checkbox" id="case-sensitive-checkbox" /> Aa
+                        </label>
+                        <label title="Use regular expressions">
+                            <input type="checkbox" id="regex-checkbox" /> .*
+                        </label>
+                    </div>
+                </div>
+                <div class="find-replace-input-group">
+                    <input type="text" id="replace-text" placeholder="Replace" />
+                </div>
+                <div id="find-replace-buttons">
+                    <span id="find-count"></span>
+                    <button id="find-btn">Find</button>
+                    <button id="replace-btn">Replace</button>
+                    <button id="replace-all-btn">Replace All</button>
+                </div>
+            </div>
+        </div>
+        <div id="text-expansion-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Text Expander</h2>
+            <p>Create shortcuts that automatically expand when you type the trigger (e.g., <code>.a</code> [space]). Shortcuts are saved in this browser.</p>
+            <div id="text-expansion-content"></div>
+            <div id="text-expansion-actions">
+                <button id="export-expansions-btn">Export to .txt</button>
+                <button id="import-expansions-btn">Import from .txt</button>
+            </div>
+            <input type="file" id="import-expansions-input" accept=".txt" style="display: none;" />
+        </div>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const elements = {
+                textbox1: document.getElementById("textbox-1"),
+                textbox2: document.getElementById("textbox-2"),
+                filenameBox1: document.getElementById("filename-1"),
+                filenameBox2: document.getElementById("filename-2"),
+                recentFilesDatalist1: document.getElementById("recent-files-datalist-1"),
+                recentFilesDatalist2: document.getElementById("recent-files-datalist-2"),
+                linePosition: document.getElementById("line-position"),
+                charPosition: document.getElementById("char-position"),
+                wordCount: document.getElementById("word-count"),
+                overlay: document.getElementById("popup-overlay"),
+                openInput1: document.getElementById("open-input-1"),
+                openInput2: document.getElementById("open-input-2"),
+                findText: document.getElementById("find-text"),
+                replaceText: document.getElementById("replace-text"),
+                findCount: document.getElementById("find-count"),
+                undoButton: document.getElementById("undo"),
+                nav: document.querySelector("nav"),
+                findBtn: document.getElementById("find-btn"),
+                replaceBtn: document.getElementById("replace-btn"),
+                replaceAllBtn: document.getElementById("replace-all-btn"),
+                openBtn: document.getElementById("open"),
+                saveBtn: document.getElementById("save"),
+                openNewTabBtn: document.getElementById("openNewTab"),
+                readmeBtn: document.getElementById("readme-button"),
+                findReplaceBtn: document.getElementById("find-replace-button"),
+                closeButtons: document.querySelectorAll(".close-btn"),
+                installButton: document.getElementById("install-app"),
+                themeToggle: document.getElementById("theme-toggle"),
+                highlightLayer1: document.getElementById("highlight-layer-1"),
+                highlightLayer2: document.getElementById("highlight-layer-2"),
+                activeLine1: document.getElementById("active-line-1"),
+                activeLine2: document.getElementById("active-line-2"),
+                caseSensitiveCheckbox: document.getElementById("case-sensitive-checkbox"),
+                regexCheckbox: document.getElementById("regex-checkbox"),
+                splitViewBtn: document.getElementById("split-view-btn"),
+                editorContainer: document.getElementById("editor-container"),
+                textExpansionBtn: document.getElementById("text-expansion-btn"),
+                exportExpansionsBtn: document.getElementById("export-expansions-btn"),
+                importExpansionsBtn: document.getElementById("import-expansions-btn"),
+                importExpansionsInput: document.getElementById("import-expansions-input"),
+            };
+            const popups = {
+                readme: document.getElementById("readme-popup"),
+                findReplace: document.getElementById("find-replace-popup"),
+                textExpansion: document.getElementById("text-expansion-popup"),
+            };
+
+            let deferredPrompt;
+            let activeTextbox = elements.textbox1;
+            const MAX_RECENT_FILES = 5;
+
+            function isPWAInstalled() {
+                if (window.matchMedia('(display-mode: standalone)').matches) { return true; }
+                if (navigator.standalone === true) { return true; }
+                return false;
+            }
+
+            function isMobileDevice() {
+                return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker
+                        .register('./service-worker.js')
+                        .then((registration) => { console.log('ServiceWorker registration successful'); })
+                        .catch((error) => { console.log('ServiceWorker registration failed: ', error); });
+                });
+
+                if (!isPWAInstalled()) {
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        if (!isMobileDevice() || /Android/i.test(navigator.userAgent)) {
+                            elements.installButton.style.display = 'inline-flex';
+                        }
+                    });
+
+                    elements.installButton.addEventListener('click', (e) => {
+                        if (!deferredPrompt) return;
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            deferredPrompt = null;
+                        });
+                    });
+
+                    window.addEventListener('appinstalled', (evt) => {
+                        elements.installButton.style.display = 'none';
+                    });
+                }
+            }
+
+            if (!window.name) {
+                window.name = "bpad-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+            }
+            const tabId = window.name;
+
+            let saveTimer;
+            let currentMatches = [];
+            let currentMatchIndex = -1;
+            const MAX_HISTORY = 100;
+            let history = [];
+            let currentHistoryIndex = -1;
+            let isUndoing = false;
+            let initialContentLoaded = false;
+            let lastChangeTime = 0;
+            const CHANGE_DELAY = 1000;
+
+            let historyCursorPositions = [];
+
+            function adjustTextareaHeight() {
+                elements.editorContainer.style.top = elements.nav.offsetHeight + "px";
+            }
+
+            function storeLocally() {
+                localStorage.setItem("bpad_" + tabId, elements.textbox1.value);
+            }
+
+            function updateAllUI() {
+                updateCursorPosition();
+                updateActiveLineHighlight();
+                updateWordCount();
+            }
+
+            function updateCursorPosition() {
+                const text = activeTextbox.value;
+                const cursorPos = activeTextbox.selectionStart;
+                const lines = text.substring(0, cursorPos).split("\n");
+                elements.linePosition.textContent = lines.length;
+                elements.charPosition.textContent = lines[lines.length - 1].length + 1;
+            }
+
+            function updateActiveLineHighlight() {
+                const activeLineEl = activeTextbox === elements.textbox1 ? elements.activeLine1 : elements.activeLine2;
+                if (!activeLineEl) return;
+
+                const text = activeTextbox.value;
+                const cursorPos = activeTextbox.selectionStart;
+                const lines = text.substring(0, cursorPos).split("\n");
+                const lineIndex = lines.length - 1;
+
+                const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
+
+                activeLineEl.style.top = `${lineIndex * lineHeight}px`;
+                activeLineEl.style.height = `${lineHeight}px`;
+                activeLineEl.style.display = 'block';
+            }
+
+            function updateWordCount() {
+                const text = elements.textbox1.value.trim();
+                if (!text) {
+                    elements.wordCount.textContent = "0";
+                    return;
+                }
+                const words = text.split(/\s+/).filter((word) => word.length > 0);
+                elements.wordCount.textContent = words.length.toString();
+            }
+
+            function getRecentFiles() {
+                const files = localStorage.getItem('bpad-recent-files');
+                return files ? JSON.parse(files) : [];
+            }
+
+            function updateRecentFilesDatalists() {
+                const files = getRecentFiles();
+                const datalist1 = elements.recentFilesDatalist1;
+                const datalist2 = elements.recentFilesDatalist2;
+                datalist1.innerHTML = '';
+                datalist2.innerHTML = '';
+                files.forEach(file => {
+                    const option1 = document.createElement('option');
+                    option1.value = file.filename;
+                    datalist1.appendChild(option1);
+                    const option2 = document.createElement('option');
+                    option2.value = file.filename;
+                    datalist2.appendChild(option2);
+                });
+            }
+
+            function addRecentFile(filename, content) {
+                if (!filename || content === null || content === undefined) return;
+                let recentFiles = getRecentFiles();
+                recentFiles = recentFiles.filter(file => file.filename !== filename);
+                recentFiles.unshift({ filename, content, timestamp: Date.now() });
+                if (recentFiles.length > MAX_RECENT_FILES) {
+                    recentFiles.pop();
+                }
+                localStorage.setItem('bpad-recent-files', JSON.stringify(recentFiles));
+                updateRecentFilesDatalists();
+            }
+
+            function openDroppedFile(file, targetTextbox, targetFilenameBox) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    targetTextbox.value = content;
+                    targetFilenameBox.value = file.name;
+                    addRecentFile(file.name, content);
+
+                    if (targetTextbox === elements.textbox1) {
+                        storeLocally();
+                        history = [];
+                        historyCursorPositions = [];
+                        currentHistoryIndex = -1;
+                        addToHistory(content, 0);
+                        updateUndoRedoButtons();
+                    }
+                    activeTextbox = targetTextbox;
+                    updateAllUI();
+                    updateHighlights();
+                };
+                reader.onerror = (e) => {
+                    console.warn("Could not read the file.", file.name, e);
+                };
+                reader.readAsText(file);
+            }
+
+            function handleFileOpen(event, targetTextbox, targetFilenameBox) {
+                const file = event.target.files[0];
+                if (file) {
+                    openDroppedFile(file, targetTextbox, targetFilenameBox);
+                }
+            }
+
+            function saveFile() {
+                const textboxToSave = activeTextbox;
+                const contentToSave = textboxToSave.value;
+                const filenameToSave = (textboxToSave === elements.textbox2)
+                    ? elements.filenameBox2.value
+                    : elements.filenameBox1.value;
+
+                const filename = filenameToSave || "bpad.txt";
+                addRecentFile(filename, contentToSave);
+
+                const blob = new Blob([contentToSave], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+
+            function openNewTab() {
+                window.open("https://bpad.me", "_blank");
+            }
+
+            function togglePopup(popupId, show) {
+                for (const key in popups) {
+                    if (popups[key]) {
+                        popups[key].style.display = "none";
+                    }
+                }
+                elements.overlay.style.display = "none";
+                if (show && popupId && popups[popupId]) {
+                    popups[popupId].style.display = "block";
+                    elements.overlay.style.display = "block";
+                    if (popupId === "findReplace" && elements.findText) {
+                        elements.findText.focus();
+                        elements.findText.select();
+                        updateHighlights();
+                    }
+                } else {
+                    elements.highlightLayer1.innerHTML = "";
+                    elements.highlightLayer2.innerHTML = "";
+                }
+            }
+
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape") {
+                    togglePopup(null, false);
+                }
+            });
+
+            function addToHistory(state, cursorPosition) {
+                if (history[currentHistoryIndex] === state) { return; }
+                if (currentHistoryIndex < history.length - 1) {
+                    history = history.slice(0, currentHistoryIndex + 1);
+                    historyCursorPositions = historyCursorPositions.slice(0, currentHistoryIndex + 1);
+                }
+                history.push(state);
+                historyCursorPositions.push(cursorPosition);
+                if (history.length > MAX_HISTORY) {
+                    history.shift();
+                    historyCursorPositions.shift();
+                }
+                currentHistoryIndex = history.length - 1;
+                updateUndoRedoButtons();
+            }
+
+            function undo() {
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+                    restoreState();
+                }
+            }
+
+            function redo() {
+                if (currentHistoryIndex < history.length - 1) {
+                    currentHistoryIndex++;
+                    restoreState();
+                }
+            }
+
+            function restoreState() {
+                isUndoing = true;
+                elements.textbox1.value = history[currentHistoryIndex];
+                elements.textbox1.focus();
+                elements.textbox1.setSelectionRange(
+                    historyCursorPositions[currentHistoryIndex],
+                    historyCursorPositions[currentHistoryIndex]
+                );
+                updateAllUI();
+                storeLocally();
+                updateUndoRedoButtons();
+                isUndoing = false;
+                updateHighlights();
+            }
+
+            function updateUndoRedoButtons() {
+                elements.undoButton.disabled = currentHistoryIndex <= 0;
+            }
+
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            }
+
+            function findAllMatches() {
+                const searchTerm = elements.findText.value;
+                const text = activeTextbox.value;
+                if (!searchTerm) {
+                    currentMatches = [];
+                    updateFindCount();
+                    updateHighlights();
+                    return;
+                }
+                const isCaseSensitive = elements.caseSensitiveCheckbox.checked;
+                const isRegex = elements.regexCheckbox.checked;
+                const flags = isCaseSensitive ? "g" : "gi";
+                const pattern = isRegex ? searchTerm : escapeRegExp(searchTerm);
+                const regex = new RegExp(pattern, flags);
+                const matches = [];
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                    matches.push({ start: match.index, end: match.index + match[0].length });
+                }
+                currentMatches = matches;
+                updateFindCount();
+                updateHighlights();
+            }
+
+            function updateHighlights() {
+                const highlightLayer = activeTextbox === elements.textbox1 ? elements.highlightLayer1 : elements.highlightLayer2;
+                highlightLayer.innerHTML = '';
+                if (currentMatches.length === 0) return;
+
+                const text = activeTextbox.value;
+                const frag = document.createDocumentFragment();
+                const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
+                const charWidth = parseFloat(getComputedStyle(activeTextbox).fontSize) * 0.6; // Approximation
+
+                currentMatches.forEach(match => {
+                    const textBefore = text.substring(0, match.start);
+                    const lines = textBefore.split('\n');
+                    const lineIndex = lines.length - 1;
+                    const charPos = lines[lineIndex].length;
+                    const highlight = document.createElement('div');
+                    highlight.className = 'highlight';
+                    highlight.style.top = `${lineIndex * lineHeight}px`;
+                    highlight.style.left = `${charPos * charWidth}px`;
+                    highlight.style.width = `${(match.end - match.start) * charWidth}px`;
+                    highlight.style.height = `${lineHeight}px`;
+                    frag.appendChild(highlight);
+                });
+                highlightLayer.appendChild(frag);
+            }
+
+            function updateFindCount() {
+                if (elements.findText.value === "") { elements.findCount.textContent = ""; }
+                else if (currentMatches.length > 0) { elements.findCount.textContent = `${currentMatches.length} matches`; }
+                else { elements.findCount.textContent = "No matches"; }
+            }
+
+            function findNext() {
+                if (currentMatches.length === 0) { findAllMatches(); }
+                if (currentMatches.length === 0) return;
+                const currentPosition = activeTextbox.selectionStart;
+                let nextMatchIndex = -1;
+                if (currentMatchIndex !== -1 && currentMatches[currentMatchIndex] && currentMatches[currentMatchIndex].start === activeTextbox.selectionStart && currentMatches[currentMatchIndex].end === activeTextbox.selectionEnd) {
+                    nextMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
+                } else {
+                    for (let i = 0; i < currentMatches.length; i++) {
+                        if (currentMatches[i].start >= currentPosition) { nextMatchIndex = i; break; }
+                    }
+                }
+                if (nextMatchIndex === -1 && currentMatches.length > 0) { nextMatchIndex = 0; }
+                currentMatchIndex = nextMatchIndex;
+                if (currentMatchIndex === -1) return;
+                const match = currentMatches[currentMatchIndex];
+                activeTextbox.focus();
+                activeTextbox.setSelectionRange(match.start, match.end);
+                const highlightLayer = activeTextbox === elements.textbox1 ? elements.highlightLayer1 : elements.highlightLayer2;
+                if(highlightLayer.children[currentMatchIndex]) {
+                    activeTextbox.scrollTop = highlightLayer.children[currentMatchIndex].offsetTop - (activeTextbox.clientHeight / 2);
+                }
+            }
+
+            function replaceCurrentMatch() {
+                const replacement = elements.replaceText.value;
+                const selectionStart = activeTextbox.selectionStart;
+                const selectionEnd = activeTextbox.selectionEnd;
+                if (selectionStart === selectionEnd) { findNext(); return; }
+                const currentText = activeTextbox.value;
+                const before = currentText.substring(0, selectionStart);
+                const after = currentText.substring(selectionEnd);
+                addToHistory(currentText, selectionStart);
+                activeTextbox.value = before + replacement + after;
+                updateAllUI();
+                storeLocally();
+                activeTextbox.focus();
+                const newCursorPos = selectionStart + replacement.length;
+                activeTextbox.setSelectionRange(newCursorPos, newCursorPos);
+                findAllMatches();
+                findNext();
+            }
+
+            function replaceAll() {
+                const replacement = elements.replaceText.value;
+                const searchTerm = elements.findText.value;
+                if (!searchTerm) return;
+                addToHistory(activeTextbox.value, activeTextbox.selectionStart);
+                const isCaseSensitive = elements.caseSensitiveCheckbox.checked;
+                const isRegex = elements.regexCheckbox.checked;
+                const flags = isCaseSensitive ? "g" : "gi";
+                const pattern = isRegex ? searchTerm : escapeRegExp(searchTerm);
+                const regex = new RegExp(pattern, flags);
+                activeTextbox.value = activeTextbox.value.replace(regex, replacement);
+                updateAllUI();
+                storeLocally();
+                findAllMatches();
+            }
+
+            function updateThemeIcon() {
+                const body = document.body;
+                const buttonIcon = elements.themeToggle.querySelector('strong');
+                if (body.classList.contains('dark-mode')) {
+                    buttonIcon.innerHTML = '&#10052;'; // Snowflake
+                } else if (body.classList.contains('snow-mode')) {
+                    buttonIcon.innerHTML = '&#127774;'; // Sun
+                } else {
+                    buttonIcon.innerHTML = '&#127769;'; // Moon
+                }
+            }
+
+            function cycleTheme() {
+                const body = document.body;
+                if (body.classList.contains('dark-mode')) {
+                    body.classList.remove('dark-mode');
+                    body.classList.add('snow-mode');
+                    localStorage.setItem('bpad-theme', 'snow');
+                } else if (body.classList.contains('snow-mode')) {
+                    body.classList.remove('snow-mode');
+                    localStorage.setItem('bpad-theme', 'light');
+                } else {
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('bpad-theme', 'dark');
+                }
+                updateThemeIcon();
+            }
+
+            function initializeTheme() {
+                const savedTheme = localStorage.getItem('bpad-theme');
+                if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); }
+                else if (savedTheme === 'snow') { document.body.classList.add('snow-mode'); }
+                updateThemeIcon();
+            }
+
+            function toggleSplitView() {
+                const isActive = elements.editorContainer.classList.toggle("split-view-active");
+                if (isActive) {
+                    elements.filenameBox2.style.display = 'inline-block';
+                    elements.textbox2.focus();
+                } else {
+                    elements.filenameBox2.style.display = 'none';
+                    elements.textbox1.focus();
+                }
+            }
+
+            function saveShortcuts(shortcuts) {
+                localStorage.setItem('bpad-text-expansions', JSON.stringify(shortcuts));
+            }
+
+            function loadShortcuts() {
+                const saved = localStorage.getItem('bpad-text-expansions');
+                return saved ? JSON.parse(saved) : {};
+            }
+
+            function initializeExpansionPopup() {
+                const container = document.getElementById('text-expansion-content');
+                if (!container) return;
+                container.innerHTML = '';
+                const shortcuts = loadShortcuts();
+                for (let i = 0; i < 26; i++) {
+                    const char = String.fromCharCode(97 + i);
+                    const shortcutKey = `.${char}`;
+                    const row = document.createElement('div');
+                    row.className = 'expansion-row';
+                    const label = document.createElement('label');
+                    label.textContent = shortcutKey;
+                    label.htmlFor = `expansion-input-${char}`;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = `expansion-input-${char}`;
+                    input.value = shortcuts[char] || '';
+                    input.placeholder = `Expanded text for ${shortcutKey}`;
+                    input.addEventListener('input', () => { shortcuts[char] = input.value; saveShortcuts(shortcuts); });
+                    row.appendChild(label);
+                    row.appendChild(input);
+                    container.appendChild(row);
+                }
+            }
+
+            function handleExpansion(event) {
+                const textbox = event.target;
+                const text = textbox.value;
+                const cursorPos = textbox.selectionStart;
+                const triggerMatch = text.substring(0, cursorPos).match(/\.([a-z])\s$/);
+                if (triggerMatch) {
+                    const key = triggerMatch[1];
+                    const shortcuts = loadShortcuts();
+                    const expansionText = shortcuts[key];
+                    if (expansionText) {
+                        event.preventDefault();
+                        const triggerLength = 3;
+                        const textBefore = text.substring(0, cursorPos - triggerLength);
+                        const textAfter = text.substring(cursorPos);
+                        addToHistory(textbox.value, cursorPos);
+                        textbox.value = textBefore + expansionText + textAfter;
+                        const newCursorPos = textBefore.length + expansionText.length;
+                        textbox.setSelectionRange(newCursorPos, newCursorPos);
+                        updateAllUI();
+                        storeLocally();
+                    }
+                }
+            }
+
+            function handleExportExpansions() {
+                const shortcuts = loadShortcuts();
+                let fileContent = '';
+                for (const key in shortcuts) {
+                    if (Object.hasOwnProperty.call(shortcuts, key) && shortcuts[key]) {
+                        const trigger = `.${key}`;
+                        const expansion = shortcuts[key];
+                        fileContent += `${trigger}:${expansion}\n`;
+                    }
+                }
+
+                if (!fileContent) {
+                    alert("No text expansions to export.");
+                    return;
+                }
+
+                const blob = new Blob([fileContent.trim()], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "bpad-expansions.txt";
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+
+            function handleImportExpansions(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    const shortcuts = loadShortcuts();
+                    let importedCount = 0;
+
+                    lines.forEach(line => {
+                        line = line.trim();
+                        if (!line) return;
+
+                        const separatorIndex = line.indexOf(':');
+                        if (separatorIndex === -1 || separatorIndex === 0) return;
+
+                        const trigger = line.substring(0, separatorIndex);
+                        const expansion = line.substring(separatorIndex + 1);
+
+                        if (trigger.length === 2 && trigger.startsWith('.') && trigger[1] >= 'a' && trigger[1] <= 'z') {
+                            const key = trigger[1];
+                            shortcuts[key] = expansion;
+                            importedCount++;
+                        }
+                    });
+
+                    if (importedCount > 0) {
+                        saveShortcuts(shortcuts);
+                        initializeExpansionPopup();
+                        alert(`Successfully imported ${importedCount} shortcut(s).`);
+                    } else {
+                        alert("No valid shortcuts found in the selected file.");
+                    }
+                };
+                reader.onerror = () => {
+                    alert("Error reading the file.");
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+            function handleFilenameChange(event) {
+                const filename = event.target.value;
+                const recentFiles = getRecentFiles();
+                const selectedFile = recentFiles.find(file => file.filename === filename);
+
+                if (selectedFile) {
+                    const targetTextbox = event.target.id === 'filename-1' ? elements.textbox1 : elements.textbox2;
+                    targetTextbox.value = selectedFile.content;
+
+                    if (targetTextbox === elements.textbox1) {
+                         storeLocally();
+                         addToHistory(selectedFile.content, 0);
+                    }
+                    updateAllUI();
+                }
+            }
+
+            function handleKeyDown(event) {
+                const targetTextbox = event.target.closest('.textbox');
+                if (!targetTextbox) return;
+
+                if (event.key === "Tab") {
+                    event.preventDefault();
+                    const tabSpaces = '    ';
+                    const s = targetTextbox.selectionStart;
+                    const e = targetTextbox.selectionEnd;
+                    targetTextbox.value = targetTextbox.value.substring(0, s) + tabSpaces + targetTextbox.value.substring(e);
+                    targetTextbox.selectionStart = targetTextbox.selectionEnd = s + tabSpaces.length;
+                    updateAllUI();
+                }
+
+                if (event.ctrlKey || event.metaKey) {
+                    switch (event.key.toLowerCase()) {
+                        case "o": event.preventDefault(); elements.openBtn.click(); break;
+                        case "s": event.preventDefault(); saveFile(); break;
+                        case "f": event.preventDefault(); togglePopup("findReplace", true); break;
+                        case "z": event.preventDefault(); undo(); break;
+                        case "y": event.preventDefault(); redo(); break;
+                        case "n": event.preventDefault(); openNewTab(); break;
+                        case "h": event.preventDefault(); togglePopup("readme", true); break;
+                        case "m": event.preventDefault(); cycleTheme(); break;
+                        case "i": event.preventDefault(); toggleSplitView(); break;
+                        case "e": event.preventDefault(); togglePopup("textExpansion", true); break;
+                    }
+                }
+
+                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) {
+                    setTimeout(updateAllUI, 0);
+                }
+            }
+
+            function handleMouseUp() {
+                setTimeout(updateAllUI, 0);
+            }
+
+            function handleTextChange() {
+                updateAllUI();
+                if (popups.findReplace.style.display === "block") { findAllMatches(); }
+                if (!isUndoing) {
+                    const now = Date.now();
+                    if (now - lastChangeTime > CHANGE_DELAY || history.length === 0) {
+                        addToHistory(activeTextbox.value, activeTextbox.selectionStart);
+                        lastChangeTime = now;
+                    }
+                }
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => { storeLocally(); }, 500);
+            }
+
+            [elements.textbox1, elements.textbox2].forEach(tb => {
+                tb.addEventListener('focus', (e) => {
+                    activeTextbox = e.target;
+                    updateAllUI();
+                });
+                tb.addEventListener('click', (e) => {
+                    activeTextbox = e.target;
+                    updateAllUI();
+                });
+                tb.addEventListener("keydown", handleKeyDown);
+                tb.addEventListener("keyup", updateActiveLineHighlight);
+                tb.addEventListener("mouseup", handleMouseUp);
+                tb.addEventListener('input', handleExpansion);
+            });
+
+            [elements.filenameBox1, elements.filenameBox2].forEach(box => {
+                box.addEventListener('change', handleFilenameChange);
+            });
+
+            elements.textbox1.addEventListener("input", handleTextChange);
+            elements.textbox2.addEventListener("input", handleTextChange);
+
+            elements.openBtn.addEventListener("click", function() {
+                if (activeTextbox === elements.textbox2) { elements.openInput2.click(); }
+                else { elements.openInput1.click(); }
+            });
+            elements.openInput1.addEventListener("change", (e) => handleFileOpen(e, elements.textbox1, elements.filenameBox1));
+            elements.openInput2.addEventListener("change", (e) => handleFileOpen(e, elements.textbox2, elements.filenameBox2));
+
+            elements.saveBtn.addEventListener("click", saveFile);
+            elements.findReplaceBtn.addEventListener("click", function() { togglePopup("findReplace", true); });
+            elements.undoButton.addEventListener("click", undo);
+            elements.openNewTabBtn.addEventListener("click", openNewTab);
+            elements.readmeBtn.addEventListener("click", function() { togglePopup("readme", true); });
+            elements.themeToggle.addEventListener("click", cycleTheme);
+            elements.splitViewBtn.addEventListener("click", toggleSplitView);
+            elements.textExpansionBtn.addEventListener("click", () => togglePopup("textExpansion", true));
+            elements.exportExpansionsBtn.addEventListener("click", handleExportExpansions);
+            elements.importExpansionsBtn.addEventListener("click", () => elements.importExpansionsInput.click());
+            elements.importExpansionsInput.addEventListener("change", handleImportExpansions);
+
+
+            elements.findText.addEventListener("input", findAllMatches);
+            elements.caseSensitiveCheckbox.addEventListener("change", findAllMatches);
+            elements.regexCheckbox.addEventListener("change", findAllMatches);
+            elements.findBtn.addEventListener("click", findNext);
+            elements.replaceBtn.addEventListener("click", replaceCurrentMatch);
+            elements.replaceAllBtn.addEventListener("click", replaceAll);
+
+            elements.closeButtons.forEach(button => {
+                button.addEventListener("click", function() { togglePopup(null, false); });
+            });
+
+            elements.overlay.addEventListener("click", function() { togglePopup(null, false); });
+
+            adjustTextareaHeight();
+            window.addEventListener("resize", adjustTextareaHeight);
+
+            const savedContent = localStorage.getItem("bpad_" + tabId);
+            if (savedContent) {
+                elements.textbox1.value = savedContent;
+                initialContentLoaded = true;
+                addToHistory(savedContent, 0);
+            } else {
+                addToHistory(elements.textbox1.value, 0);
+            }
+            updateAllUI();
+            updateRecentFilesDatalists();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("readme") === "true") { togglePopup("readme", true); }
+
+            initializeTheme();
+            initializeExpansionPopup();
+
+            const editorContainer = elements.editorContainer;
+            editorContainer.addEventListener('dragover', (event) => { event.preventDefault(); editorContainer.classList.add('drag-over'); });
+            editorContainer.addEventListener('dragleave', (event) => { event.preventDefault(); editorContainer.classList.remove('drag-over'); });
+            editorContainer.addEventListener('drop', (event) => {
+                event.preventDefault();
+                editorContainer.classList.remove('drag-over');
+                const files = event.dataTransfer.files;
+                if (!files || files.length === 0) { return; }
+                const targetTextbox = event.target.closest('.textbox');
+                if (targetTextbox === elements.textbox2) {
+                    openDroppedFile(files[0], elements.textbox2, elements.filenameBox2);
+                } else {
+                    openDroppedFile(files[0], elements.textbox1, elements.filenameBox1);
+                    if (files.length > 1 && editorContainer.classList.contains('split-view-active')) {
+                        openDroppedFile(files[1], elements.textbox2, elements.filenameBox2);
+                    }
+                }
+            });
+
+            if ('launchQueue' in window) {
+                launchQueue.setConsumer(async (launchParams) => {
+                    if (!launchParams.files || launchParams.files.length === 0) { return; }
+                    const fileHandle1 = launchParams.files[0];
+                    const file1 = await fileHandle1.getFile();
+                    openDroppedFile(file1, elements.textbox1, elements.filenameBox1);
+                    if (launchParams.files.length > 1) {
+                        if (!elements.editorContainer.classList.contains("split-view-active")) { toggleSplitView(); }
+                        const fileHandle2 = launchParams.files[1];
+                        const file2 = await fileHandle2.getFile();
+                        openDroppedFile(file2, elements.textbox2, elements.filenameBox2);
+                    }
+                });
+            }
+        });
+        </script>
+    </body>
+</html>

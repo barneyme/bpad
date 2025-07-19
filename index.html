@@ -4,11 +4,11 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bpad - browser text editor">
+        <meta name="description" content="bPad - text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="bpad">
-        <title>bPad : browser Pad</title>
+        <title>bPad : text Editor</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
 	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
@@ -40,6 +40,8 @@
                     <datalist id="recent-files-datalist-1"></datalist>
                     <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
+                    <button id="recent-files-btn" title="Recent Files">&#9662;</button>
+                    <div id="recent-files-dropdown" class="dropdown-content"></div>
                 </span>
                 <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
                 <button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
@@ -80,7 +82,7 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bpad. Start typing to begin or click &#63; Help for help."
+                    placeholder="Welcome to bPad. Start typing to begin or click &#63; Help for help."
                 ></textarea>
             </div>
             <div class="editor-pane" id="editor-pane-2" style="display: none;">
@@ -101,24 +103,25 @@
             <h2>Help</h2>
             <div id="readme-content">
                 <p>
-                    bpad is a browser editor. It can open, create, and save basic plaintext files such as .txt; data files such as .csv and .tsv; markup and documentation files such as .html; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as .py, .js, and .java; and scripts such .bat, ,ps1 and .sh.
+                    bPad is a browser editor. It can open, create, and save basic plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
                 </p>
                 <h2>Directions</h2>
                 <p>
                     Open bpad.me in web browser and start writing. Changes are
                     automatically saved in your browser. (Save your file before clearing browser cache.)<br />
                     <br />
-                    bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
+                    bPad can be used offline after the first use. Reopen bpad.org in your browser to continue working on your
                     file.<br />
                     <br />
-                    Files can be drag and dropped to bpad or added using Open button.<br />
-                    <br />
+                    Files can be openned by drag and drop to bpad or using "Open" button.<br />
                     To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
+                    <br />
+                    (, [, {, ", ' and < brackets auto close.<br />
                     <br />
                     &#8595; displays the current line number.<br />
                     &#8594; displays the current character position.<br />
                     = displays the current word count.<br />
-                    &#x2B07; PWA installs bpad as an offline Progressive Web App.<br />
+                    &#x2B07; PWA installs bPad as an offline Progressive Web App.<br />
                 </p>
                 <h2>Shortcuts</h2>
                     <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
@@ -126,14 +129,14 @@
                     <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
                     <b>CTRL + I</b> (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg> Split) to toggle split view.<br />
                     <b>CTRL + F</b> (&#128269; Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
-                    <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change.<br />
-                    <b>CTRL + E</b> (&#x2328; Text) to open the text expander.<br />
+                    <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change and CTRL + Y to redo it.<br />
+                    <b>CTRL + E</b> (&#x2328; Text) to open the text expander. (.d = DD-MMM-YYYY.)<br />
                     <b>CTRL + M</b> (&#127769; Mode) to cycle through Light, Dark, and Snow modes.<br />
                     <b>CTRL + H</b> (&#63; Help) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>
-                    bpad.me does not (and cannot):<br />
+                    bPad.me does not (and cannot):<br />
                     <ul>
                     <li>access your content,</li>
                     <li>criticize your writing or coding,</li>
@@ -146,7 +149,7 @@
                 <h2>About</h2>
                 <p>
                     bpad was created by <a href="https://barney.me">Barney</a>.<br />
-                    I hope you find bpad useful. If you want to support bpad.me buy me a
+                    I hope you find bpad useful. If you want to support bpad.org buy me a
                     <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
                 </p>
             </div>
@@ -183,8 +186,8 @@
             <p>Create shortcuts that automatically expand when you type the trigger (e.g., <code>.a</code> [space]). Shortcuts are saved in this browser.</p>
             <div id="text-expansion-content"></div>
             <div id="text-expansion-actions">
-                <button id="export-expansions-btn">Export to .txt</button>
-                <button id="import-expansions-btn">Import from .txt</button>
+                <button id="export-expansions-btn">Export .txt</button>
+                <button id="import-expansions-btn">Import .txt</button>
             </div>
             <input type="file" id="import-expansions-input" accept=".txt" style="display: none;" />
         </div>
@@ -198,6 +201,8 @@
                 filenameBox2: document.getElementById("filename-2"),
                 recentFilesDatalist1: document.getElementById("recent-files-datalist-1"),
                 recentFilesDatalist2: document.getElementById("recent-files-datalist-2"),
+                recentFilesBtn: document.getElementById("recent-files-btn"),
+                recentFilesDropdown: document.getElementById("recent-files-dropdown"),
                 linePosition: document.getElementById("line-position"),
                 charPosition: document.getElementById("char-position"),
                 wordCount: document.getElementById("word-count"),
@@ -355,12 +360,25 @@
                 return files ? JSON.parse(files) : [];
             }
 
-            function updateRecentFilesDatalists() {
+            function removeRecentFile(filenameToRemove) {
+                let recentFiles = getRecentFiles();
+                recentFiles = recentFiles.filter(file => file.filename !== filenameToRemove);
+                localStorage.setItem('bpad-recent-files', JSON.stringify(recentFiles));
+                updateRecentFilesUI();
+            }
+
+            function updateRecentFilesUI() {
                 const files = getRecentFiles();
                 const datalist1 = elements.recentFilesDatalist1;
                 const datalist2 = elements.recentFilesDatalist2;
+                const dropdown = elements.recentFilesDropdown;
+
                 datalist1.innerHTML = '';
                 datalist2.innerHTML = '';
+                dropdown.innerHTML = '';
+
+                elements.recentFilesBtn.disabled = files.length === 0;
+
                 files.forEach(file => {
                     const option1 = document.createElement('option');
                     option1.value = file.filename;
@@ -368,8 +386,27 @@
                     const option2 = document.createElement('option');
                     option2.value = file.filename;
                     datalist2.appendChild(option2);
+
+                    const dropdownItem = document.createElement('div');
+                    dropdownItem.className = 'recent-file-item';
+                    dropdownItem.dataset.filename = file.filename;
+
+                    const filenameSpan = document.createElement('span');
+                    filenameSpan.className = 'recent-filename';
+                    filenameSpan.textContent = file.filename;
+
+                    const deleteBtn = document.createElement('span');
+                    deleteBtn.className = 'delete-recent-btn';
+                    deleteBtn.textContent = ' [X]';
+                    deleteBtn.title = 'Remove from list';
+                    deleteBtn.dataset.filename = file.filename;
+
+                    dropdownItem.appendChild(filenameSpan);
+                    dropdownItem.appendChild(deleteBtn);
+                    dropdown.appendChild(dropdownItem);
                 });
             }
+
 
             function addRecentFile(filename, content) {
                 if (!filename || content === null || content === undefined) return;
@@ -380,7 +417,7 @@
                     recentFiles.pop();
                 }
                 localStorage.setItem('bpad-recent-files', JSON.stringify(recentFiles));
-                updateRecentFilesDatalists();
+                updateRecentFilesUI();
             }
 
             function openDroppedFile(file, targetTextbox, targetFilenameBox) {
@@ -435,7 +472,7 @@
             }
 
             function openNewTab() {
-                window.open("https://bpad.me", "_blank");
+                window.open("https://bpad.org", "_blank");
             }
 
             function togglePopup(popupId, show) {
@@ -704,9 +741,19 @@
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.id = `expansion-input-${char}`;
-                    input.value = shortcuts[char] || '';
                     input.placeholder = `Expanded text for ${shortcutKey}`;
-                    input.addEventListener('input', () => { shortcuts[char] = input.value; saveShortcuts(shortcuts); });
+
+                    if (char === 'd') {
+                        input.value = 'DD-MMM-YYYY';
+                        input.readOnly = true;
+                        input.title = 'This is a built-in shortcut for the current date.';
+                    } else {
+                        input.value = shortcuts[char] || '';
+                        input.addEventListener('input', () => {
+                            shortcuts[char] = input.value;
+                            saveShortcuts(shortcuts);
+                        });
+                    }
                     row.appendChild(label);
                     row.appendChild(input);
                     container.appendChild(row);
@@ -718,10 +765,23 @@
                 const text = textbox.value;
                 const cursorPos = textbox.selectionStart;
                 const triggerMatch = text.substring(0, cursorPos).match(/\.([a-z])\s$/);
+
                 if (triggerMatch) {
                     const key = triggerMatch[1];
-                    const shortcuts = loadShortcuts();
-                    const expansionText = shortcuts[key];
+                    let expansionText;
+
+                    if (key === 'd') {
+                        const date = new Date();
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const year = date.getFullYear();
+                        const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+                        const month = monthNames[date.getMonth()];
+                        expansionText = `${day}-${month}-${year}`;
+                    } else {
+                        const shortcuts = loadShortcuts();
+                        expansionText = shortcuts[key];
+                    }
+
                     if (expansionText) {
                         event.preventDefault();
                         const triggerLength = 3;
@@ -732,7 +792,9 @@
                         const newCursorPos = textBefore.length + expansionText.length;
                         textbox.setSelectionRange(newCursorPos, newCursorPos);
                         updateAllUI();
-                        storeLocally();
+                        if (textbox === elements.textbox1) {
+                            storeLocally();
+                        }
                     }
                 }
             }
@@ -804,35 +866,72 @@
                 event.target.value = '';
             }
 
-            function handleFilenameChange(event) {
-                const filename = event.target.value;
+            function openRecentFile(filename) {
                 const recentFiles = getRecentFiles();
                 const selectedFile = recentFiles.find(file => file.filename === filename);
 
                 if (selectedFile) {
-                    const targetTextbox = event.target.id === 'filename-1' ? elements.textbox1 : elements.textbox2;
+                    const targetTextbox = activeTextbox;
+                    const targetFilenameBox = (targetTextbox === elements.textbox1) ? elements.filenameBox1 : elements.filenameBox2;
+
                     targetTextbox.value = selectedFile.content;
+                    targetFilenameBox.value = selectedFile.filename;
 
                     if (targetTextbox === elements.textbox1) {
                          storeLocally();
                          addToHistory(selectedFile.content, 0);
                     }
                     updateAllUI();
+                    targetTextbox.focus();
                 }
+            }
+
+
+            function handleFilenameChange(event) {
+                openRecentFile(event.target.value);
             }
 
             function handleKeyDown(event) {
                 const targetTextbox = event.target.closest('.textbox');
                 if (!targetTextbox) return;
 
+                const pairs = { '(': ')', '[': ']', '{': '}', "'": "'", '"': '"', '<': '>' };
+                const openChars = Object.keys(pairs);
+                if (openChars.includes(event.key)) {
+                    event.preventDefault();
+                    const openChar = event.key;
+                    const closeChar = pairs[openChar];
+                    const s = targetTextbox.selectionStart;
+                    const e = targetTextbox.selectionEnd;
+                    const text = targetTextbox.value;
+                    addToHistory(text, s);
+                    if (s !== e) {
+                        const selectedText = text.substring(s, e);
+                        targetTextbox.value = text.substring(0, s) + openChar + selectedText + closeChar + text.substring(e);
+                        targetTextbox.selectionStart = s + 1;
+                        targetTextbox.selectionEnd = e + 1;
+                    } else {
+                        targetTextbox.value = text.substring(0, s) + openChar + closeChar + text.substring(e);
+                        targetTextbox.selectionStart = targetTextbox.selectionEnd = s + 1;
+                    }
+                    updateAllUI();
+                    if (targetTextbox === elements.textbox1) {
+                        clearTimeout(saveTimer);
+                        saveTimer = setTimeout(() => { storeLocally(); }, 500);
+                    }
+                    return;
+                }
+
                 if (event.key === "Tab") {
                     event.preventDefault();
                     const tabSpaces = '    ';
                     const s = targetTextbox.selectionStart;
                     const e = targetTextbox.selectionEnd;
+                    addToHistory(targetTextbox.value, s);
                     targetTextbox.value = targetTextbox.value.substring(0, s) + tabSpaces + targetTextbox.value.substring(e);
                     targetTextbox.selectionStart = targetTextbox.selectionEnd = s + tabSpaces.length;
                     updateAllUI();
+                    return;
                 }
 
                 if (event.ctrlKey || event.metaKey) {
@@ -902,6 +1001,33 @@
             elements.openInput1.addEventListener("change", (e) => handleFileOpen(e, elements.textbox1, elements.filenameBox1));
             elements.openInput2.addEventListener("change", (e) => handleFileOpen(e, elements.textbox2, elements.filenameBox2));
 
+            elements.recentFilesBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = elements.recentFilesDropdown;
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            elements.recentFilesDropdown.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('delete-recent-btn')) {
+                    e.stopPropagation();
+                    removeRecentFile(target.dataset.filename);
+                } else {
+                    const item = target.closest('.recent-file-item');
+                    if (item) {
+                        openRecentFile(item.dataset.filename);
+                        elements.recentFilesDropdown.style.display = 'none';
+                    }
+                }
+            });
+
+            window.addEventListener('click', (e) => {
+                if (!elements.filenameContainer.contains(e.target)) {
+                    elements.recentFilesDropdown.style.display = 'none';
+                }
+            });
+
+
             elements.saveBtn.addEventListener("click", saveFile);
             elements.findReplaceBtn.addEventListener("click", function() { togglePopup("findReplace", true); });
             elements.undoButton.addEventListener("click", undo);
@@ -940,7 +1066,7 @@
                 addToHistory(elements.textbox1.value, 0);
             }
             updateAllUI();
-            updateRecentFilesDatalists();
+            updateRecentFilesUI();
 
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get("readme") === "true") { togglePopup("readme", true); }

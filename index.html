@@ -4,17 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bPad - text editor">
+        <meta name="description" content="bEdit - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="bpad">
-        <title>bPad : text Editor</title>
+        <meta name="apple-mobile-web-app-title" content="bEdit">
+        <title>bEdit : browser Editor</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
-	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
-	<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
-	<link rel="shortcut icon" href="./bpad192.png">
-	<link rel="apple-touch-icon" href="./bpad192.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="./bedit192.png">
+	<link rel="icon" type="image/png" sizes="512x512" href="./bedit512.png">
+	<link rel="shortcut icon" href="./bedit192.png">
+	<link rel="apple-touch-icon" href="./bedit192.png">
     </head>
     <body>
         <div class="snow-container">
@@ -36,9 +36,9 @@
                 <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
                 <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
                 <span id="filename-container">
-                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
+                    <input id="filename-1" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-1" />
                     <datalist id="recent-files-datalist-1"></datalist>
-                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <input id="filename-2" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
                     <button id="recent-files-btn" title="Recent Files">&#9662;</button>
                     <div id="recent-files-dropdown" class="dropdown-content"></div>
@@ -46,7 +46,6 @@
                 <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
                 <button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
                 <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong> <span class="button-text">Undo</span></button>
-                <button id="text-expansion-btn" title="Text Expander (CTRL + E)"><strong>&#x2328;</strong> <span class="button-text">Text</span></button>
                 <button id="split-view-btn" title="Split View (CTRL + I)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
                         <path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/>
@@ -54,7 +53,6 @@
                     </svg>
                   <span class="button-text">Split</span>
                 </button>
-		<button id="theme-toggle" title="Mode (CTRL + M)"><strong>&#127769;</strong> <span class="button-text">Mode</span></button>
                 <span id="stats">
                     <span class="stat-item" title="Current line number">
                         <span class="stat-label">&#8595;</span>
@@ -70,9 +68,10 @@
                     </span>
                 </span>
                 <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
+                <button id="settings-btn" title="Settings (CTRL + G)"><strong>&#9881;</strong> <span class="button-text">Settings</span></button>
                 <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong> <span class="button-text">Help</span></button>
             </span>
-            <span id="app-name"><strong>bpad</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
+            <span id="app-name"><strong>bEdit</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
         </nav>
         <div id="editor-container">
             <div class="editor-pane" id="editor-pane-1">
@@ -82,7 +81,8 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bPad. Start typing to begin or click &#63; Help for help."
+                    placeholder="Welcome to bEdit. Start typing to begin or click &#63; Help for help."
+                    spellcheck="false"
                 ></textarea>
             </div>
             <div class="editor-pane" id="editor-pane-2" style="display: none;">
@@ -92,6 +92,7 @@
                     id="textbox-2"
                     class="textbox"
                     placeholder="Open a second file or start typing."
+                    spellcheck="false"
                 ></textarea>
             </div>
         </div>
@@ -103,17 +104,18 @@
             <h2>Help</h2>
             <div id="readme-content">
                 <p>
-                    bPad is a browser editor. It can open, create, and save basic plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
+                    bEdit is a browser editor. It can open, create, and save basic plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
                 </p>
                 <h2>Directions</h2>
                 <p>
-                    Open bpad.me in web browser and start writing. Changes are
+                    Open bedit.org in web browser and start writing. Changes are
                     automatically saved in your browser. (Save your file before clearing browser cache.)<br />
                     <br />
-                    bPad can be used offline after the first use. Reopen bpad.org in your browser to continue working on your
+                    bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
                     file.<br />
                     <br />
-                    Files can be openned by drag and drop to bpad or using "Open" button.<br />
+                    Files can be opened by dragging and dropping in to bEdit or using "Open" button.<br />
+                    <br />
                     To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
                     <br />
                     (, [, {, ", ' and < brackets auto close.<br />
@@ -121,7 +123,7 @@
                     &#8595; displays the current line number.<br />
                     &#8594; displays the current character position.<br />
                     = displays the current word count.<br />
-                    &#x2B07; PWA installs bPad as an offline Progressive Web App.<br />
+                    &#x2B07; PWA installs bEdit as an offline Progressive Web App.<br />
                 </p>
                 <h2>Shortcuts</h2>
                     <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
@@ -129,14 +131,15 @@
                     <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
                     <b>CTRL + I</b> (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg> Split) to toggle split view.<br />
                     <b>CTRL + F</b> (&#128269; Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
+                    <b>CTRL + K</b> to open a highlighted link in a new tab.<br />
+                    <b>CTRL + G</b> (&#9881; Settings) to open the settings window.<br />
                     <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change and CTRL + Y to redo it.<br />
-                    <b>CTRL + E</b> (&#x2328; Text) to open the text expander. (.d = DD-MMM-YYYY.)<br />
-                    <b>CTRL + M</b> (&#127769; Mode) to cycle through Light, Dark, and Snow modes.<br />
+                    <b>CTRL + M</b> to cycle through Light, Dark, and Snow modes.<br />
                     <b>CTRL + H</b> (&#63; Help) to view this help file.
                 </p>
                 <h2>Privacy</h2>
                 <p>
-                    bPad.me does not (and cannot):<br />
+                    bEdit.org does not (and cannot):<br />
                     <ul>
                     <li>access your content,</li>
                     <li>criticize your writing or coding,</li>
@@ -148,8 +151,8 @@
                 </p>
                 <h2>About</h2>
                 <p>
-                    bpad was created by <a href="https://barney.me">Barney</a>.<br />
-                    I hope you find bpad useful. If you want to support bpad.org buy me a
+                    bEdit was created by <a href="https://barney.me">Barney</a>.<br />
+                    I hope you find bEdit useful. If you want to support bEdit.org buy me a
                     <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
                 </p>
             </div>
@@ -180,16 +183,57 @@
                 </div>
             </div>
         </div>
-        <div id="text-expansion-popup" class="popup">
+        <div id="settings-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>Text Expander</h2>
-            <p>Create shortcuts that automatically expand when you type the trigger (e.g., <code>.a</code> [space]). Shortcuts are saved in this browser.</p>
-            <div id="text-expansion-content"></div>
-            <div id="text-expansion-actions">
-                <button id="export-expansions-btn">Export .txt</button>
-                <button id="import-expansions-btn">Import .txt</button>
+            <h2>Settings</h2>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Defaults</h3>
+                    <div class="setting-item">
+                        <label for="default-word-wrap">Word Wrap On</label>
+                        <input type="checkbox" id="default-word-wrap" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="default-split-view">Split View</label>
+                        <input type="checkbox" id="default-split-view" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="default-auto-indent">Auto Indent</label>
+                        <input type="checkbox" id="default-auto-indent" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="default-turbo-boost">Turbo Boost</label>
+                        <input type="checkbox" id="default-turbo-boost" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="enable-spell-checker">Enable Spell Checker</label>
+                        <input type="checkbox" id="enable-spell-checker" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="auto-close-brackets">Autoclose brackets</label>
+                        <input type="checkbox" id="auto-close-brackets" />
+                    </div>
+                    <div class="setting-item">
+                        <label for="default-theme">Theme</label>
+                        <select id="default-theme">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="snow">Snow</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Text Expander</h3>
+                    <p>Create shortcuts that automatically expand when you type the trigger (e.g., <code>.a</code> [space]).</p>
+                    <div id="text-expansion-content"></div>
+                </div>
             </div>
-            <input type="file" id="import-expansions-input" accept=".txt" style="display: none;" />
+            <div id="settings-actions">
+                <button id="export-settings-btn">Export All Settings</button>
+                <button id="import-settings-btn">Import All Settings</button>
+            </div>
+            <input type="file" id="import-settings-input" accept=".json" style="display: none;" />
         </div>
 
         <script>
@@ -224,7 +268,6 @@
                 findReplaceBtn: document.getElementById("find-replace-button"),
                 closeButtons: document.querySelectorAll(".close-btn"),
                 installButton: document.getElementById("install-app"),
-                themeToggle: document.getElementById("theme-toggle"),
                 highlightLayer1: document.getElementById("highlight-layer-1"),
                 highlightLayer2: document.getElementById("highlight-layer-2"),
                 activeLine1: document.getElementById("active-line-1"),
@@ -233,20 +276,90 @@
                 regexCheckbox: document.getElementById("regex-checkbox"),
                 splitViewBtn: document.getElementById("split-view-btn"),
                 editorContainer: document.getElementById("editor-container"),
-                textExpansionBtn: document.getElementById("text-expansion-btn"),
-                exportExpansionsBtn: document.getElementById("export-expansions-btn"),
-                importExpansionsBtn: document.getElementById("import-expansions-btn"),
-                importExpansionsInput: document.getElementById("import-expansions-input"),
+                settingsBtn: document.getElementById("settings-btn"),
+                // Settings popup elements
+                defaultWordWrapCheck: document.getElementById("default-word-wrap"),
+                defaultSplitViewCheck: document.getElementById("default-split-view"),
+                defaultAutoIndentCheck: document.getElementById("default-auto-indent"),
+                defaultTurboBoostCheck: document.getElementById("default-turbo-boost"),
+                enableSpellCheckerCheck: document.getElementById("enable-spell-checker"),
+                autoCloseBracketsCheck: document.getElementById("auto-close-brackets"),
+                defaultThemeSelect: document.getElementById("default-theme"),
+                exportSettingsBtn: document.getElementById("export-settings-btn"),
+                importSettingsBtn: document.getElementById("import-settings-btn"),
+                importSettingsInput: document.getElementById("import-settings-input"),
             };
             const popups = {
                 readme: document.getElementById("readme-popup"),
                 findReplace: document.getElementById("find-replace-popup"),
-                textExpansion: document.getElementById("text-expansion-popup"),
+                settings: document.getElementById("settings-popup"),
             };
 
             let deferredPrompt;
             let activeTextbox = elements.textbox1;
             const MAX_RECENT_FILES = 5;
+
+            // --- Settings ---
+            let settings = {};
+            const defaultSettings = {
+                wordWrap: false,
+                splitView: false,
+                theme: 'light',
+                autoIndent: false,
+                turboBoost: false,
+                spellCheck: false,
+                autoCloseBrackets: false,
+                expansions: {}
+            };
+
+            function saveSettings() {
+                localStorage.setItem('bedit-settings', JSON.stringify(settings));
+            }
+
+            function loadSettings() {
+                const savedSettings = localStorage.getItem('bedit-settings');
+                settings = savedSettings ? JSON.parse(savedSettings) : { ...defaultSettings };
+                // Ensure all keys exist
+                settings = { ...defaultSettings, ...settings };
+            }
+
+            function applySettings(isInitialLoad = false) {
+                // Apply Word Wrap
+                if (settings.wordWrap) {
+                    elements.textbox1.classList.add('word-wrap-enabled');
+                    elements.textbox2.classList.add('word-wrap-enabled');
+                } else {
+                    elements.textbox1.classList.remove('word-wrap-enabled');
+                    elements.textbox2.classList.remove('word-wrap-enabled');
+                }
+
+                // Apply Spell Check
+                elements.textbox1.spellcheck = settings.spellCheck;
+                elements.textbox2.spellcheck = settings.spellCheck;
+
+                // Apply Theme
+                document.body.classList.remove('dark-mode', 'snow-mode');
+                if (settings.theme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                } else if (settings.theme === 'snow') {
+                    document.body.classList.add('snow-mode');
+                }
+
+                // Apply Split View (only on initial load)
+                if (isInitialLoad && settings.splitView) {
+                    toggleSplitView();
+                }
+
+                // Update settings UI
+                elements.defaultWordWrapCheck.checked = settings.wordWrap;
+                elements.defaultSplitViewCheck.checked = settings.splitView;
+                elements.defaultAutoIndentCheck.checked = settings.autoIndent;
+                elements.defaultTurboBoostCheck.checked = settings.turboBoost;
+                elements.enableSpellCheckerCheck.checked = settings.spellCheck;
+                elements.autoCloseBracketsCheck.checked = settings.autoCloseBrackets;
+                elements.defaultThemeSelect.value = settings.theme;
+                initializeExpansionSettings();
+            }
 
             function isPWAInstalled() {
                 if (window.matchMedia('(display-mode: standalone)').matches) { return true; }
@@ -290,7 +403,7 @@
             }
 
             if (!window.name) {
-                window.name = "bpad-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+                window.name = "bedit-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
             const tabId = window.name;
 
@@ -312,7 +425,7 @@
             }
 
             function storeLocally() {
-                localStorage.setItem("bpad_" + tabId, elements.textbox1.value);
+                localStorage.setItem("bedit_" + tabId, elements.textbox1.value);
             }
 
             function updateAllUI() {
@@ -356,14 +469,14 @@
             }
 
             function getRecentFiles() {
-                const files = localStorage.getItem('bpad-recent-files');
+                const files = localStorage.getItem('bedit-recent-files');
                 return files ? JSON.parse(files) : [];
             }
 
             function removeRecentFile(filenameToRemove) {
                 let recentFiles = getRecentFiles();
                 recentFiles = recentFiles.filter(file => file.filename !== filenameToRemove);
-                localStorage.setItem('bpad-recent-files', JSON.stringify(recentFiles));
+                localStorage.setItem('bedit-recent-files', JSON.stringify(recentFiles));
                 updateRecentFilesUI();
             }
 
@@ -416,7 +529,7 @@
                 if (recentFiles.length > MAX_RECENT_FILES) {
                     recentFiles.pop();
                 }
-                localStorage.setItem('bpad-recent-files', JSON.stringify(recentFiles));
+                localStorage.setItem('bedit-recent-files', JSON.stringify(recentFiles));
                 updateRecentFilesUI();
             }
 
@@ -460,7 +573,7 @@
                     ? elements.filenameBox2.value
                     : elements.filenameBox1.value;
 
-                const filename = filenameToSave || "bpad.txt";
+                const filename = filenameToSave || "bedit.txt";
                 addRecentFile(filename, contentToSave);
 
                 const blob = new Blob([contentToSave], { type: "text/plain" });
@@ -472,7 +585,7 @@
             }
 
             function openNewTab() {
-                window.open("https://bpad.org", "_blank");
+                window.open("https://bedit.org", "_blank");
             }
 
             function togglePopup(popupId, show) {
@@ -489,6 +602,8 @@
                         elements.findText.focus();
                         elements.findText.select();
                         updateHighlights();
+                    } else if (popupId === "settings") {
+                        applySettings(); // Refresh settings UI when opening
                     }
                 } else {
                     elements.highlightLayer1.innerHTML = "";
@@ -670,39 +785,16 @@
                 findAllMatches();
             }
 
-            function updateThemeIcon() {
-                const body = document.body;
-                const buttonIcon = elements.themeToggle.querySelector('strong');
-                if (body.classList.contains('dark-mode')) {
-                    buttonIcon.innerHTML = '&#10052;'; // Snowflake
-                } else if (body.classList.contains('snow-mode')) {
-                    buttonIcon.innerHTML = '&#127774;'; // Sun
-                } else {
-                    buttonIcon.innerHTML = '&#127769;'; // Moon
-                }
-            }
-
             function cycleTheme() {
-                const body = document.body;
-                if (body.classList.contains('dark-mode')) {
-                    body.classList.remove('dark-mode');
-                    body.classList.add('snow-mode');
-                    localStorage.setItem('bpad-theme', 'snow');
-                } else if (body.classList.contains('snow-mode')) {
-                    body.classList.remove('snow-mode');
-                    localStorage.setItem('bpad-theme', 'light');
+                if (settings.theme === 'dark') {
+                    settings.theme = 'snow';
+                } else if (settings.theme === 'snow') {
+                    settings.theme = 'light';
                 } else {
-                    body.classList.add('dark-mode');
-                    localStorage.setItem('bpad-theme', 'dark');
+                    settings.theme = 'dark';
                 }
-                updateThemeIcon();
-            }
-
-            function initializeTheme() {
-                const savedTheme = localStorage.getItem('bpad-theme');
-                if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); }
-                else if (savedTheme === 'snow') { document.body.classList.add('snow-mode'); }
-                updateThemeIcon();
+                saveSettings();
+                applySettings();
             }
 
             function toggleSplitView() {
@@ -714,22 +806,15 @@
                     elements.filenameBox2.style.display = 'none';
                     elements.textbox1.focus();
                 }
+                return isActive;
             }
 
-            function saveShortcuts(shortcuts) {
-                localStorage.setItem('bpad-text-expansions', JSON.stringify(shortcuts));
-            }
-
-            function loadShortcuts() {
-                const saved = localStorage.getItem('bpad-text-expansions');
-                return saved ? JSON.parse(saved) : {};
-            }
-
-            function initializeExpansionPopup() {
+            function initializeExpansionSettings() {
                 const container = document.getElementById('text-expansion-content');
                 if (!container) return;
                 container.innerHTML = '';
-                const shortcuts = loadShortcuts();
+                if (!settings.expansions) settings.expansions = {};
+
                 for (let i = 0; i < 26; i++) {
                     const char = String.fromCharCode(97 + i);
                     const shortcutKey = `.${char}`;
@@ -748,10 +833,10 @@
                         input.readOnly = true;
                         input.title = 'This is a built-in shortcut for the current date.';
                     } else {
-                        input.value = shortcuts[char] || '';
+                        input.value = settings.expansions[char] || '';
                         input.addEventListener('input', () => {
-                            shortcuts[char] = input.value;
-                            saveShortcuts(shortcuts);
+                            settings.expansions[char] = input.value;
+                            saveSettings();
                         });
                     }
                     row.appendChild(label);
@@ -778,8 +863,7 @@
                         const month = monthNames[date.getMonth()];
                         expansionText = `${day}-${month}-${year}`;
                     } else {
-                        const shortcuts = loadShortcuts();
-                        expansionText = shortcuts[key];
+                        expansionText = settings.expansions[key];
                     }
 
                     if (expansionText) {
@@ -799,64 +883,31 @@
                 }
             }
 
-            function handleExportExpansions() {
-                const shortcuts = loadShortcuts();
-                let fileContent = '';
-                for (const key in shortcuts) {
-                    if (Object.hasOwnProperty.call(shortcuts, key) && shortcuts[key]) {
-                        const trigger = `.${key}`;
-                        const expansion = shortcuts[key];
-                        fileContent += `${trigger}:${expansion}\n`;
-                    }
-                }
-
-                if (!fileContent) {
-                    alert("No text expansions to export.");
-                    return;
-                }
-
-                const blob = new Blob([fileContent.trim()], { type: "text/plain" });
+            function handleExportSettings() {
+                const settingsString = JSON.stringify(settings, null, 2);
+                const blob = new Blob([settingsString], { type: "application/json" });
                 const a = document.createElement("a");
                 a.href = URL.createObjectURL(blob);
-                a.download = "bpad-expansions.txt";
+                a.download = "bedit-settings.json";
                 a.click();
                 URL.revokeObjectURL(a.href);
             }
 
-            function handleImportExpansions(event) {
+            function handleImportSettings(event) {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const content = e.target.result;
-                    const lines = content.split('\n');
-                    const shortcuts = loadShortcuts();
-                    let importedCount = 0;
-
-                    lines.forEach(line => {
-                        line = line.trim();
-                        if (!line) return;
-
-                        const separatorIndex = line.indexOf(':');
-                        if (separatorIndex === -1 || separatorIndex === 0) return;
-
-                        const trigger = line.substring(0, separatorIndex);
-                        const expansion = line.substring(separatorIndex + 1);
-
-                        if (trigger.length === 2 && trigger.startsWith('.') && trigger[1] >= 'a' && trigger[1] <= 'z') {
-                            const key = trigger[1];
-                            shortcuts[key] = expansion;
-                            importedCount++;
-                        }
-                    });
-
-                    if (importedCount > 0) {
-                        saveShortcuts(shortcuts);
-                        initializeExpansionPopup();
-                        alert(`Successfully imported ${importedCount} shortcut(s).`);
-                    } else {
-                        alert("No valid shortcuts found in the selected file.");
+                    try {
+                        const importedSettings = JSON.parse(e.target.result);
+                        settings = { ...defaultSettings, ...importedSettings };
+                        saveSettings();
+                        applySettings();
+                        alert("Settings imported successfully!");
+                    } catch (error) {
+                        alert("Error: Could not parse settings file. Please make sure it's a valid JSON file.");
+                        console.error("Settings import error:", error);
                     }
                 };
                 reader.onerror = () => {
@@ -891,13 +942,40 @@
                 openRecentFile(event.target.value);
             }
 
+            function openHighlightedLink() {
+                const textbox = activeTextbox;
+                if (!textbox) return;
+
+                const selectedText = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd).trim();
+
+                if (!selectedText) {
+                    return;
+                }
+
+                let url = selectedText;
+                if (url.includes(' ') || !url.includes('.')) {
+                    return;
+                }
+
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
+                }
+
+                try {
+                    new URL(url);
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } catch (e) {
+                    console.error("The selected text is not a valid URL:", e);
+                }
+            }
+
             function handleKeyDown(event) {
                 const targetTextbox = event.target.closest('.textbox');
                 if (!targetTextbox) return;
 
                 const pairs = { '(': ')', '[': ']', '{': '}', "'": "'", '"': '"', '<': '>' };
                 const openChars = Object.keys(pairs);
-                if (openChars.includes(event.key)) {
+                if (settings.autoCloseBrackets && openChars.includes(event.key)) {
                     event.preventDefault();
                     const openChar = event.key;
                     const closeChar = pairs[openChar];
@@ -922,6 +1000,33 @@
                     return;
                 }
 
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    const s = targetTextbox.selectionStart;
+                    const e = targetTextbox.selectionEnd;
+                    const text = targetTextbox.value;
+                    let newText;
+                    let newCursorPos;
+
+                    addToHistory(text, s);
+
+                    if (settings.autoIndent) {
+                        const lineStart = text.lastIndexOf('\n', s - 1) + 1;
+                        const currentLine = text.substring(lineStart, s);
+                        const indentation = currentLine.match(/^\s*/)[0];
+                        newText = text.substring(0, s) + '\n' + indentation + text.substring(e);
+                        newCursorPos = s + 1 + indentation.length;
+                    } else {
+                        newText = text.substring(0, s) + '\n' + text.substring(e);
+                        newCursorPos = s + 1;
+                    }
+
+                    targetTextbox.value = newText;
+                    targetTextbox.selectionStart = targetTextbox.selectionEnd = newCursorPos;
+                    updateAllUI();
+                    return;
+                }
+
                 if (event.key === "Tab") {
                     event.preventDefault();
                     const tabSpaces = '    ';
@@ -939,13 +1044,14 @@
                         case "o": event.preventDefault(); elements.openBtn.click(); break;
                         case "s": event.preventDefault(); saveFile(); break;
                         case "f": event.preventDefault(); togglePopup("findReplace", true); break;
+                        case "k": event.preventDefault(); openHighlightedLink(); break;
                         case "z": event.preventDefault(); undo(); break;
                         case "y": event.preventDefault(); redo(); break;
                         case "n": event.preventDefault(); openNewTab(); break;
                         case "h": event.preventDefault(); togglePopup("readme", true); break;
                         case "m": event.preventDefault(); cycleTheme(); break;
                         case "i": event.preventDefault(); toggleSplitView(); break;
-                        case "e": event.preventDefault(); togglePopup("textExpansion", true); break;
+                        case "g": event.preventDefault(); togglePopup("settings", true); break;
                     }
                 }
 
@@ -971,6 +1077,10 @@
                 clearTimeout(saveTimer);
                 saveTimer = setTimeout(() => { storeLocally(); }, 500);
             }
+
+            // --- Initial Load ---
+            loadSettings();
+            applySettings(true);
 
             [elements.textbox1, elements.textbox2].forEach(tb => {
                 tb.addEventListener('focus', (e) => {
@@ -1033,12 +1143,44 @@
             elements.undoButton.addEventListener("click", undo);
             elements.openNewTabBtn.addEventListener("click", openNewTab);
             elements.readmeBtn.addEventListener("click", function() { togglePopup("readme", true); });
-            elements.themeToggle.addEventListener("click", cycleTheme);
             elements.splitViewBtn.addEventListener("click", toggleSplitView);
-            elements.textExpansionBtn.addEventListener("click", () => togglePopup("textExpansion", true));
-            elements.exportExpansionsBtn.addEventListener("click", handleExportExpansions);
-            elements.importExpansionsBtn.addEventListener("click", () => elements.importExpansionsInput.click());
-            elements.importExpansionsInput.addEventListener("change", handleImportExpansions);
+            elements.settingsBtn.addEventListener("click", () => togglePopup("settings", true));
+
+            // Settings listeners
+            elements.defaultWordWrapCheck.addEventListener('change', (e) => {
+                settings.wordWrap = e.target.checked;
+                saveSettings();
+                applySettings();
+            });
+            elements.defaultSplitViewCheck.addEventListener('change', (e) => {
+                settings.splitView = e.target.checked;
+                saveSettings();
+            });
+            elements.defaultAutoIndentCheck.addEventListener('change', (e) => {
+                settings.autoIndent = e.target.checked;
+                saveSettings();
+            });
+            elements.defaultTurboBoostCheck.addEventListener('change', (e) => {
+                settings.turboBoost = e.target.checked;
+                saveSettings();
+            });
+            elements.enableSpellCheckerCheck.addEventListener('change', (e) => {
+                settings.spellCheck = e.target.checked;
+                saveSettings();
+                applySettings();
+            });
+            elements.autoCloseBracketsCheck.addEventListener('change', (e) => {
+                settings.autoCloseBrackets = e.target.checked;
+                saveSettings();
+            });
+            elements.defaultThemeSelect.addEventListener('change', (e) => {
+                settings.theme = e.target.value;
+                saveSettings();
+                applySettings();
+            });
+            elements.exportSettingsBtn.addEventListener("click", handleExportSettings);
+            elements.importSettingsBtn.addEventListener("click", () => elements.importSettingsInput.click());
+            elements.importSettingsInput.addEventListener("change", handleImportSettings);
 
 
             elements.findText.addEventListener("input", findAllMatches);
@@ -1057,7 +1199,7 @@
             adjustTextareaHeight();
             window.addEventListener("resize", adjustTextareaHeight);
 
-            const savedContent = localStorage.getItem("bpad_" + tabId);
+            const savedContent = localStorage.getItem("bedit_" + tabId);
             if (savedContent) {
                 elements.textbox1.value = savedContent;
                 initialContentLoaded = true;
@@ -1070,9 +1212,6 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get("readme") === "true") { togglePopup("readme", true); }
-
-            initializeTheme();
-            initializeExpansionPopup();
 
             const editorContainer = elements.editorContainer;
             editorContainer.addEventListener('dragover', (event) => { event.preventDefault(); editorContainer.classList.add('drag-over'); });

@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? elements.filenameBox2.value
             : elements.filenameBox1.value;
 
-        const filename = filenameToSave || "bedit.txt";
+        const filename = filenameToSave || "bpad.txt";
         addRecentFile(filename, contentToSave);
 
         const blob = new Blob([contentToSave], { type: "text/plain" });
@@ -384,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function openNewTab() {
-        window.open("https://bedit.org", "_blank");
+        window.open("https://bpad.me", "_blank");
     }
 
     function togglePopup(popupId, show) {

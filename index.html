@@ -4,17 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bEdit - browser text editor">
+        <meta name="description" content="bpad - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="bEdit">
-        <title>bEdit : browser Editor</title>
+        <meta name="apple-mobile-web-app-title" content="bpad">
+        <title>bpad : browser Editor</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
-	<link rel="icon" type="image/png" sizes="192x192" href="./bedit192.png">
-	<link rel="icon" type="image/png" sizes="512x512" href="./bedit512.png">
-	<link rel="shortcut icon" href="./bedit192.png">
-	<link rel="apple-touch-icon" href="./bedit192.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
+	<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
+	<link rel="shortcut icon" href="./bpad192.png">
+	<link rel="apple-touch-icon" href="./bpad192.png">
     </head>
     <body>
         <div class="snow-container">
@@ -36,9 +36,9 @@
                 <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
                 <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
                 <span id="filename-container">
-                    <input id="filename-1" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-1" />
+                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
                     <datalist id="recent-files-datalist-1"></datalist>
-                    <input id="filename-2" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
                     <button id="recent-files-btn" title="Recent Files">&#9662;</button>
                     <div id="recent-files-dropdown" class="dropdown-content"></div>
@@ -72,7 +72,7 @@
                 <button id="settings-btn" title="Settings (CTRL + G)"><strong>&#9881;</strong> <span class="button-text">Settings</span></button>
                 <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong> <span class="button-text">Help</span></button>
             </span>
-            <span id="app-name"><strong>bEdit</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
+            <span id="app-name"><strong>bpad</strong> : <strong>b</strong>rowser <strong>Edit</strong>or</span>
         </nav>
         <div id="editor-container">
             <div class="editor-pane" id="editor-pane-1">
@@ -82,7 +82,7 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bEdit. Start typing to begin or click &#63; Help for help."
+                    placeholder="Welcome to bpad. Start typing to begin or click &#63; Help for help."
                     spellcheck="false"
                 ></textarea>
             </div>
@@ -105,17 +105,17 @@
             <h2>Help</h2>
             <div id="readme-content">
                 <p>
-                    bEdit is a browser editor. It can open, create, and save basic plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
+                    bpad is a browser editor. It can open, create, and save basic plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
                 </p>
                 <h2>Directions</h2>
                 <p>
-                    Open bedit.org in web browser and start writing. Changes are
+                    Open bpad.me in web browser and start writing. Changes are
                     automatically saved in your browser. (Save your file before clearing browser cache.)<br />
                     <br />
-                    bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
+                    bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
                     file.<br />
                     <br />
-                    Files can be opened by drag and drop to bEdit or using "Open" button.<br />
+                    Files can be opened by drag and drop to bpad or using "Open" button.<br />
                     To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
                     <br />
                     ( ), [ ], { ], " ", ' ' and < > brackets auto close.<br />
@@ -123,7 +123,7 @@
                     &#8595; displays the current line number.<br />
                     &#8594; displays the current character position.<br />
                     = displays the current word count.<br />
-                    &#x2B07; PWA installs bEdit as an offline Progressive Web App.<br />
+                    &#x2B07; PWA installs bpad as an offline Progressive Web App.<br />
                 </p>
                 <h2>Shortcuts</h2>
                     <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
@@ -139,7 +139,7 @@
                 </p>
                 <h2>Privacy</h2>
                 <p>
-                    bEdit.org does not (and cannot):<br />
+                    bpad.me does not (and cannot):<br />
                     <ul>
                     <li>access your content,</li>
                     <li>criticize your writing or coding,</li>
@@ -151,8 +151,8 @@
                 </p>
                 <h2>About</h2>
                 <p>
-                    bEdit was created by <a href="https://barney.me">Barney</a>.<br />
-                    I hope you find bEdit useful. If you want to support bEdit.org buy me a
+                    bpad was created by <a href="https://barney.me">Barney</a>.<br />
+                    I hope you find bpad useful. If you want to support bpad.me buy me a
                     <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
                 </p>
             </div>

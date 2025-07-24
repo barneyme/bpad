@@ -1,0 +1,18 @@
+{
+  "wordWrap": false,
+  "splitView": false,
+  "theme": "light",
+  "autoIndent": false,
+  "turboBoost": false,
+  "spellCheck": false,
+  "autoCloseBrackets": false,
+  "focusMode": false,
+  "dateFormat": "DD-MMM-YYYY",
+  "expansions": {
+    "b": "Barney Matthews",
+    "e": "barney@barney.me",
+    "p": "(802) 299-0123",
+    "m": "",
+    "u": "[title](https://www.example.com)"
+  }
+}

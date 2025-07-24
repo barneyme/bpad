@@ -149,6 +149,7 @@ button:disabled {
 #settings-btn,
 #split-view-btn,
 #wrap-btn,
+#email-btn,
 #theme-toggle {
     background-color: #2980b9;
     border-color: #5dade2;
@@ -163,6 +164,7 @@ button:disabled {
 #settings-btn:hover,
 #split-view-btn:hover,
 #wrap-btn:hover,
+#email-btn:hover,
 #theme-toggle:hover {
     background-color: #5dade2;
 }
@@ -437,17 +439,17 @@ button:disabled {
 }
 body.dark-mode {
     background-color: #1a1a1a;
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode .textbox {
-    color: #e0e0e0;
+    color: #39ff14;
     background-color: transparent;
 }
 body.dark-mode .active-line {
-    background-color: #333;
+    background-color: #222;
 }
 body.dark-mode .highlight {
-    background-color: rgba(255, 255, 0, 0.3);
+    background-color: rgba(57, 255, 20, 0.25);
 }
 body.dark-mode nav {
     background-color: #1e1e1e;
@@ -456,7 +458,7 @@ body.dark-mode nav {
 body.dark-mode button {
     background-color: #404040;
     border-color: #555;
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode button:hover {
     background-color: #555;
@@ -472,6 +474,7 @@ body.dark-mode #theme-toggle,
 body.dark-mode #split-view-btn,
 body.dark-mode #wrap-btn,
 body.dark-mode #settings-btn,
+body.dark-mode #email-btn,
 body.dark-mode #recent-files-btn {
     background-color: #404040;
     border-color: #666;
@@ -487,12 +490,13 @@ body.dark-mode #theme-toggle:hover,
 body.dark-mode #split-view-btn:hover,
 body.dark-mode #wrap-btn:hover,
 body.dark-mode #settings-btn:hover,
+body.dark-mode #email-btn:hover,
 body.dark-mode #recent-files-btn:hover {
     background-color: #555;
 }
 body.dark-mode #filename-container input {
     background-color: #3d3d3d;
-    color: #e0e0e0;
+    color: #39ff14;
     border-color: #555;
 }
 body.dark-mode .dropdown-content {
@@ -500,33 +504,33 @@ body.dark-mode .dropdown-content {
     border-color: #555;
 }
 body.dark-mode .dropdown-content div {
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode .dropdown-content div:hover {
     background-color: #3d3d3d;
 }
 body.dark-mode #stats {
     background-color: #404040;
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode .popup {
     background: #2d2d2d;
     border-color: #555;
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode .popup h2 {
     border-bottom-color: #555;
 }
 body.dark-mode .close-btn {
-    color: #e0e0e0;
+    color: #39ff14;
 }
 body.dark-mode #find-replace-popup input[type="text"] {
     background-color: #3d3d3d;
-    color: #e0e0e0;
+    color: #39ff14;
     border-color: #555;
 }
 body.dark-mode #find-count {
-    color: #aaa;
+    color: #a1fca1;
 }
 body.dark-mode .settings-section {
     background-color: #252525;
@@ -537,7 +541,7 @@ body.dark-mode .settings-section h3 {
 body.dark-mode .expansion-row input,
 body.dark-mode #settings-popup select {
     background-color: #3d3d3d;
-    color: #e0e0e0;
+    color: #39ff14;
     border-color: #555;
 }
 body.dark-mode #settings-actions {
@@ -652,6 +656,7 @@ body.snow-mode #install-app,
 body.snow-mode #theme-toggle,
 body.snow-mode #split-view-btn,
 body.snow-mode #wrap-btn,
+body.snow-mode #email-btn,
 body.snow-mode #settings-btn {
     background-color: #87ceeb;
     border-color: #add8e6;
@@ -667,6 +672,7 @@ body.snow-mode #install-app:hover,
 body.snow-mode #theme-toggle:hover,
 body.snow-mode #split-view-btn:hover,
 body.snow-mode #wrap-btn:hover,
+body.snow-mode #email-btn:hover,
 body.snow-mode #settings-btn:hover {
     background-color: #b0e0e6;
 }

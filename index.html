@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#4a90e2" />
+        <title>bPad</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="manifest" href="manifest.json" />
+    </head>
+    <body>
+        <header>
+            <h1>bPad 📝</h1>
+            <nav>
+                <button id="tab-processor" class="tab-btn active">
+                    Word Processor
+                </button>
+                <button id="tab-sheet" class="tab-btn">Spreadsheet</button>
+                <button id="tab-notes" class="tab-btn">Sticky Notes</button>
+                <button id="tab-help" class="tab-btn">Help</button>
+            </nav>
+        </header>
+
+        <main>
+            <section id="processor-section" class="app-section active">
+                <div class="toolbar">
+                    <button id="wp-open" title="Open RTF">📂 Open</button>
+                    <button id="wp-save" title="Save as RTF">💾 Save</button>
+                    <button class="wp-format" data-command="bold">
+                        <b>B</b>
+                    </button>
+                    <button class="wp-format" data-command="italic">
+                        <i>I</i>
+                    </button>
+                    <button class="wp-format" data-command="underline">
+                        <u>U</u>
+                    </button>
+                    <button class="wp-format" data-command="insertOrderedList">
+                        Ordered List
+                    </button>
+                    <button
+                        class="wp-format"
+                        data-command="insertUnorderedList"
+                    >
+                        Unordered List
+                    </button>
+                </div>
+                <div id="editor" contenteditable="true"></div>
+            </section>
+
+            <section id="sheet-section" class="app-section">
+                <div class="toolbar">
+                    <button id="csv-open" title="Open CSV">📂 Open</button>
+                    <button id="csv-save" title="Save as CSV">💾 Save</button>
+                    <input
+                        type="text"
+                        id="formula-bar"
+                        placeholder="f(x) Formula bar"
+                    />
+                </div>
+                <div id="spreadsheet-container"></div>
+            </section>
+
+            <section id="notes-section" class="app-section">
+                <div class="toolbar">
+                    <button id="txt-open" title="Open TXT">📂 Open</button>
+                    <button id="txt-save" title="Save as TXT">💾 Save</button>
+                    <button id="add-note">➕ Add Note</button>
+                </div>
+                <div id="notes-container"></div>
+            </section>
+
+            <section id="help-section" class="app-section">
+                <div class="help-welcome">
+                    <h2>Welcome to bPad!</h2>
+                    <p>
+                        bPad is a simple productivity suite with basic word
+                        processor, spreadsheet and sticky notes apps. bPad is
+                        completely private and your work never leaves your
+                        computer. bPad automatically saves your work to your
+                        browser. You can close the tab and your content will be
+                        here when you return! bPad can be installed as a PWA
+                        (Progressive Web App) with supported web browsers.
+                    </p>
+                </div>
+
+                <div class="help-grid">
+                    <div class="help-column">
+                        <h3>Word Processor ✍️</h3>
+                        <ul>
+                            <li>
+                                Use the toolbar buttons to make text
+                                <b>Bold</b>, <i>Italic</i>, or
+                                <u>Underlined</u>.
+                            </li>
+                            <li>Create numbered or bulleted lists.</li>
+                            <li>
+                                Your document is saved automatically as you
+                                type.
+                            </li>
+                            <li>
+                                Use the <b>📂 Open</b> and
+                                <b>💾 Save</b> buttons to import or export your
+                                work as simple <code>.rtf</code> files.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-column">
+                        <h3>Spreadsheet 📊</h3>
+                        <ul>
+                            <li>
+                                Click on any cell to select it. The formula bar
+                                at the top will show its content.
+                            </li>
+                            <li>
+                                Enter text or numbers directly into a cell or
+                                into the formula bar.
+                            </li>
+                            <li>
+                                <b
+                                    >To create a formula, start with an equals
+                                    sign (<code>=</code>).</b
+                                >
+                                <ul>
+                                    <li>
+                                        <b>Basic Math:</b> <code>=A1+B1</code>,
+                                        <code>=C2-D3</code>, etc.
+                                    </li>
+                                    <li>
+                                        <b>SUM Function:</b>
+                                        <code>=SUM(A1:A10)</code>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                Press <b>Enter</b> in the formula bar to see the
+                                result.
+                            </li>
+                            <li>
+                                Use the <b>📂 Open</b> and
+                                <b>💾 Save</b> buttons to import/export
+                                <code>.csv</code> files.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-column">
+                        <h3>Sticky Notes 📌</h3>
+                        <ul>
+                            <li>
+                                Click <b>➕ Add Note</b> to create a new sticky
+                                note.
+                            </li>
+                            <li>
+                                Type directly into a note to edit its content.
+                            </li>
+                            <li>
+                                Click the <b>X</b> in the top-right corner of a
+                                note to delete it.
+                            </li>
+                            <li>All notes are saved automatically.</li>
+                            <li>
+                                Use the <b>📂 Open</b> and
+                                <b>💾 Save</b> buttons to import or export all
+                                your notes to a single <code>.txt</code> file.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script src="script.js"></script>
+    </body>
+</html>

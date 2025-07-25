@@ -1,0 +1,17 @@
+{
+  "name": "bPad",
+  "short_name": "bPad",
+  "description": "A simple offline-first text processor, spreadsheet, and notes app.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fc",
+  "theme_color": "#4a90e2",
+  "icons": [
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

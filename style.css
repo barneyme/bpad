@@ -1,0 +1,230 @@
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f4f7fc;
+    --border-color: #dbe2ef;
+    --font-color: #333;
+    --header-height: 110px;
+}
+
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
+    margin: 0;
+    background-color: var(--secondary-color);
+    color: var(--font-color);
+}
+
+header {
+    background-color: #fff;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+header h1 {
+    margin: 0 0 10px 0;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 500;
+    transition:
+        background-color 0.2s,
+        color 0.2s;
+}
+
+.tab-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.tab-btn.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+main {
+    padding-top: var(--header-height);
+}
+
+.app-section {
+    display: none;
+    height: calc(100vh - var(--header-height));
+    flex-direction: column;
+}
+
+.app-section.active {
+    display: flex;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.toolbar button {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.toolbar button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Word Processor */
+#editor {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #fff;
+    overflow-y: auto;
+    outline: none;
+    line-height: 1.6;
+}
+
+/* Spreadsheet */
+#formula-bar {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+#spreadsheet-container {
+    flex-grow: 1;
+    overflow: auto;
+    background-color: #fff;
+}
+.spreadsheet-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+.spreadsheet-table th,
+.spreadsheet-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    min-width: 100px;
+    outline: none;
+    text-align: left;
+}
+.spreadsheet-table th {
+    background-color: var(--secondary-color);
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+.spreadsheet-table td.active {
+    box-shadow: inset 0 0 0 2px var(--primary-color);
+}
+
+/* Sticky Notes */
+#notes-container {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 20px;
+}
+.note {
+    width: 250px;
+    height: 250px;
+    background: #fffbe5;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+.note-header {
+    padding: 5px;
+    text-align: right;
+    background-color: #f9f4c3;
+}
+.note-delete {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    color: #c9302c;
+}
+.note textarea {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    font: inherit;
+    resize: none;
+    outline: none;
+}
+
+/* === NEW HELP SECTION STYLES === */
+#help-section {
+    padding: 20px 40px;
+    overflow-y: auto;
+    background-color: #fff;
+}
+
+.help-welcome {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--secondary-color);
+    margin-bottom: 20px;
+}
+
+.help-welcome h2 {
+    color: var(--primary-color);
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px; /* Space between columns */
+}
+
+.help-column {
+    padding: 0 15px;
+}
+
+.help-column h3 {
+    color: var(--font-color);
+}
+
+.help-column code {
+    background-color: #eef2f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "Courier New", Courier, monospace;
+    color: #c9302c;
+}
+
+/* Make the help section responsive */
+@media (max-width: 800px) {
+    .help-grid {
+        grid-template-columns: 1fr; /* Stack to a single column */
+    }
+}

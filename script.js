@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
     saveBtn: document.getElementById("save"),
     emailBtn: document.getElementById("email-btn"),
     openNewTabBtn: document.getElementById("openNewTab"),
-    readmeBtn: document.getElementById("readme-button"),
     findReplaceBtn: document.getElementById("find-replace-button"),
     closeButtons: document.querySelectorAll(".close-btn"),
     installButton: document.getElementById("install-app"),
@@ -39,11 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
     regexCheckbox: document.getElementById("regex-checkbox"),
     splitViewBtn: document.getElementById("split-view-btn"),
     editorContainer: document.getElementById("editor-container"),
-    settingsBtn: document.getElementById("settings-btn"),
-    // Password popup elements
+    beditBtn: document.getElementById("bedit-btn"),
     passwordInput: document.getElementById("password-input"),
     passwordSubmitBtn: document.getElementById("password-submit-btn"),
-    // Settings popup elements
     defaultWordWrapCheck: document.getElementById("default-word-wrap"),
     defaultSplitViewCheck: document.getElementById("default-split-view"),
     defaultAutoIndentCheck: document.getElementById("default-auto-indent"),
@@ -58,13 +55,11 @@ document.addEventListener("DOMContentLoaded", function () {
     importSettingsInput: document.getElementById("import-settings-input"),
   };
   const popups = {
-    readme: document.getElementById("readme-popup"),
     findReplace: document.getElementById("find-replace-popup"),
     settings: document.getElementById("settings-popup"),
     password: document.getElementById("password-popup"),
   };
 
-  // --- NEW Crypto Helpers ---
   async function deriveKey(password, salt) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
@@ -141,13 +136,12 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentLinkUrl = null;
   const MAX_RECENT_FILES = 5;
   let protectedNotes = {};
-  let activeProtectedNotePassword = null; // NEW
+  let activeProtectedNotePassword = null;
   let fileHandles = {
     "textbox-1": null,
     "textbox-2": null,
   };
 
-  // --- Settings ---
   let settings = {};
   const defaultSettings = {
     wordWrap: false,
@@ -163,46 +157,35 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   function saveSettings() {
-    localStorage.setItem("bpad-settings", JSON.stringify(settings));
+    localStorage.setItem("bedit-settings", JSON.stringify(settings));
   }
 
   function loadSettings() {
-    const savedSettings = localStorage.getItem("bpad-settings");
+    const savedSettings = localStorage.getItem("bedit-settings");
     settings = savedSettings
-      ? JSON.parse(savedSettings)
+      ? { ...defaultSettings, ...JSON.parse(savedSettings) }
       : { ...defaultSettings };
-    // Ensure all keys exist
-    settings = { ...defaultSettings, ...settings };
   }
 
   function applySettings(isInitialLoad = false) {
-    // Apply Word Wrap
-    if (settings.wordWrap) {
-      elements.textbox1.classList.add("word-wrap-enabled");
-      elements.textbox2.classList.add("word-wrap-enabled");
-    } else {
-      elements.textbox1.classList.remove("word-wrap-enabled");
-      elements.textbox2.classList.remove("word-wrap-enabled");
-    }
+    const isWordWrapEnabled = settings.wordWrap;
+    elements.textbox1.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
+    elements.textbox2.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
 
-    // Apply Spell Check
     elements.textbox1.spellcheck = settings.spellCheck;
     elements.textbox2.spellcheck = settings.spellCheck;
 
-    // Apply Theme
-    document.body.classList.remove("dark-mode", "snow-mode");
+    document.body.className = document.body.className.replace(/\b(dark|snow)-mode\b/g, "").trim();
     if (settings.theme === "dark") {
       document.body.classList.add("dark-mode");
     } else if (settings.theme === "snow") {
       document.body.classList.add("snow-mode");
     }
 
-    // Apply Split View (only on initial load)
     if (isInitialLoad && settings.splitView) {
       toggleSplitView();
     }
 
-    // Update settings UI
     elements.defaultWordWrapCheck.checked = settings.wordWrap;
     elements.defaultSplitViewCheck.checked = settings.splitView;
     elements.defaultAutoIndentCheck.checked = settings.autoIndent;
@@ -215,20 +198,18 @@ document.addEventListener("DOMContentLoaded", function () {
     initializeExpansionSettings();
   }
 
-  // --- Password Protection ---
   function saveProtectedNotes() {
     localStorage.setItem(
-      "bpad-protected-notes",
+      "bedit-protected-notes",
       JSON.stringify(protectedNotes),
     );
   }
 
   function loadProtectedNotes() {
-    const savedNotes = localStorage.getItem("bpad-protected-notes");
+    const savedNotes = localStorage.getItem("bedit-protected-notes");
     protectedNotes = savedNotes ? JSON.parse(savedNotes) : {};
   }
 
-  // FIXED function to lock and save the current note
   async function lockAndSaveProtectedNote() {
     if (!activeProtectedNotePassword) return;
 
@@ -239,9 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (content.trim() === "") {
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
-        "Welcome to bpad. Start typing to begin or click ? Help for help.";
-
-      // Reorder to allow UI update before alert
+        "Welcome to bEdit. Start typing to begin or click ? Help for help.";
       updateAllUI();
       storeLocally(elements.textbox1);
       alert(
@@ -258,9 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
-        "Welcome to bpad. Start typing to begin or click ? Help for help.";
-
-      // Reorder to allow UI update before alert
+        "Welcome to bEdit. Start typing to begin or click ? Help for help.";
       updateAllUI();
       storeLocally(elements.textbox1);
       alert("Note locked and saved.");
@@ -271,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // REPLACED handlePasswordSubmit
   async function handlePasswordSubmit() {
     const password = elements.passwordInput.value;
     elements.passwordInput.value = "";
@@ -285,7 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const noteId = await getNoteId(password);
 
     if (protectedNotes.hasOwnProperty(noteId)) {
-      // Unlock existing note
       const encryptedData = protectedNotes[noteId];
       const decryptedContent = await decrypt(encryptedData, password);
 
@@ -303,7 +278,6 @@ document.addEventListener("DOMContentLoaded", function () {
         elements.textbox1.focus();
       }
     } else {
-      // Create a new note
       addToHistory(elements.textbox1.value, elements.textbox1.selectionStart);
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
@@ -320,13 +294,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (elem.requestFullscreen) {
       elem.requestFullscreen();
     } else if (elem.mozRequestFullScreen) {
-      /* Firefox */
       elem.mozRequestFullScreen();
     } else if (elem.webkitRequestFullscreen) {
-      /* Chrome, Safari & Opera */
       elem.webkitRequestFullscreen();
     } else if (elem.msRequestFullscreen) {
-      /* IE/Edge */
       elem.msRequestFullscreen();
     }
   }
@@ -335,13 +306,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (document.exitFullscreen) {
       document.exitFullscreen();
     } else if (document.mozCancelFullScreen) {
-      /* Firefox */
       document.mozCancelFullScreen();
     } else if (document.webkitExitFullscreen) {
-      /* Chrome, Safari and Opera */
       document.webkitExitFullscreen();
     } else if (document.msExitFullscreen) {
-      /* IE/Edge */
       document.msExitFullscreen();
     }
   }
@@ -361,13 +329,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function isPWAInstalled() {
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      return true;
-    }
-    if (navigator.standalone === true) {
-      return true;
-    }
-    return false;
+    return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   }
 
   function isMobileDevice() {
@@ -413,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!window.name) {
     window.name =
-      "bpad-tab-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+      `bedit-tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   const tabId = window.name;
 
@@ -424,19 +386,18 @@ document.addEventListener("DOMContentLoaded", function () {
   let history = [];
   let currentHistoryIndex = -1;
   let isUndoing = false;
-  let initialContentLoaded = false;
   let lastChangeTime = 0;
   const CHANGE_DELAY = 1000;
 
   let historyCursorPositions = [];
 
   function adjustTextareaHeight() {
-    elements.editorContainer.style.top = elements.nav.offsetHeight + "px";
+    elements.editorContainer.style.top = `${elements.nav.offsetHeight}px`;
   }
 
   function storeLocally(textbox) {
     if (!textbox) return;
-    const key = `bpad_${tabId}_${textbox.id}`;
+    const key = `bedit_${tabId}_${textbox.id}`;
     localStorage.setItem(key, textbox.value);
   }
 
@@ -468,14 +429,8 @@ document.addEventListener("DOMContentLoaded", function () {
         break;
       }
     }
-
-    if (foundLink) {
-      currentLinkUrl = foundLink;
-      elements.openLinkBtn.style.display = "inline-flex";
-    } else {
-      currentLinkUrl = null;
-      elements.openLinkBtn.style.display = "none";
-    }
+    currentLinkUrl = foundLink;
+    elements.openLinkBtn.style.display = foundLink ? "inline-flex" : "none";
   }
 
   function updateAllUI() {
@@ -533,7 +488,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getRecentFiles() {
-    const files = localStorage.getItem("bpad-recent-files");
+    const files = localStorage.getItem("bedit-recent-files");
     return files ? JSON.parse(files) : [];
   }
 
@@ -542,49 +497,36 @@ document.addEventListener("DOMContentLoaded", function () {
     recentFiles = recentFiles.filter(
       (file) => file.filename !== filenameToRemove,
     );
-    localStorage.setItem("bpad-recent-files", JSON.stringify(recentFiles));
+    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
 
   function updateRecentFilesUI() {
     const files = getRecentFiles();
-    const datalist1 = elements.recentFilesDatalist1;
-    const datalist2 = elements.recentFilesDatalist2;
-    const dropdown = elements.recentFilesDropdown;
-
-    datalist1.innerHTML = "";
-    datalist2.innerHTML = "";
-    dropdown.innerHTML = "";
-
-    elements.recentFilesBtn.disabled = files.length === 0;
-
+    const { recentFilesDatalist1, recentFilesDatalist2, recentFilesDropdown, recentFilesBtn } = elements;
+    
+    recentFilesDatalist1.innerHTML = "";
+    recentFilesDatalist2.innerHTML = "";
+    recentFilesDropdown.innerHTML = "";
+    
+    recentFilesBtn.disabled = files.length === 0;
+    
+    const fragment = document.createDocumentFragment();
     files.forEach((file) => {
-      const option1 = document.createElement("option");
-      option1.value = file.filename;
-      datalist1.appendChild(option1);
-      const option2 = document.createElement("option");
-      option2.value = file.filename;
-      datalist2.appendChild(option2);
+      const option = document.createElement("option");
+      option.value = file.filename;
+      fragment.appendChild(option);
 
       const dropdownItem = document.createElement("div");
       dropdownItem.className = "recent-file-item";
       dropdownItem.dataset.filename = file.filename;
-
-      const filenameSpan = document.createElement("span");
-      filenameSpan.className = "recent-filename";
-      filenameSpan.textContent = file.filename;
-
-      const deleteBtn = document.createElement("span");
-      deleteBtn.className = "delete-recent-btn";
-      deleteBtn.textContent = " [X]";
-      deleteBtn.title = "Remove from list";
-      deleteBtn.dataset.filename = file.filename;
-
-      dropdownItem.appendChild(filenameSpan);
-      dropdownItem.appendChild(deleteBtn);
-      dropdown.appendChild(dropdownItem);
+      dropdownItem.innerHTML = `<span class="recent-filename">${file.filename}</span><span class="delete-recent-btn" title="Remove from list" data-filename="${file.filename}"> [X]</span>`;
+      recentFilesDropdown.appendChild(dropdownItem);
     });
-  }
+    
+    recentFilesDatalist1.appendChild(fragment.cloneNode(true));
+    recentFilesDatalist2.appendChild(fragment);
+}
 
   function addRecentFile(filename, content) {
     if (!filename || content === null || content === undefined) return;
@@ -594,7 +536,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (recentFiles.length > MAX_RECENT_FILES) {
       recentFiles.pop();
     }
-    localStorage.setItem("bpad-recent-files", JSON.stringify(recentFiles));
+    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
 
@@ -624,7 +566,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function openFile() {
-    // Use new File System Access API if available
     if ("showOpenFilePicker" in window) {
       try {
         const [handle] = await window.showOpenFilePicker();
@@ -638,38 +579,38 @@ document.addEventListener("DOMContentLoaded", function () {
             ? elements.filenameBox2
             : elements.filenameBox1;
 
-        // Store the handle for future saves
         fileHandles[targetTextbox.id] = handle;
-
-        // Use existing logic to read and display the file
         openDroppedFile(file, targetTextbox, targetFilenameBox);
       } catch (err) {
         console.log("Open file dialog was cancelled or failed.", err);
       }
     } else {
-      // Fallback for older browsers
-      if (activeTextbox === elements.textbox2) {
-        elements.openInput2.click();
-      } else {
-        elements.openInput1.click();
-      }
+      const openInput = activeTextbox === elements.textbox2 ? elements.openInput2 : elements.openInput1;
+      openInput.click();
     }
   }
 
   function handleFileOpen(event, targetTextbox, targetFilenameBox) {
     const file = event.target.files[0];
     if (file) {
-      // Opening via the input tag does not provide a file handle, so clear any existing one.
       fileHandles[targetTextbox.id] = null;
       openDroppedFile(file, targetTextbox, targetFilenameBox);
     }
   }
 
   async function saveFile() {
+    if (activeTextbox === elements.textbox1 && activeProtectedNotePassword) {
+      const userConfirmed = confirm(
+        "Warning: This is a password-protected file. Saving it to your device will remove the password protection and save the content as plain text. Are you sure you want to continue?",
+      );
+      if (!userConfirmed) {
+        return;
+      }
+    }
+
     const handle = fileHandles[activeTextbox.id];
     const content = activeTextbox.value;
 
-    // If API is supported and we have a handle, use it for a direct save.
     if (handle && "createWritable" in handle) {
       try {
         const writable = await handle.createWritable();
@@ -677,26 +618,21 @@ document.addEventListener("DOMContentLoaded", function () {
         await writable.close();
         addRecentFile(handle.name, content);
         console.log("File saved successfully to existing handle.");
-        return; // Done
+        return;
       } catch (err) {
         console.error(
           'Could not save to existing handle. Fallback to "Save As".',
           err,
         );
-        // Clear the bad handle and fall through to "Save As".
         fileHandles[activeTextbox.id] = null;
       }
     }
 
-    // If API is supported, use "Save As" (showSaveFilePicker).
-    // This runs if there's no handle, or if saving to the existing handle failed.
     if ("showSaveFilePicker" in window) {
       try {
+        const filenameBox = activeTextbox === elements.textbox1 ? elements.filenameBox1 : elements.filenameBox2;
         const saveAsHandle = await window.showSaveFilePicker({
-          suggestedName:
-            activeTextbox === elements.textbox1
-              ? elements.filenameBox1.value
-              : elements.filenameBox2.value || "bpad.txt",
+          suggestedName: filenameBox.value || "bedit.txt",
           types: [
             {
               description: "Text Files",
@@ -714,32 +650,22 @@ document.addEventListener("DOMContentLoaded", function () {
             },
           ],
         });
-        fileHandles[activeTextbox.id] = saveAsHandle; // Store the new handle for next time
-        const filenameBox =
-          activeTextbox === elements.textbox1
-            ? elements.filenameBox1
-            : elements.filenameBox2;
+        fileHandles[activeTextbox.id] = saveAsHandle;
         filenameBox.value = saveAsHandle.name;
 
         const writable = await saveAsHandle.createWritable();
         await writable.write(content);
         await writable.close();
         addRecentFile(saveAsHandle.name, content);
-        return; // Done
+        return;
       } catch (err) {
-        // This error is expected if the user cancels the "Save As" dialog.
         console.log("Save As dialog was cancelled or failed.", err);
         return;
       }
     }
 
-    // Fallback for browsers that don't support the API at all.
-    const filenameToSave =
-      activeTextbox === elements.textbox2
-        ? elements.filenameBox2.value
-        : elements.filenameBox1.value;
-
-    const filename = filenameToSave || "bpad.txt";
+    const filenameBox = activeTextbox === elements.textbox2 ? elements.filenameBox2 : elements.filenameBox1;
+    const filename = filenameBox.value || "bedit.txt";
     addRecentFile(filename, content);
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -755,12 +681,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function togglePopup(popupId, show) {
-    for (const key in popups) {
-      if (popups[key]) {
-        popups[key].style.display = "none";
-      }
-    }
+    Object.values(popups).forEach(popup => popup.style.display = 'none');
     elements.overlay.style.display = "none";
+
     if (show && popupId && popups[popupId]) {
       popups[popupId].style.display = "block";
       elements.overlay.style.display = "block";
@@ -769,7 +692,7 @@ document.addEventListener("DOMContentLoaded", function () {
         elements.findText.select();
         findAllMatches();
       } else if (popupId === "settings") {
-        applySettings(); // Refresh settings UI when opening
+        applySettings();
       } else if (popupId === "password") {
         elements.passwordInput.focus();
       }
@@ -785,20 +708,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // NOTE: History/Undo is now only supported for the primary (left) editor pane
-  // to prevent data corruption in split view without a more complex history implementation.
   function addToHistory(state, cursorPosition) {
-    if (activeTextbox !== elements.textbox1) return;
-    if (history[currentHistoryIndex] === state) {
+    if (activeTextbox !== elements.textbox1 || history[currentHistoryIndex] === state) {
       return;
     }
 
     if (currentHistoryIndex < history.length - 1) {
-      history = history.slice(0, currentHistoryIndex + 1);
-      historyCursorPositions = historyCursorPositions.slice(
-        0,
-        currentHistoryIndex + 1,
-      );
+      history.splice(currentHistoryIndex + 1);
+      historyCursorPositions.splice(currentHistoryIndex + 1);
     }
     history.push(state);
     historyCursorPositions.push(cursorPosition);
@@ -833,7 +750,7 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.textbox1.focus();
     elements.textbox1.setSelectionRange(cursorPos, cursorPos);
 
-    activeTextbox = elements.textbox1; // Ensure active textbox is correct
+    activeTextbox = elements.textbox1;
     updateAllUI();
     storeLocally(elements.textbox1);
     updateHighlights();
@@ -865,15 +782,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       const regex = new RegExp(pattern, flags);
-      const matches = [];
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        matches.push({
+      currentMatches = [...text.matchAll(regex)].map(match => ({
           start: match.index,
           end: match.index + match[0].length,
-        });
-      }
-      currentMatches = matches;
+      }));
     } catch (e) {
       currentMatches = [];
       console.error("Invalid Regex:", e);
@@ -895,7 +807,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     highlightLayer.innerHTML = "";
     if (activeTextbox !== elements.textbox1) {
-      otherHighlightLayer.innerHTML = ""; // Clear other pane's highlights
+      otherHighlightLayer.innerHTML = "";
     }
 
     if (currentMatches.length === 0) return;
@@ -904,14 +816,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const frag = document.createDocumentFragment();
     const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
 
-    // Create a temporary element to measure character width accurately
     const span = document.createElement("span");
     span.style.font = getComputedStyle(activeTextbox).font;
     span.style.position = "absolute";
     span.style.visibility = "hidden";
     span.style.whiteSpace = "pre";
     document.body.appendChild(span);
-    span.textContent = "M"; // Use a standard character for measurement
+    span.textContent = "M";
     const charWidth = span.getBoundingClientRect().width;
     document.body.removeChild(span);
 
@@ -922,10 +833,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const charPos = lines[lineIndex].length;
       const highlight = document.createElement("div");
       highlight.className = "highlight";
-      highlight.style.top = `${lineIndex * lineHeight}px`;
-      highlight.style.left = `${charPos * charWidth}px`;
-      highlight.style.width = `${(match.end - match.start) * charWidth}px`;
-      highlight.style.height = `${lineHeight}px`;
+      highlight.style.cssText = `top: ${lineIndex * lineHeight}px; left: ${charPos * charWidth}px; width: ${(match.end - match.start) * charWidth}px; height: ${lineHeight}px;`;
       frag.appendChild(highlight);
     });
     highlightLayer.appendChild(frag);
@@ -934,10 +842,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateFindCount() {
     if (elements.findText.value === "") {
       elements.findCount.textContent = "";
-    } else if (currentMatches.length > 0) {
-      elements.findCount.textContent = `${currentMatches.length} matches`;
     } else {
-      elements.findCount.textContent = "No matches";
+        elements.findCount.textContent = `${currentMatches.length} match${currentMatches.length === 1 ? '' : 'es'}`;
     }
   }
 
@@ -949,7 +855,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentPosition = activeTextbox.selectionStart;
     let nextMatchIndex = -1;
 
-    // If a match is currently selected, find the next one after it
     if (
       currentMatchIndex !== -1 &&
       currentMatches[currentMatchIndex] &&
@@ -957,13 +862,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ) {
       nextMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
     } else {
-      // Otherwise, find the next match after the cursor
-      for (let i = 0; i < currentMatches.length; i++) {
-        if (currentMatches[i].start >= currentPosition) {
-          nextMatchIndex = i;
-          break;
-        }
-      }
+        nextMatchIndex = currentMatches.findIndex(match => match.start >= currentPosition);
     }
 
     if (nextMatchIndex === -1 && currentMatches.length > 0) {
@@ -989,18 +888,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function replaceCurrentMatch() {
     const replacement = elements.replaceText.value;
-    const selectionStart = activeTextbox.selectionStart;
-    const selectionEnd = activeTextbox.selectionEnd;
+    const { selectionStart, selectionEnd } = activeTextbox;
     if (selectionStart === selectionEnd) {
       findNext();
       return;
     }
     const currentText = activeTextbox.value;
-    const before = currentText.substring(0, selectionStart);
-    const after = currentText.substring(selectionEnd);
     addToHistory(currentText, selectionStart);
-    activeTextbox.value = before + replacement + after;
-
+    activeTextbox.value = currentText.slice(0, selectionStart) + replacement + currentText.slice(selectionEnd);
+    
     const newCursorPos = selectionStart + replacement.length;
     activeTextbox.setSelectionRange(newCursorPos, newCursorPos);
 
@@ -1031,13 +927,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function cycleTheme() {
-    if (settings.theme === "dark") {
-      settings.theme = "snow";
-    } else if (settings.theme === "snow") {
-      settings.theme = "light";
-    } else {
-      settings.theme = "dark";
-    }
+    const themes = ["light", "dark", "snow"];
+    const currentThemeIndex = themes.indexOf(settings.theme);
+    settings.theme = themes[(currentThemeIndex + 1) % themes.length];
     saveSettings();
     applySettings();
   }
@@ -1045,13 +937,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function toggleSplitView() {
     const isActive =
       elements.editorContainer.classList.toggle("split-view-active");
-    if (isActive) {
-      elements.filenameBox2.style.display = "inline-block";
-      elements.textbox2.focus();
-    } else {
-      elements.filenameBox2.style.display = "none";
-      elements.textbox1.focus();
-    }
+    elements.filenameBox2.style.display = isActive ? "inline-block" : "none";
+    (isActive ? elements.textbox2 : elements.textbox1).focus();
     updateWordCount();
     return isActive;
   }
@@ -1062,19 +949,18 @@ document.addEventListener("DOMContentLoaded", function () {
     container.innerHTML = "";
     if (!settings.expansions) settings.expansions = {};
 
+    const fragment = document.createDocumentFragment();
     for (let i = 0; i < 26; i++) {
       const char = String.fromCharCode(97 + i);
       const shortcutKey = `.${char}`;
       const row = document.createElement("div");
       row.className = "expansion-row";
-      const label = document.createElement("label");
-      label.textContent = shortcutKey;
-      label.htmlFor = `expansion-input-${char}`;
-      const input = document.createElement("input");
-      input.type = "text";
-      input.id = `expansion-input-${char}`;
-      input.placeholder = `Expanded text for ${shortcutKey}`;
-
+      row.innerHTML = `
+        <label for="expansion-input-${char}">${shortcutKey}</label>
+        <input type="text" id="expansion-input-${char}" placeholder="Expanded text for ${shortcutKey}">
+      `;
+      const input = row.querySelector("input");
+      
       if (char === "d") {
         input.value = "(Date)";
         input.readOnly = true;
@@ -1086,10 +972,9 @@ document.addEventListener("DOMContentLoaded", function () {
           saveSettings();
         });
       }
-      row.appendChild(label);
-      row.appendChild(input);
-      container.appendChild(row);
+      fragment.appendChild(row);
     }
+    container.appendChild(fragment);
   }
 
   function handleExpansion(event) {
@@ -1110,18 +995,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const year = date.getFullYear();
         const yearShort = String(year).slice(-2);
         const monthNames = [
-          "JAN",
-          "FEB",
-          "MAR",
-          "APR",
-          "MAY",
-          "JUN",
-          "JUL",
-          "AUG",
-          "SEP",
-          "OCT",
-          "NOV",
-          "DEC",
+          "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+          "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
         ];
         const monthName = monthNames[date.getMonth()];
 
@@ -1161,7 +1036,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const blob = new Blob([settingsString], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "bpad-settings.json";
+    a.download = "bedit-settings.json";
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -1205,7 +1080,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       targetTextbox.value = selectedFile.content;
       targetFilenameBox.value = selectedFile.filename;
-      fileHandles[targetTextbox.id] = null; // Opening a recent file doesn't provide a handle
+      fileHandles[targetTextbox.id] = null;
 
       storeLocally(targetTextbox);
       if (targetTextbox === elements.textbox1) {
@@ -1244,7 +1119,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- Email Function ---
   function shareViaEmail() {
     const content = activeTextbox.value;
     if (!content) {
@@ -1255,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", function () {
       activeTextbox === elements.textbox1
         ? elements.filenameBox1
         : elements.filenameBox2;
-    const subject = encodeURIComponent(filenameBox.value || "Note from bpad");
+    const subject = encodeURIComponent(filenameBox.value || "Note from bEdit");
     const body = encodeURIComponent(content);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
@@ -1265,12 +1139,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!targetTextbox) return;
 
     const pairs = {
-      "(": ")",
-      "[": "]",
-      "{": "}",
-      "'": "'",
-      '"': '"',
-      "<": ">",
+      "(": ")", "[": "]", "{": "}", "'": "'", '"': '"', "<": ">",
     };
     const openChars = Object.keys(pairs);
     if (settings.autoCloseBrackets && openChars.includes(event.key)) {
@@ -1284,16 +1153,12 @@ document.addEventListener("DOMContentLoaded", function () {
       if (s !== e) {
         const selectedText = text.substring(s, e);
         targetTextbox.value =
-          text.substring(0, s) +
-          openChar +
-          selectedText +
-          closeChar +
-          text.substring(e);
+          `${text.substring(0, s)}${openChar}${selectedText}${closeChar}${text.substring(e)}`;
         targetTextbox.selectionStart = s + 1;
         targetTextbox.selectionEnd = e + 1;
       } else {
         targetTextbox.value =
-          text.substring(0, s) + openChar + closeChar + text.substring(e);
+          `${text.substring(0, s)}${openChar}${closeChar}${text.substring(e)}`;
         targetTextbox.selectionStart = targetTextbox.selectionEnd = s + 1;
       }
 
@@ -1318,7 +1183,7 @@ document.addEventListener("DOMContentLoaded", function () {
         addToHistory(text, s);
 
         const newText =
-          text.substring(0, s) + "\n" + indentation + text.substring(e);
+          `${text.substring(0, s)}\n${indentation}${text.substring(e)}`;
         const newCursorPos = s + 1 + indentation.length;
 
         targetTextbox.value = newText;
@@ -1336,9 +1201,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const e = targetTextbox.selectionEnd;
       addToHistory(targetTextbox.value, s);
       targetTextbox.value =
-        targetTextbox.value.substring(0, s) +
-        tabSpaces +
-        targetTextbox.value.substring(e);
+        `${targetTextbox.value.substring(0, s)}${tabSpaces}${targetTextbox.value.substring(e)}`;
       targetTextbox.selectionStart = targetTextbox.selectionEnd =
         s + tabSpaces.length;
       updateAllUI();
@@ -1351,42 +1214,17 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
       }
       switch (key) {
-        case "o":
-          openFile();
-          break;
-        case "s":
-          saveFile();
-          break;
-        case "e":
-          shareViaEmail();
-          break;
-        case "f":
-          togglePopup("findReplace", true);
-          break;
-        case "k":
-          openHighlightedLink();
-          break;
-        case "z":
-          undo();
-          break;
-        case "y":
-          redo();
-          break;
-        case "n":
-          openNewTab();
-          break;
-        case "h":
-          togglePopup("readme", true);
-          break;
-        case "m":
-          cycleTheme();
-          break;
-        case "i":
-          toggleSplitView();
-          break;
-        case "/":
-          togglePopup("settings", true);
-          break;
+        case "o": openFile(); break;
+        case "s": saveFile(); break;
+        case "e": shareViaEmail(); break;
+        case "f": togglePopup("findReplace", true); break;
+        case "k": openHighlightedLink(); break;
+        case "z": undo(); break;
+        case "y": redo(); break;
+        case "n": openNewTab(); break;
+        case "m": cycleTheme(); break;
+        case "i": toggleSplitView(); break;
+        case "/": togglePopup("settings", true); break;
         case "=":
           if (activeProtectedNotePassword) {
             lockAndSaveProtectedNote();
@@ -1399,14 +1237,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (
       [
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        "Home",
-        "End",
-        "PageUp",
-        "PageDown",
+        "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+        "Home", "End", "PageUp", "PageDown",
       ].includes(event.key)
     ) {
       setTimeout(updateAllUI, 0);
@@ -1439,7 +1271,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
   }
 
-  // --- Initial Load ---
   loadSettings();
   loadProtectedNotes();
   applySettings(true);
@@ -1463,7 +1294,6 @@ document.addEventListener("DOMContentLoaded", function () {
     box.addEventListener("change", handleFilenameChange);
   });
 
-  // Event Listeners
   elements.openBtn.addEventListener("click", openFile);
   elements.saveBtn.addEventListener("click", saveFile);
   elements.emailBtn.addEventListener("click", shareViaEmail);
@@ -1504,21 +1334,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  elements.findReplaceBtn.addEventListener("click", function () {
-    togglePopup("findReplace", true);
-  });
+  elements.findReplaceBtn.addEventListener("click", () => togglePopup("findReplace", true));
   elements.openLinkBtn.addEventListener("click", openHighlightedLink);
   elements.undoButton.addEventListener("click", undo);
   elements.openNewTabBtn.addEventListener("click", openNewTab);
-  elements.readmeBtn.addEventListener("click", function () {
-    togglePopup("readme", true);
-  });
   elements.splitViewBtn.addEventListener("click", toggleSplitView);
-  elements.settingsBtn.addEventListener("click", () =>
-    togglePopup("settings", true),
-  );
+  elements.beditBtn.addEventListener("click", () => togglePopup("settings", true));
 
-  // Settings listeners
   elements.defaultWordWrapCheck.addEventListener("change", (e) => {
     settings.wordWrap = e.target.checked;
     saveSettings();
@@ -1584,31 +1406,25 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   elements.closeButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      togglePopup(null, false);
-    });
+    button.addEventListener("click", () => togglePopup(null, false));
   });
 
-  elements.overlay.addEventListener("click", function () {
-    togglePopup(null, false);
-  });
+  elements.overlay.addEventListener("click", () => togglePopup(null, false));
 
   adjustTextareaHeight();
   window.addEventListener("resize", adjustTextareaHeight);
 
-  // Load content from local storage for both panes
   const savedContent1 = localStorage.getItem(
-    `bpad_${tabId}_${elements.textbox1.id}`,
+    `bedit_${tabId}_${elements.textbox1.id}`,
   );
   if (savedContent1) {
     elements.textbox1.value = savedContent1;
-    initialContentLoaded = true;
     addToHistory(savedContent1, 0);
   } else {
     addToHistory(elements.textbox1.value, 0);
   }
   const savedContent2 = localStorage.getItem(
-    `bpad_${tabId}_${elements.textbox2.id}`,
+    `bedit_${tabId}_${elements.textbox2.id}`,
   );
   if (savedContent2) {
     elements.textbox2.value = savedContent2;
@@ -1622,7 +1438,7 @@ document.addEventListener("DOMContentLoaded", function () {
     togglePopup("readme", true);
   }
 
-  const editorContainer = elements.editorContainer;
+  const { editorContainer } = elements;
   editorContainer.addEventListener("dragover", (event) => {
     event.preventDefault();
     editorContainer.classList.add("drag-over");
@@ -1639,7 +1455,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Dropped files don't come with handles, so clear any existing ones for the target panes.
     const targetTextbox = event.target.closest(".textbox");
     if (targetTextbox === elements.textbox2) {
       fileHandles[elements.textbox2.id] = null;
@@ -1663,27 +1478,26 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       for (const fileHandle of launchParams.files) {
-        // Determine which pane to open in
+        let targetTextbox, targetFilenameBox;
         if (
           activeTextbox === elements.textbox1 &&
           elements.textbox1.value === ""
         ) {
-          fileHandles[elements.textbox1.id] = fileHandle;
-          const file = await fileHandle.getFile();
-          openDroppedFile(file, elements.textbox1, elements.filenameBox1);
+            targetTextbox = elements.textbox1;
+            targetFilenameBox = elements.filenameBox1;
         } else if (
           elements.editorContainer.classList.contains("split-view-active") &&
           elements.textbox2.value === ""
         ) {
-          fileHandles[elements.textbox2.id] = fileHandle;
-          const file = await fileHandle.getFile();
-          openDroppedFile(file, elements.textbox2, elements.filenameBox2);
+            targetTextbox = elements.textbox2;
+            targetFilenameBox = elements.filenameBox2;
         } else {
-          // Open in primary pane if no other logic fits
-          fileHandles[elements.textbox1.id] = fileHandle;
-          const file = await fileHandle.getFile();
-          openDroppedFile(file, elements.textbox1, elements.filenameBox1);
+            targetTextbox = elements.textbox1;
+            targetFilenameBox = elements.filenameBox1;
         }
+        fileHandles[targetTextbox.id] = fileHandle;
+        const file = await fileHandle.getFile();
+        openDroppedFile(file, targetTextbox, targetFilenameBox);
       }
     });
   }

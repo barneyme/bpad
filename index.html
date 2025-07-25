@@ -4,17 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bpad - browser text editor">
+        <meta name="description" content="bEdit - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="bpad">
-        <title>bpad</title>
+        <meta name="apple-mobile-web-app-title" content="bEdit">
+        <title>bEdit</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
-	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
-	<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
-	<link rel="shortcut icon" href="./bpad192.png">
-	<link rel="apple-touch-icon" href="./bpad192.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="./bedit192.png">
+	<link rel="icon" type="image/png" sizes="512x512" href="./bedit512.png">
+	<link rel="shortcut icon" href="./bedit192.png">
+	<link rel="apple-touch-icon" href="./bedit192.png">
     </head>
     <body>
         <div class="snow-container">
@@ -36,9 +36,9 @@
                 <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
                 <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
                 <span id="filename-container">
-                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
+                    <input id="filename-1" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-1" />
                     <datalist id="recent-files-datalist-1"></datalist>
-                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <input id="filename-2" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
                     <button id="recent-files-btn" title="Recent Files">&#9662;</button>
                     <div id="recent-files-dropdown" class="dropdown-content"></div>
@@ -70,10 +70,8 @@
                     </span>
                 </span>
                 <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
-                <button id="settings-btn" title="Config (CTRL + /)"><strong>&#9881;</strong> <span class="button-text">Set</span></button>
-                <button id="readme-button" title="Help (CTRL + H)"><strong>&#63;</strong> <span class="button-text">Help</span></button>
             </span>
-            <span id="app-name"><strong>bpad</strong></span>
+            <button id="bedit-btn" title="bEdit (CTRL + /)"><strong>b<span class="button-text">Edit</span></strong></button>
         </nav>
         <div id="editor-container">
             <div class="editor-pane" id="editor-pane-1">
@@ -83,7 +81,7 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bpad. Start typing to begin or click &#63; Help for help."
+                    placeholder="Welcome to bEdit. Start typing to begin or click 'bEdit' ('b' on mobile) for help and settings."
                     spellcheck="false"
                 ></textarea>
             </div>
@@ -101,80 +99,6 @@
         <input type="file" id="open-input-1" style="display: none" />
         <input type="file" id="open-input-2" style="display: none" />
         <div id="popup-overlay"></div>
-        <div id="readme-popup" class="popup">
-            <button class="close-btn">×</button>
-            <h2>Help</h2>
-            <div id="readme-content">
-                <p>
-                    bpad is a browser editor. It can open, create, and save plaintext files such as <a href="https://en.wikipedia.org/wiki/Plain_text">.txt</a>; data files such as .csv; markup and documentation files such as <a href="https://www.w3schools.com/html/">.html</a> and <a href="https://www.markdownguide.org/">.md</a>; configuration files such as .ini, .yml and .json; log files such as .log; source code files such as <a href="https://www.w3schools.com/python/">.py</a>, <a href="https://www.w3schools.com/js/default.asp">.js</a>, and <a href="https://www.w3schools.com/java/default.asp">.java</a>; and scripts such <a href="https://ss64.com/nt/">.bat</a>, <a href="https://ss64.com/ps/">.ps1</a> and <a href="https://ss64.com/bash/">.sh</a>.
-                </p>
-                <h2>Directions</h2>
-                <p>
-                    Open bpad.me in web browser and start writing. Changes are automatically saved in your browser.<br />
-		Remember to "Save" a copy of your file before clearing your browser cache.<br />
-                    <br />
-                    bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
-                    file.<br />
-                    <br />
-                    Files can be opened from your device using the "Open" button or by dragging and dropping in to bpad.<br />
-                    <br />
-                    To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
-                    <br />
-                    bpad PWA can edit and save local files directly once installed.<br />
-                    <br />
-                <h2>Settings</h2>
-                    Use "Set" to enable\disable:<br />
-                    - Word Wrap.<br />
-                    - Split View.<br />
-                    - Auto Indent.<br />
-                    - Turbo Boost.<br />
-                    - Spell check.<br />
-                    - Auto close brackets.<br />
-                    - Theme. (Light. Dark. Snow.)<br />
-                    - Text Expander (editable.)<br />
-                    <br />
-                    Settings can be exported and imported.<br />
-                    <br />
-                    &#8595; displays the current line number.<br />
-                    &#8594; displays the current character position.<br />
-                    = displays the current word count.<br />
-                    <br />
-                    &#x2B07; PWA installs bpad as an offline Progressive Web App.<br />
-                </p>
-                <h2>Shortcuts</h2>
-                    <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
-                    <b>CTRL + O</b> (&#128194; Open) to open a file from your computer.<br />
-                    <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
-                    <b>CTRL + E</b> (📧 Email) to open the content in your default email client.<br />
-                    <b>CTRL + I</b> (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg> Split) to toggle split view.<br />
-                    <b>CTRL + F</b> (&#128269; Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
-                    <b>CTRL + K</b> to open a web link on current line in a new tab.<br />
-                    <b>CTRL + /</b> (&#9881; Set) to open the Settings window.<br />
-                    <b>CTRL + =</b> to lock the current note with a password, or unlock an existing one.<br />
-                    <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change and CTRL + Y to redo it.<br />
-                    <b>CTRL + M</b> to cycle through Light, Dark, and Snow modes.<br />
-                    <b>CTRL + H</b> (&#63; Help) to view this help file.
-                </p>
-                <h2>Privacy</h2>
-                <p>
-                    bpad.me does not (and cannot):<br />
-                    <ul>
-                    <li>access your content,</li>
-                    <li>criticize your writing or coding,</li>
-                    <li>track any activity on your computer,</li>
-                    <li>judge your music choices,</li>
-                    <li>identify who you are,</li>
-                    <li>sell your data.</li>
-                    </ul>
-                </p>
-                <h2>About</h2>
-                <p>
-                    bpad was created by <a href="https://barney.me">Barney</a>.<br />
-                    I hope you find bpad useful. If you want to support bpad.me buy me a
-                    <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
-                </p>
-            </div>
-        </div>
         <div id="find-replace-popup" class="popup">
             <button class="close-btn">×</button>
             <h2>Find & Replace</h2>
@@ -203,8 +127,8 @@
         </div>
         <div id="password-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>Protected Note</h2>
-            <p>Enter a password to unlock an existing note or create a new one.</p>
+            <h2>Protected File</h2>
+            <p>Enter a password to unlock an existing file or create a new one.</p>
             <div>
                 <div class="find-replace-input-group">
                     <input type="password" id="password-input" placeholder="Password" style="width:100%;" />
@@ -216,65 +140,107 @@
         </div>
         <div id="settings-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>Settings</h2>
-            <div class="settings-container">
-                <div class="settings-section">
-                    <h3>Defaults</h3>
-                    <div class="setting-item">
-                        <label for="default-word-wrap">Word Wrap</label>
-                        <input type="checkbox" id="default-word-wrap" />
+            <h2>bEdit</h2>
+            <div class="b-modal-layout">
+                <div class="b-modal-column-left">
+                    <p>
+                        Open bedit.org in web browser and start writing. Changes are automatically saved in your browser.<br />
+                        Remember to "Save" a copy of your file before clearing your browser cache.<br />
+                        bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
+                        file.<br />
+                        Files can be opened from your device using the "Open" button or by dragging and dropping in to bEdit.<br />
+                        To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
+                        bEdit PWA can edit and save local files directly once installed.<br />
+                        &#8595; displays the current line number.<br />
+                        &#8594; displays the current character position.<br />
+                        = displays the current word count.<br />
+                    </p>
+                        <b>CTRL + N</b> (&#128196; New) to create a blank file in a new tab.<br />
+                        <b>CTRL + O</b> (&#128194; Open) to open a file from your computer.<br />
+                        <b>CTRL + S</b> (&#128190; Save) to save a file to your computer.<br />
+                        <b>CTRL + E</b> (📧 Email) to open the content in your default email client.<br />
+                        <b>CTRL + F</b> (&#128269; Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
+                        <b>CTRL + I</b> (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg> Split) to toggle split view.<br />
+                        <b>CTRL + K</b> to open a web link on current line in a new tab.<br />
+                        <b>CTRL + =</b> to lock the current file with a password, or unlock an existing one.<br />
+                        <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change and CTRL + Y to redo it.<br />
+                        <b>CTRL + M</b> to cycle through Light, Dark, and Snow modes.<br />
+                        <b>&#x2B07; PWA</b> installs bEdit as an offline Progressive Web App.<br />
+                        <b>CTRL + /</b> to open the bEdit help and settings window.<br />
+                    </p>
+                    <p>
+                        bEdit.org does not (and cannot):<br />
+                        <ul>
+                        <li>access your content,</li>
+                        <li>criticize your writing or coding,</li>
+                        <li>track any activity on your computer,</li>
+                        <li>judge your music choices,</li>
+                        <li>identify who you are,</li>
+                        <li>sell your data.</li>
+                        </ul>
+                    </p>
+                    <p>
+                        bEdit was created by <a href="https://barney.me">Barney</a>.<br />
+                        I hope you find bEdit useful. If you want to support bEdit.org buy me a
+                        <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
+                    </p>
+                </div>
+                <div class="b-modal-column-right">
+                    <div id="settings-actions">
+                        <button id="export-settings-btn">Export Settings</button>
+                        <button id="import-settings-btn">Import Settings</button>
                     </div>
-                    <div class="setting-item">
-                        <label for="default-split-view">Split View</label>
-                        <input type="checkbox" id="default-split-view" />
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <label for="default-word-wrap">Word Wrap</label>
+                            <input type="checkbox" id="default-word-wrap" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-split-view">Split View</label>
+                            <input type="checkbox" id="default-split-view" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-auto-indent">Auto Indent</label>
+                            <input type="checkbox" id="default-auto-indent" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-turbo-boost">Turbo Boost</label>
+                            <input type="checkbox" id="default-turbo-boost" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="enable-spell-checker">Enable Spell Checker</label>
+                            <input type="checkbox" id="enable-spell-checker" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="auto-close-brackets">Autoclose brackets</label>
+                            <input type="checkbox" id="auto-close-brackets" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="focus-mode-check" title="Enter fullscreen for a distraction-free experience.">Focus Mode</label>
+                            <input type="checkbox" id="focus-mode-check" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-theme">Theme</label>
+                            <select id="default-theme">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="snow">Snow</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="date-format-select">Date</label>
+                            <select id="date-format-select">
+                                <option value="MM/DD/YY">MM/DD/YY</option>
+                                <option value="DD-MMM-YYYY">DD-MMM-YYYY</option>
+                                <option value="YYYY-MMM-DD">YYYY-MMM-DD</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="setting-item">
-                        <label for="default-auto-indent">Auto Indent</label>
-                        <input type="checkbox" id="default-auto-indent" />
-                    </div>
-                    <div class="setting-item">
-                        <label for="default-turbo-boost">Turbo Boost</label>
-                        <input type="checkbox" id="default-turbo-boost" />
-                    </div>
-                    <div class="setting-item">
-                        <label for="enable-spell-checker">Enable Spell Checker</label>
-                        <input type="checkbox" id="enable-spell-checker" />
-                    </div>
-                    <div class="setting-item">
-                        <label for="auto-close-brackets">Autoclose brackets</label>
-                        <input type="checkbox" id="auto-close-brackets" />
-                    </div>
-                    <div class="setting-item">
-                        <label for="focus-mode-check" title="Enter fullscreen for a distraction-free experience.">Focus Mode</label>
-                        <input type="checkbox" id="focus-mode-check" />
-                    </div>
-                    <div class="setting-item">
-                        <label for="default-theme">Theme</label>
-                        <select id="default-theme">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="snow">Snow</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <label for="date-format-select">Date</label>
-                        <select id="date-format-select">
-                            <option value="MM/DD/YY">MM/DD/YY</option>
-                            <option value="DD-MMM-YYYY">DD-MMM-YYYY</option>
-                            <option value="YYYY-MMM-DD">YYYY-MMM-DD</option>
-                        </select>
+                    <div class="settings-section" id="text-expansion-section">
+                        <h3>Text Expansion</h3>
+                        <div id="text-expansion-content"></div>
                     </div>
                 </div>
-
-                <div class="settings-section">
-                    <h3>Text Expander</h3>
-                    <p>Create shortcuts that automatically expand when you type the trigger (e.g., <code>.a</code> [space]).</p>
-                    <div id="text-expansion-content"></div>
-                </div>
-            </div>
-            <div id="settings-actions">
-                <button id="export-settings-btn">Export Settings</button>
-                <button id="import-settings-btn">Import Settings</button>
             </div>
             <input type="file" id="import-settings-input" accept=".json" style="display: none;" />
         </div>

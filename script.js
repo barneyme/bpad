@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const wpNewBtn = document.getElementById("wp-new");
   const wpOpenBtn = document.getElementById("wp-open");
   const wpSaveBtn = document.getElementById("wp-save");
-  const wpSavePdfBtn = document.getElementById("wp-save-pdf");
 
   function loadProcessorContent() {
     const savedContent = localStorage.getItem(STORAGE_KEYS.processor);
@@ -102,65 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- FIXED SAVE AS PDF BUTTON LOGIC ---
-  wpSavePdfBtn.addEventListener("click", () => {
-    // Check if the required libraries are loaded
-    if (
-      typeof html2canvas === "undefined" ||
-      typeof window.jspdf === "undefined"
-    ) {
-      console.error("Error: PDF generation libraries are not loaded.");
-      alert(
-        "Sorry, the PDF function is unavailable. Please check your internet connection.",
-      );
-      return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4"); // Create a standard A4 page
-
-    const toolbars = document.querySelectorAll(".toolbar");
-    toolbars.forEach((t) => (t.style.display = "none")); // Hide toolbars for a clean capture
-
-    html2canvas(editor, {
-      scale: 2, // Use higher resolution for better quality
-      scrollY: -window.scrollY, // Capture entire scrollable content
-      useCORS: true,
-    })
-      .then((canvas) => {
-        toolbars.forEach((t) => (t.style.display = "flex")); // Show toolbars again
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgProps = doc.getImageProperties(imgData);
-
-        // Calculate the image's dimensions to fit on the A4 page
-        const pdfWidth = doc.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        let heightLeft = pdfHeight;
-        let position = 0;
-
-        // Add the first page
-        doc.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= doc.internal.pageSize.getHeight();
-
-        // Loop to add new pages if the content is longer than one page
-        while (heightLeft > 0) {
-          position = -heightLeft;
-          doc.addPage();
-          doc.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-          heightLeft -= doc.internal.pageSize.getHeight();
-        }
-
-        doc.save("document.pdf");
-      })
-      .catch((err) => {
-        toolbars.forEach((t) => (t.style.display = "flex")); // Ensure toolbars are always restored
-        console.error("Failed to generate PDF:", err);
-        alert("An error occurred while generating the PDF.");
-      });
-  });
-
   wpOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -183,6 +123,34 @@ document.addEventListener("DOMContentLoaded", () => {
       editor.dispatchEvent(new Event("input"));
     } catch (err) {
       console.error("Failed to open file:", err);
+    }
+  });
+
+  // --- Keyboard Shortcuts for Word Processor ---
+  document.addEventListener("keydown", (e) => {
+    // Return early if the processor tab is not active
+    if (
+      !document.getElementById("processor-section").classList.contains("active")
+    ) {
+      return;
+    }
+
+    // Use `metaKey` for macOS (Cmd key) and `ctrlKey` for Windows/Linux
+    if (e.metaKey || e.ctrlKey) {
+      switch (e.key.toLowerCase()) {
+        case "s": // Ctrl+S or Cmd+S
+          e.preventDefault();
+          wpSaveBtn.click();
+          break;
+        case "o": // Ctrl+O or Cmd+O
+          e.preventDefault();
+          wpOpenBtn.click();
+          break;
+        case "n": // Ctrl+N or Cmd+N
+          e.preventDefault();
+          wpNewBtn.click();
+          break;
+      }
     }
   });
 

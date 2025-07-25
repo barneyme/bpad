@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const wpOpenBtn = document.getElementById("wp-open");
   const wpSaveBtn = document.getElementById("wp-save");
 
-  // Load saved content from localStorage
   function loadProcessorContent() {
     const savedContent = localStorage.getItem(STORAGE_KEYS.processor);
     if (savedContent) {
@@ -49,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Save content to localStorage on input
   editor.addEventListener("input", () => {
     localStorage.setItem(STORAGE_KEYS.processor, editor.innerHTML);
   });
@@ -58,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       document.execCommand(btn.dataset.command, false, null);
       editor.focus();
-      // Trigger input event to save after formatting
       editor.dispatchEvent(new Event("input"));
     });
   });
@@ -108,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .split("\n")
         .map((p) => `<p>${p}</p>`)
         .join("");
-      editor.dispatchEvent(new Event("input")); // Save imported content
+      editor.dispatchEvent(new Event("input"));
     } catch (err) {
       console.error("Failed to open file:", err);
     }
@@ -162,59 +159,107 @@ document.addEventListener("DOMContentLoaded", () => {
         const cell = sheetContainer.querySelector(
           `[data-row="${i}"][data-col="${j}"]`,
         );
-        if (sheetData[i][j] && sheetData[i][j].toString().startsWith("=")) {
-          cell.textContent = evaluateFormula(i, j);
+        const cellValue = sheetData[i][j];
+        if (cellValue && cellValue.toString().startsWith("=")) {
+          cell.textContent = evaluateFormula(cellValue, new Set());
         } else {
-          cell.textContent = sheetData[i][j];
+          cell.textContent = cellValue;
         }
       }
     }
   }
 
-  function getCellRefValue(ref) {
+  function getCellRefValue(ref, visited) {
     const col = ref.charCodeAt(0) - 65;
     const row = parseInt(ref.substring(1), 10) - 1;
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#REF!";
+
     const cellValue = sheetData[row][col];
-    if (cellValue.startsWith("=")) return evaluateFormula(row, col);
+    if (cellValue.startsWith("=")) {
+      return evaluateFormula(cellValue, visited);
+    }
     return parseFloat(cellValue) || 0;
   }
 
-  function evaluateFormula(row, col) {
-    const formula = sheetData[row][col].substring(1).toUpperCase();
-    const sumRegex = /SUM\((.+):(.+)\)/;
-    if (sumRegex.test(formula)) {
-      const [, startRef, endRef] = formula.match(sumRegex);
-      const startCol = startRef.charCodeAt(0) - 65,
-        startRow = parseInt(startRef.substring(1)) - 1;
-      const endCol = endRef.charCodeAt(0) - 65,
-        endRow = parseInt(endRef.substring(1)) - 1;
+  /**
+   * Evaluates a formula string.
+   * @param {string} formula The formula string, e.g., "=A1+B1" or "=SUM(A1:B5, C1)".
+   * @param {Set<string>} visited A set to track visited cells for circular reference detection.
+   * @returns {number|string} The result of the calculation or an error string.
+   */
+  function evaluateFormula(formula, visited) {
+    // Circular reference detection
+    if (visited.has(formula)) {
+      return "#REF!";
+    }
+    visited.add(formula);
+
+    const formulaBody = formula.substring(1).toUpperCase();
+
+    // --- SUM Function ---
+    const sumRegex = /^SUM\((.+)\)$/;
+    if (sumRegex.test(formulaBody)) {
+      const args = formulaBody.match(sumRegex)[1].split(",");
       let sum = 0;
-      for (let r = startRow; r <= endRow; r++) {
-        for (let c = startCol; c <= endCol; c++) {
-          sum += parseFloat(evaluateFormula(r, c) || sheetData[r][c] || 0);
+      for (const arg of args) {
+        const trimmedArg = arg.trim();
+        const rangeRegex = /^([A-Z]+\d+):([A-Z]+\d+)$/;
+        if (rangeRegex.test(trimmedArg)) {
+          // It's a range like C1:C3
+          const [, startRef, endRef] = trimmedArg.match(rangeRegex);
+          const startCol = startRef.charCodeAt(0) - 65,
+            startRow = parseInt(startRef.substring(1)) - 1;
+          const endCol = endRef.charCodeAt(0) - 65,
+            endRow = parseInt(endRef.substring(1)) - 1;
+          for (let r = startRow; r <= endRow; r++) {
+            for (let c = startCol; c <= endCol; c++) {
+              const cellValue = sheetData[r][c];
+              sum +=
+                parseFloat(
+                  cellValue && cellValue.startsWith("=")
+                    ? evaluateFormula(cellValue, new Set(visited))
+                    : cellValue,
+                ) || 0;
+            }
+          }
+        } else {
+          // It's a single cell like A1
+          sum += getCellRefValue(trimmedArg, new Set(visited));
         }
       }
       return sum;
     }
 
-    const parts = formula.match(/([A-Z]+\d+)|([+\-*/])/g);
-    if (parts && parts.length === 3) {
-      const [val1, op, val2] = parts,
-        num1 = getCellRefValue(val1),
-        num2 = getCellRefValue(val2);
-      switch (op) {
+    // --- Basic Arithmetic (+, -, *, /) ---
+    const parts = formulaBody.match(/([A-Z]+\d+)|([+\-*/])/g);
+    if (!parts || parts.length % 2 === 0) return "#ERROR!";
+
+    let result = getCellRefValue(parts[0], new Set(visited));
+
+    // Loop through operators and operands from left to right
+    for (let i = 1; i < parts.length; i += 2) {
+      const operator = parts[i];
+      const nextOperandValue = getCellRefValue(parts[i + 1], new Set(visited));
+
+      switch (operator) {
         case "+":
-          return num1 + num2;
+          result += nextOperandValue;
+          break;
         case "-":
-          return num1 - num2;
+          result -= nextOperandValue;
+          break;
         case "*":
-          return num1 * num2;
+          result *= nextOperandValue;
+          break;
         case "/":
-          return num2 !== 0 ? num1 / num2 : "#DIV/0!";
+          if (nextOperandValue === 0) return "#DIV/0!";
+          result /= nextOperandValue;
+          break;
+        default:
+          return "#ERROR!";
       }
     }
-    return "#ERROR!";
+    return result;
   }
 
   sheetContainer.addEventListener("focusin", (e) => {
@@ -256,8 +301,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
   formulaBar.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && activeCell) {
+      e.preventDefault();
       updateSheetDisplay();
       activeCell.focus();
+    }
+  });
+
+  sheetContainer.addEventListener("keydown", (e) => {
+    if (!activeCell) return;
+
+    let row = parseInt(activeCell.dataset.row, 10);
+    let col = parseInt(activeCell.dataset.col, 10);
+
+    let newRow = row;
+    let newCol = col;
+
+    switch (e.key) {
+      case "ArrowUp":
+        if (row > 0) newRow--;
+        e.preventDefault();
+        break;
+      case "ArrowDown":
+        if (row < ROWS - 1) newRow++;
+        e.preventDefault();
+        break;
+      case "ArrowLeft":
+        if (window.getSelection().anchorOffset === 0) {
+          if (col > 0) newCol--;
+          e.preventDefault();
+        }
+        break;
+      case "ArrowRight":
+        if (
+          window.getSelection().anchorOffset === activeCell.textContent.length
+        ) {
+          if (col < COLS - 1) newCol++;
+          e.preventDefault();
+        }
+        break;
+      default:
+        return;
+    }
+
+    if (newRow !== row || newCol !== col) {
+      const newCell = sheetContainer.querySelector(
+        `[data-row="${newRow}"][data-col="${newCol}"]`,
+      );
+      if (newCell) {
+        newCell.focus();
+      }
     }
   });
 
@@ -296,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
       updateSheetDisplay();
-      saveSheetData(); // Save imported data to localStorage
+      saveSheetData();
     } catch (err) {
       console.error("Failed to open file:", err);
     }
@@ -381,7 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const file = await handle.getFile();
       const contents = await file.text();
       notes = contents.split(NOTE_SEPARATOR);
-      saveNotes(); // Save imported notes to localStorage
+      saveNotes();
       renderNotes();
     } catch (err) {
       console.error("Failed to open file:", err);

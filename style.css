@@ -83,6 +83,7 @@ main {
     background-color: #fff;
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    flex-wrap: wrap; /* Allows toolbar items to wrap on small screens */
 }
 
 .toolbar button {
@@ -113,6 +114,7 @@ main {
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    min-width: 150px;
 }
 #spreadsheet-container {
     flex-grow: 1;
@@ -159,18 +161,30 @@ main {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    transition: transform 0.2s;
+}
+.note:hover {
+    transform: scale(1.02);
 }
 .note-header {
     padding: 5px;
-    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
     background-color: #f9f4c3;
 }
-.note-delete {
+.note-header button {
     border: none;
     background: transparent;
     cursor: pointer;
     font-weight: bold;
+    font-size: 14px;
+}
+.note-delete {
     color: #c9302c;
+}
+.note-save {
+    color: var(--primary-color);
 }
 .note textarea {
     flex-grow: 1;
@@ -182,7 +196,7 @@ main {
     outline: none;
 }
 
-/* === NEW HELP SECTION STYLES === */
+/* Help Section */
 #help-section {
     padding: 20px 40px;
     overflow-y: auto;
@@ -203,7 +217,7 @@ main {
 .help-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 30px; /* Space between columns */
+    gap: 30px;
 }
 
 .help-column {
@@ -222,9 +236,26 @@ main {
     color: #c9302c;
 }
 
-/* Make the help section responsive */
+/* Responsive Design */
 @media (max-width: 800px) {
     .help-grid {
-        grid-template-columns: 1fr; /* Stack to a single column */
+        grid-template-columns: 1fr; /* Stack help columns */
+    }
+}
+@media (max-width: 600px) {
+    header {
+        position: static; /* Make header scroll with page on small screens */
+        height: auto;
+    }
+    main {
+        padding-top: 0;
+        height: auto;
+    }
+    .app-section {
+        height: auto;
+        min-height: calc(100vh - 120px);
+    }
+    #help-section {
+        padding: 20px;
     }
 }

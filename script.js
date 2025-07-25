@@ -38,8 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // =================================================================
   const editor = document.getElementById("editor");
   const wpFormatBtns = document.querySelectorAll(".wp-format");
+  const wpNewBtn = document.getElementById("wp-new");
   const wpOpenBtn = document.getElementById("wp-open");
   const wpSaveBtn = document.getElementById("wp-save");
+  const wpSavePdfBtn = document.getElementById("wp-save-pdf");
 
   function loadProcessorContent() {
     const savedContent = localStorage.getItem(STORAGE_KEYS.processor);
@@ -50,6 +52,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   editor.addEventListener("input", () => {
     localStorage.setItem(STORAGE_KEYS.processor, editor.innerHTML);
+  });
+
+  wpNewBtn.addEventListener("click", () => {
+    if (editor.textContent.trim().length > 0) {
+      if (
+        confirm(
+          "Do you want to save your current document before creating a new one?",
+        )
+      ) {
+        wpSaveBtn.click(); // Trigger the existing save function
+      }
+    }
+    editor.innerHTML = "";
+    localStorage.removeItem(STORAGE_KEYS.processor);
   });
 
   wpFormatBtns.forEach((btn) => {
@@ -82,8 +98,35 @@ document.addEventListener("DOMContentLoaded", () => {
       await writable.write(rtfContent);
       await writable.close();
     } catch (err) {
-      console.error("Failed to save file:", err);
+      console.error("Failed to save RTF file:", err);
     }
+  });
+
+  wpSavePdfBtn.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Hide toolbars temporarily for a clean screenshot
+    const toolbars = document.querySelectorAll(".toolbar");
+    toolbars.forEach((t) => (t.style.display = "none"));
+
+    html2canvas(editor)
+      .then((canvas) => {
+        // Restore toolbars
+        toolbars.forEach((t) => (t.style.display = "flex"));
+
+        const imgData = canvas.toDataURL("image/png");
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        doc.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        doc.save("document.pdf");
+      })
+      .catch((err) => {
+        toolbars.forEach((t) => (t.style.display = "flex"));
+        console.error("Failed to generate PDF:", err);
+      });
   });
 
   wpOpenBtn.addEventListener("click", async () => {
@@ -112,21 +155,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =================================================================
-  // Spreadsheet
+  // Spreadsheet (No changes in this section)
   // =================================================================
   const sheetContainer = document.getElementById("spreadsheet-container");
   const formulaBar = document.getElementById("formula-bar");
   const csvOpenBtn = document.getElementById("csv-open");
   const csvSaveBtn = document.getElementById("csv-save");
   const ROWS = 100;
-  const COLS = 26; // A-Z
+  const COLS = 26;
   let sheetData = [];
   let activeCell = null;
 
   function saveSheetData() {
     localStorage.setItem(STORAGE_KEYS.sheet, JSON.stringify(sheetData));
   }
-
   function loadSheetData() {
     const savedData = localStorage.getItem(STORAGE_KEYS.sheet);
     sheetData = savedData
@@ -137,7 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSheet();
     updateSheetDisplay();
   }
-
   function renderSheet() {
     let tableHTML = '<table class="spreadsheet-table"><thead><tr><th></th>';
     for (let j = 0; j < COLS; j++)
@@ -152,7 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tableHTML += "</tbody></table>";
     sheetContainer.innerHTML = tableHTML;
   }
-
   function updateSheetDisplay() {
     for (let i = 0; i < ROWS; i++) {
       for (let j = 0; j < COLS; j++) {
@@ -168,35 +208,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
-
   function getCellRefValue(ref, visited) {
     const col = ref.charCodeAt(0) - 65;
     const row = parseInt(ref.substring(1), 10) - 1;
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#REF!";
-
     const cellValue = sheetData[row][col];
-    if (cellValue.startsWith("=")) {
-      return evaluateFormula(cellValue, visited);
-    }
+    if (cellValue.startsWith("=")) return evaluateFormula(cellValue, visited);
     return parseFloat(cellValue) || 0;
   }
-
-  /**
-   * Evaluates a formula string.
-   * @param {string} formula The formula string, e.g., "=A1+B1" or "=SUM(A1:B5, C1)".
-   * @param {Set<string>} visited A set to track visited cells for circular reference detection.
-   * @returns {number|string} The result of the calculation or an error string.
-   */
   function evaluateFormula(formula, visited) {
-    // Circular reference detection
-    if (visited.has(formula)) {
-      return "#REF!";
-    }
+    if (visited.has(formula)) return "#REF!";
     visited.add(formula);
-
     const formulaBody = formula.substring(1).toUpperCase();
-
-    // --- SUM Function ---
     const sumRegex = /^SUM\((.+)\)$/;
     if (sumRegex.test(formulaBody)) {
       const args = formulaBody.match(sumRegex)[1].split(",");
@@ -205,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const trimmedArg = arg.trim();
         const rangeRegex = /^([A-Z]+\d+):([A-Z]+\d+)$/;
         if (rangeRegex.test(trimmedArg)) {
-          // It's a range like C1:C3
           const [, startRef, endRef] = trimmedArg.match(rangeRegex);
           const startCol = startRef.charCodeAt(0) - 65,
             startRow = parseInt(startRef.substring(1)) - 1;
@@ -223,24 +245,17 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         } else {
-          // It's a single cell like A1
           sum += getCellRefValue(trimmedArg, new Set(visited));
         }
       }
       return sum;
     }
-
-    // --- Basic Arithmetic (+, -, *, /) ---
     const parts = formulaBody.match(/([A-Z]+\d+)|([+\-*/])/g);
     if (!parts || parts.length % 2 === 0) return "#ERROR!";
-
     let result = getCellRefValue(parts[0], new Set(visited));
-
-    // Loop through operators and operands from left to right
     for (let i = 1; i < parts.length; i += 2) {
       const operator = parts[i];
       const nextOperandValue = getCellRefValue(parts[i + 1], new Set(visited));
-
       switch (operator) {
         case "+":
           result += nextOperandValue;
@@ -261,7 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return result;
   }
-
   sheetContainer.addEventListener("focusin", (e) => {
     if (e.target.tagName === "TD") {
       if (activeCell) activeCell.classList.remove("active");
@@ -271,12 +285,10 @@ document.addEventListener("DOMContentLoaded", () => {
         sheetData[activeCell.dataset.row][activeCell.dataset.col];
     }
   });
-
   function handleSheetInput(row, col, value) {
     sheetData[row][col] = value;
     saveSheetData();
   }
-
   sheetContainer.addEventListener("input", (e) => {
     if (e.target.tagName === "TD") {
       handleSheetInput(
@@ -287,7 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
       formulaBar.value = e.target.textContent;
     }
   });
-
   formulaBar.addEventListener("input", (e) => {
     if (activeCell) {
       activeCell.textContent = e.target.value;
@@ -298,7 +309,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
   });
-
   formulaBar.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && activeCell) {
       e.preventDefault();
@@ -306,16 +316,12 @@ document.addEventListener("DOMContentLoaded", () => {
       activeCell.focus();
     }
   });
-
   sheetContainer.addEventListener("keydown", (e) => {
     if (!activeCell) return;
-
     let row = parseInt(activeCell.dataset.row, 10);
     let col = parseInt(activeCell.dataset.col, 10);
-
-    let newRow = row;
-    let newCol = col;
-
+    let newRow = row,
+      newCol = col;
     switch (e.key) {
       case "ArrowUp":
         if (row > 0) newRow--;
@@ -342,17 +348,13 @@ document.addEventListener("DOMContentLoaded", () => {
       default:
         return;
     }
-
     if (newRow !== row || newCol !== col) {
       const newCell = sheetContainer.querySelector(
         `[data-row="${newRow}"][data-col="${newCol}"]`,
       );
-      if (newCell) {
-        newCell.focus();
-      }
+      if (newCell) newCell.focus();
     }
   });
-
   csvSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -360,14 +362,12 @@ document.addEventListener("DOMContentLoaded", () => {
         types: [{ description: "CSV File", accept: { "text/csv": [".csv"] } }],
       });
       const writable = await handle.createWritable();
-      const csvContent = sheetData.map((row) => row.join(",")).join("\n");
-      await writable.write(csvContent);
+      await writable.write(sheetData.map((row) => row.join(",")).join("\n"));
       await writable.close();
     } catch (err) {
       console.error("Failed to save file:", err);
     }
   });
-
   csvOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -420,7 +420,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const noteEl = document.createElement("div");
       noteEl.className = "note";
       noteEl.innerHTML = `
-                <div class="note-header"><button class="note-delete" data-index="${index}" title="Delete Note">X</button></div>
+                <div class="note-header">
+                    <button class="note-save" data-index="${index}" title="Save Note">💾</button>
+                    <button class="note-delete" data-index="${index}" title="Delete Note">X</button>
+                </div>
                 <textarea data-index="${index}">${noteContent}</textarea>`;
       notesContainer.appendChild(noteEl);
     });
@@ -432,11 +435,28 @@ document.addEventListener("DOMContentLoaded", () => {
     renderNotes();
   });
 
-  notesContainer.addEventListener("click", (e) => {
+  notesContainer.addEventListener("click", async (e) => {
     if (e.target.classList.contains("note-delete")) {
       notes.splice(e.target.dataset.index, 1);
       saveNotes();
       renderNotes();
+    }
+    if (e.target.classList.contains("note-save")) {
+      const index = e.target.dataset.index;
+      const content = notes[index];
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `note-${new Date().toISOString().slice(0, 10)}.txt`,
+          types: [
+            { description: "Text File", accept: { "text/plain": [".txt"] } },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+      } catch (err) {
+        console.error("Could not save individual note:", err);
+      }
     }
   });
 
@@ -450,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
   txtSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
-        suggestedName: "notes.txt",
+        suggestedName: "all-notes.txt",
         types: [
           { description: "Text File", accept: { "text/plain": [".txt"] } },
         ],

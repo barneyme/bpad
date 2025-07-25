@@ -102,30 +102,62 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // --- FIXED SAVE AS PDF BUTTON LOGIC ---
   wpSavePdfBtn.addEventListener("click", () => {
+    // Check if the required libraries are loaded
+    if (
+      typeof html2canvas === "undefined" ||
+      typeof window.jspdf === "undefined"
+    ) {
+      console.error("Error: PDF generation libraries are not loaded.");
+      alert(
+        "Sorry, the PDF function is unavailable. Please check your internet connection.",
+      );
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF("p", "mm", "a4"); // Create a standard A4 page
 
-    // Hide toolbars temporarily for a clean screenshot
     const toolbars = document.querySelectorAll(".toolbar");
-    toolbars.forEach((t) => (t.style.display = "none"));
+    toolbars.forEach((t) => (t.style.display = "none")); // Hide toolbars for a clean capture
 
-    html2canvas(editor)
+    html2canvas(editor, {
+      scale: 2, // Use higher resolution for better quality
+      scrollY: -window.scrollY, // Capture entire scrollable content
+      useCORS: true,
+    })
       .then((canvas) => {
-        // Restore toolbars
-        toolbars.forEach((t) => (t.style.display = "flex"));
+        toolbars.forEach((t) => (t.style.display = "flex")); // Show toolbars again
 
         const imgData = canvas.toDataURL("image/png");
         const imgProps = doc.getImageProperties(imgData);
+
+        // Calculate the image's dimensions to fit on the A4 page
         const pdfWidth = doc.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-        doc.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        let heightLeft = pdfHeight;
+        let position = 0;
+
+        // Add the first page
+        doc.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+        heightLeft -= doc.internal.pageSize.getHeight();
+
+        // Loop to add new pages if the content is longer than one page
+        while (heightLeft > 0) {
+          position = -heightLeft;
+          doc.addPage();
+          doc.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+          heightLeft -= doc.internal.pageSize.getHeight();
+        }
+
         doc.save("document.pdf");
       })
       .catch((err) => {
-        toolbars.forEach((t) => (t.style.display = "flex"));
+        toolbars.forEach((t) => (t.style.display = "flex")); // Ensure toolbars are always restored
         console.error("Failed to generate PDF:", err);
+        alert("An error occurred while generating the PDF.");
       });
   });
 

@@ -4,17 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bEdit - browser text editor">
+        <meta name="description" content="bpad - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="bEdit">
-        <title>bEdit</title>
+        <meta name="apple-mobile-web-app-title" content="bpad">
+        <title>bpad</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
-	<link rel="icon" type="image/png" sizes="192x192" href="./bedit192.png">
-	<link rel="icon" type="image/png" sizes="512x512" href="./bedit512.png">
-	<link rel="shortcut icon" href="./bedit192.png">
-	<link rel="apple-touch-icon" href="./bedit192.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
+	<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
+	<link rel="shortcut icon" href="./bpad192.png">
+	<link rel="apple-touch-icon" href="./bpad192.png">
     </head>
     <body>
         <div class="snow-container">
@@ -36,9 +36,9 @@
                 <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
                 <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
                 <span id="filename-container">
-                    <input id="filename-1" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-1" />
+                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
                     <datalist id="recent-files-datalist-1"></datalist>
-                    <input id="filename-2" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
                     <button id="recent-files-btn" title="Recent Files">&#9662;</button>
                     <div id="recent-files-dropdown" class="dropdown-content"></div>
@@ -71,7 +71,7 @@
                 </span>
                 <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
             </span>
-            <button id="bedit-btn" title="bEdit (CTRL + /)"><strong>b<span class="button-text">Edit</span></strong></button>
+            <button id="bpad-btn" title="bpad (CTRL + /)"><strong>b<span class="button-text">Edit</span></strong></button>
         </nav>
         <div id="editor-container">
             <div class="editor-pane" id="editor-pane-1">
@@ -81,7 +81,7 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bEdit. Start typing to begin or click 'bEdit' ('b' on mobile) for help and settings."
+                    placeholder="Welcome to bpad. Start typing to begin or click 'bpad' ('b' on mobile) for help and settings."
                     spellcheck="false"
                 ></textarea>
             </div>
@@ -140,17 +140,17 @@
         </div>
         <div id="settings-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>bEdit</h2>
+            <h2>bpad</h2>
             <div class="b-modal-layout">
                 <div class="b-modal-column-left">
                     <p>
-                        Open bedit.org in web browser and start writing. Changes are automatically saved in your browser.<br />
+                        Open bpad.me in web browser and start writing. Changes are automatically saved in your browser.<br />
                         Remember to "Save" a copy of your file before clearing your browser cache.<br />
-                        bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
+                        bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
                         file.<br />
-                        Files can be opened from your device using the "Open" button or by dragging and dropping in to bEdit.<br />
+                        Files can be opened from your device using the "Open" button or by dragging and dropping in to bpad.<br />
                         To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
-                        bEdit PWA can edit and save local files directly once installed.<br />
+                        bpad PWA can edit and save local files directly once installed.<br />
                         &#8595; displays the current line number.<br />
                         &#8594; displays the current character position.<br />
                         = displays the current word count.<br />
@@ -165,11 +165,11 @@
                         <b>CTRL + =</b> to lock the current file with a password, or unlock an existing one.<br />
                         <b>CTRL + Z</b> (&#x21A9; Undo) to undo the last change and CTRL + Y to redo it.<br />
                         <b>CTRL + M</b> to cycle through Light, Dark, and Snow modes.<br />
-                        <b>&#x2B07; PWA</b> installs bEdit as an offline Progressive Web App.<br />
-                        <b>CTRL + /</b> to open the bEdit help and settings window.<br />
+                        <b>&#x2B07; PWA</b> installs bpad as an offline Progressive Web App.<br />
+                        <b>CTRL + /</b> to open the bpad help and settings window.<br />
                     </p>
                     <p>
-                        bEdit.org does not (and cannot):<br />
+                        bpad.me does not (and cannot):<br />
                         <ul>
                         <li>access your content,</li>
                         <li>criticize your writing or coding,</li>
@@ -180,8 +180,8 @@
                         </ul>
                     </p>
                     <p>
-                        bEdit was created by <a href="https://barney.me">Barney</a>.<br />
-                        I hope you find bEdit useful. If you want to support bEdit.org buy me a
+                        bpad was created by <a href="https://barney.me">Barney</a>.<br />
+                        I hope you find bpad useful. If you want to support bpad.me buy me a
                         <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
                     </p>
                 </div>

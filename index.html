@@ -36,13 +36,13 @@
                         <u>U</u>
                     </button>
                     <button class="wp-format" data-command="insertOrderedList">
-                        Ordered List
+                        Number List
                     </button>
                     <button
                         class="wp-format"
                         data-command="insertUnorderedList"
                     >
-                        Unordered List
+                        Bullet List
                     </button>
                 </div>
                 <div id="editor" contenteditable="true"></div>
@@ -114,33 +114,44 @@
                                 at the top will show its content.
                             </li>
                             <li>
-                                Enter text or numbers directly into a cell or
-                                into the formula bar.
-                            </li>
-                            <li>
                                 <b
                                     >To create a formula, start with an equals
                                     sign (<code>=</code>).</b
                                 >
                                 <ul>
                                     <li>
-                                        <b>Basic Math:</b> <code>=A1+B1</code>,
-                                        <code>=C2-D3</code>, etc.
+                                        <b>Basic Math:</b> Perform calculations
+                                        with multiple cells. Examples:
+                                        <ul>
+                                            <li>
+                                                Addition: <code>=A1+B1+C1</code>
+                                            </li>
+                                            <li>
+                                                Subtraction: <code>=A1-B1</code>
+                                            </li>
+                                            <li>
+                                                Multiplication:
+                                                <code>=A1*B1*C1</code>
+                                            </li>
+                                            <li>
+                                                Division: <code>=A1/B1</code>
+                                            </li>
+                                        </ul>
                                     </li>
                                     <li>
-                                        <b>SUM Function:</b>
-                                        <code>=SUM(A1:A10)</code>
+                                        <b>SUM Function:</b> Add cells and
+                                        ranges together.
+                                        <ul>
+                                            <li>
+                                                <code>=SUM(A1:A10, C5)</code>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </li>
                             <li>
                                 Press <b>Enter</b> in the formula bar to see the
                                 result.
-                            </li>
-                            <li>
-                                Use the <b>📂 Open</b> and
-                                <b>💾 Save</b> buttons to import/export
-                                <code>.csv</code> files.
                             </li>
                         </ul>
                     </div>

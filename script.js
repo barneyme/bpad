@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // --- SAVE RTF LOGIC (Unchanged) ---
+  // --- CORRECTED SAVE RTF LOGIC ---
   wpSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -125,13 +125,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const file = await handle.getFile();
       let contents = await file.text();
 
-      // This is a simplified RTF to HTML parser, designed to be the inverse of the save function.
+      // 1. Strip the header and footer to isolate the body.
+      const headerRegex =
+        /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
+      contents = contents.replace(headerRegex, "");
+      contents = contents.replace(/}$/, ""); // Remove the final closing brace
 
-      // 1. Remove RTF header/metadata and the final closing brace for simpler processing.
-      contents = contents.replace(/^{\\rtf1[\\s\\S]*?}\\viewkind4\\uc1\n/, "");
-      contents = contents.replace(/}}$/, "}");
-
-      // 2. Convert paragraph breaks and the app-specific list item format.
+      // 2. Convert paragraph breaks and list items.
       contents = contents.replace(
         /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
         "<li>$1</li>",
@@ -139,25 +139,19 @@ document.addEventListener("DOMContentLoaded", () => {
       contents = contents.replace(/\\par\n?/g, "<br>");
 
       // 3. Iteratively convert style groups (e.g., {\b ...}) to HTML tags.
-      // This loop handles nested styles by converting the innermost groups first.
-      const replacements = {
-        b: "b",
-        i: "i",
-        ul: "u",
-      };
+      const replacements = { b: "b", i: "i", ul: "u" };
 
       let prevContents;
       do {
         prevContents = contents;
         for (const rtfTag in replacements) {
           const htmlTag = replacements[rtfTag];
-          // Regex to find a tag group that contains NO other curly braces {}.
           const regex = new RegExp(`{\\\\${rtfTag}\\s?([^{}]+)}`, "g");
           contents = contents.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
         }
-      } while (prevContents !== contents); // Loop until no more replacements can be made.
+      } while (prevContents !== contents);
 
-      // 4. Clean up any remaining RTF control words or stray braces.
+      // 4. Clean up any remaining RTF artifacts.
       const html = contents.replace(/\\.+?\s?|[\{\}]/g, "").trim();
 
       editor.innerHTML = html;
@@ -169,25 +163,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Keyboard Shortcuts for Word Processor ---
   document.addEventListener("keydown", (e) => {
-    // Return early if the processor tab is not active
     if (
       !document.getElementById("processor-section").classList.contains("active")
     ) {
       return;
     }
 
-    // Use `metaKey` for macOS (Cmd key) and `ctrlKey` for Windows/Linux
     if (e.metaKey || e.ctrlKey) {
       switch (e.key.toLowerCase()) {
-        case "s": // Ctrl+S or Cmd+S
+        case "s":
           e.preventDefault();
           wpSaveBtn.click();
           break;
-        case "o": // Ctrl+O or Cmd+O
+        case "o":
           e.preventDefault();
           wpOpenBtn.click();
           break;
-        case "n": // Ctrl+N or Cmd+N
+        case "n":
           e.preventDefault();
           wpNewBtn.click();
           break;
@@ -240,7 +232,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const cell = sheetContainer.querySelector(
           `[data-row="${i}"][data-col="${j}"]`,
         );
-        // Do not update the cell that is currently being edited
         if (cell === activeCell) {
           continue;
         }
@@ -257,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const col = ref.charCodeAt(0) - 65;
     const row = parseInt(ref.substring(1), 10) - 1;
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#REF!";
-    // If the cell being referenced is currently active, use its text content
     if (
       activeCell &&
       activeCell.dataset.row == row &&
@@ -335,7 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (activeCell) activeCell.classList.remove("active");
       activeCell = e.target;
       activeCell.classList.add("active");
-      // Load the raw formula or value into the formula bar, not the calculated result
       formulaBar.value =
         sheetData[activeCell.dataset.row][activeCell.dataset.col] || "";
     }
@@ -344,7 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
   sheetContainer.addEventListener("focusout", (e) => {
     if (e.target.tagName === "TD") {
       activeCell = null;
-      updateSheetDisplay(); // Update the whole sheet when focus is lost
+      updateSheetDisplay();
     }
   });
 

@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/<p>(.*?)<\/p>/g, "$1\\par\n")
         .replace(
           /<li>(.*?)<\/li>/g,
-          "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}",
+          "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}"
         )
         .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "")
         .replace(/<[^>]+>/g, "");
@@ -121,14 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const file = await handle.getFile();
       let contents = await file.text();
 
-      const headerRegex =
-        /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
+      const headerRegex = /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
       contents = contents.replace(headerRegex, "");
       contents = contents.replace(/}$/, "");
 
       contents = contents.replace(
         /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
-        "<li>$1</li>",
+        "<li>$1</li>"
       );
       contents = contents.replace(/\\par\n?/g, "<br>");
 
@@ -138,7 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
         prevContents = contents;
         for (const rtfTag in replacements) {
           const htmlTag = replacements[rtfTag];
-          const regex = new RegExp(`{\\\\${rtfTag}\\s?([^{}]+)}`, "g");
+          const regex = new RegExp(
+            `{\\\\${rtfTag}\\s?([^{}]+)}`,
+            "g"
+          );
           contents = contents.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
         }
       } while (prevContents !== contents);
@@ -287,7 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       return sum;
     }
-    const parts = formulaBody.match(/([A-Z]+\d+)|([+\-*/])/g);
+    // **FIXED a syntax error in the regex below by escaping the forward slash**
+    const parts = formulaBody.match(/([A-Z]+\d+)|([+\-*\/])/g);
     if (!parts || parts.length % 2 === 0) return "#ERROR!";
     let result = getCellRefValue(parts[0], new Set(visited));
     for (let i = 1; i < parts.length; i += 2) {
@@ -553,7 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
       notes = contents.split(NOTE_SEPARATOR);
       saveNotes();
       renderNotes();
-    } catch (err) {
+    } catch (err)_ {
       console.error("Failed to open file:", err);
     }
   });

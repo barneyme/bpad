@@ -25,8 +25,10 @@
             <section id="processor-section" class="app-section active">
                 <div class="toolbar">
                     <button id="wp-new" title="New Document">📄 New</button>
-                    <button id="wp-open" title="Open .RTF">📂 Open</button>
-                    <button id="wp-save" title="Save .RTF">💾 Save .RTF</button>
+                    <button id="wp-open" title="Open RTF">📂 Open</button>
+                    <button id="wp-save" title="Save as RTF">
+                        💾 Save as RTF
+                    </button>
                     <button class="wp-format" data-command="bold">
                         <b>B</b>
                     </button>
@@ -37,23 +39,23 @@
                         <u>U</u>
                     </button>
                     <button class="wp-format" data-command="insertOrderedList">
-                        Number List
+                        Ordered List
                     </button>
                     <button
                         class="wp-format"
                         data-command="insertUnorderedList"
                     >
-                        Bullet List
+                        Unordered List
                     </button>
                 </div>
-                <div id="editor" contenteditable="true"></div>
+                <div id="editor" contenteditable="true" spellcheck="true"></div>
             </section>
 
             <section id="sheet-section" class="app-section">
                 <div class="toolbar">
-                    <button id="csv-open" title="Open .CSV">📂 Open</button>
-                    <button id="csv-save" title="Save .CSV">
-                        💾 Save .CSV
+                    <button id="csv-open" title="Open CSV">📂 Open</button>
+                    <button id="csv-save" title="Save as CSV">
+                        💾 Save as CSV
                     </button>
                     <input
                         type="text"
@@ -66,9 +68,9 @@
 
             <section id="notes-section" class="app-section">
                 <div class="toolbar">
-                    <button id="add-note">➕ New Note</button>
-                    <button id="txt-open" title="Open .TXT">📂 Open</button>
-                    <button id="txt-save" title="Save All as .TXT">
+                    <button id="add-note">➕ Add Note</button>
+                    <button id="txt-open" title="Open TXT">📂 Open</button>
+                    <button id="txt-save" title="Save All as TXT">
                         💾 Save All
                     </button>
                 </div>
@@ -162,7 +164,7 @@
                         <h3>Sticky Notes 📌</h3>
                         <ul>
                             <li>
-                                Click <b>➕ New Note</b> to create a new sticky
+                                Click <b>➕ Add Note</b> to create a new sticky
                                 note.
                             </li>
                             <li>

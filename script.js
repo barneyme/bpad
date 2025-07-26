@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // --- CORRECTED SAVE RTF LOGIC ---
   wpSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -88,12 +89,24 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const writable = await handle.createWritable();
       const htmlContent = editor.innerHTML;
-      const rtfContent = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\\pard\\sa200\\sl276\\slmult1\\f0\\fs24 ${htmlContent
-        .replace(/<br>/g, "\\par ")
+
+      // Convert basic HTML to a simple, more valid RTF structure
+      const rtfBody = htmlContent
         .replace(/<b>(.*?)<\/b>/g, "{\\b $1}")
         .replace(/<i>(.*?)<\/i>/g, "{\\i $1}")
         .replace(/<u>(.*?)<\/u>/g, "{\\ul $1}")
-        .replace(/<(?:.|\n)*?>/gm, "")}\\par}`;
+        .replace(/<br>/g, "\\par\n")
+        .replace(/<p>(.*?)<\/p>/g, "$1\\par\n")
+        .replace(
+          /<li>(.*?)<\/li>/g,
+          "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}",
+        ) // Basic list support
+        .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "") // Remove list container tags
+        .replace(/<[^>]+>/g, ""); // Strip any remaining, unsupported HTML tags
+
+      // Wrap the body in a minimal RTF document structure
+      const rtfContent = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n${rtfBody}}`;
+
       await writable.write(rtfContent);
       await writable.close();
     } catch (err) {
@@ -101,6 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // --- CORRECTED OPEN RTF LOGIC ---
   wpOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -110,16 +124,21 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const file = await handle.getFile();
       const contents = await file.text();
-      let text = contents
-        .replace(/\\par[d]?/g, "\n")
-        .replace(/\{\\.*? (.*?)\}/g, "$1")
-        .replace(/\\.*?\s?/g, "")
-        .replace(/\{|\}/g, "")
+
+      // Convert basic RTF tags back to HTML
+      let html = contents
+        .replace(/\\par\s?\n?/g, "<br>") // Convert \par to <br>
+        .replace(/\{\\b\s(.*?)\}/g, "<b>$1</b>") // Bold
+        .replace(/\{\\i\s(.*?)\}/g, "<i>$1</i>") // Italic
+        .replace(/\{\\ul\s(.*?)\}/g, "<u>$1</u>"); // Underline
+
+      // Clean up the remaining RTF structure and control words
+      // This regex removes the header, font tables, and other RTF codes.
+      html = html
+        .replace(/\{\*?\\[^{}]+}|[^{\s]*\\.[a-z0-9]+\s?|[\{\}]/g, "")
         .trim();
-      editor.innerHTML = text
-        .split("\n")
-        .map((p) => `<p>${p}</p>`)
-        .join("");
+
+      editor.innerHTML = html;
       editor.dispatchEvent(new Event("input"));
     } catch (err) {
       console.error("Failed to open file:", err);
@@ -155,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =================================================================
-  // Spreadsheet (No changes in this section)
+  // Spreadsheet
   // =================================================================
   const sheetContainer = document.getElementById("spreadsheet-container");
   const formulaBar = document.getElementById("formula-bar");
@@ -199,6 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const cell = sheetContainer.querySelector(
           `[data-row="${i}"][data-col="${j}"]`,
         );
+        // Do not update the cell that is currently being edited
+        if (cell === activeCell) {
+          continue;
+        }
         const cellValue = sheetData[i][j];
         if (cellValue && cellValue.toString().startsWith("=")) {
           cell.textContent = evaluateFormula(cellValue, new Set());
@@ -212,8 +235,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const col = ref.charCodeAt(0) - 65;
     const row = parseInt(ref.substring(1), 10) - 1;
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#REF!";
+    // If the cell being referenced is currently active, use its text content
+    if (
+      activeCell &&
+      activeCell.dataset.row == row &&
+      activeCell.dataset.col == col
+    ) {
+      return parseFloat(activeCell.textContent) || 0;
+    }
     const cellValue = sheetData[row][col];
-    if (cellValue.startsWith("=")) return evaluateFormula(cellValue, visited);
+    if (cellValue && cellValue.startsWith("="))
+      return evaluateFormula(cellValue, visited);
     return parseFloat(cellValue) || 0;
   }
   function evaluateFormula(formula, visited) {
@@ -281,10 +313,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (activeCell) activeCell.classList.remove("active");
       activeCell = e.target;
       activeCell.classList.add("active");
+      // Load the raw formula or value into the formula bar, not the calculated result
       formulaBar.value =
-        sheetData[activeCell.dataset.row][activeCell.dataset.col];
+        sheetData[activeCell.dataset.row][activeCell.dataset.col] || "";
     }
   });
+
+  sheetContainer.addEventListener("focusout", (e) => {
+    if (e.target.tagName === "TD") {
+      activeCell = null;
+      updateSheetDisplay(); // Update the whole sheet when focus is lost
+    }
+  });
+
   function handleSheetInput(row, col, value) {
     sheetData[row][col] = value;
     saveSheetData();
@@ -343,6 +384,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
           if (col < COLS - 1) newCol++;
           e.preventDefault();
+        }
+        break;
+      case "Enter":
+        if (!e.shiftKey) {
+          e.preventDefault();
+          if (row < ROWS - 1) newRow++;
         }
         break;
       default:
@@ -504,4 +551,11 @@ document.addEventListener("DOMContentLoaded", () => {
   loadProcessorContent();
   loadSheetData();
   loadNotes();
+
+  // --- Periodically update spreadsheet formulas ---
+  setInterval(() => {
+    if (document.getElementById("sheet-section").classList.contains("active")) {
+      updateSheetDisplay();
+    }
+  }, 3000);
 });

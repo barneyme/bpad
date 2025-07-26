@@ -1,12 +1,4 @@
-sheetContainer.addEventListener("input", (e) => {
-    if (e.target.classList.contains('sheet-cell') && activeCell === e.target) {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-
-      // Update formula bar to match cell content while typing
-      formulaBar.value = e.target.textContent;
-    }
-  });document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   // --- PWA Service Worker Registration ---
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -271,16 +263,19 @@ sheetContainer.addEventListener("input", (e) => {
   let isUpdating = false;
   let calculationCache = new Map();
 
-  // Initialize sheet data structure
   function initializeSheetData() {
-    return Array(ROWS).fill(null).map(() =>
-      Array(COLS).fill(null).map(() => ({
-        value: "",
-        formula: "",
-        calculated: "",
-        error: null
-      }))
-    );
+    return Array(ROWS)
+      .fill(null)
+      .map(() =>
+        Array(COLS)
+          .fill(null)
+          .map(() => ({
+            value: "",
+            formula: "",
+            calculated: "",
+            error: null,
+          })),
+      );
   }
 
   function saveSheetData() {
@@ -292,17 +287,29 @@ sheetContainer.addEventListener("input", (e) => {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // Handle legacy data format
-        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0][0] === 'string') {
-          // Convert legacy format
-          sheetData = Array(ROWS).fill(null).map((_, row) =>
-            Array(COLS).fill(null).map((_, col) => ({
-              value: parsed[row] && parsed[row][col] ? parsed[row][col] : "",
-              formula: parsed[row] && parsed[row][col] && parsed[row][col].startsWith('=') ? parsed[row][col] : "",
-              calculated: "",
-              error: null
-            }))
-          );
+        if (
+          Array.isArray(parsed) &&
+          parsed.length > 0 &&
+          typeof parsed[0][0] === "string"
+        ) {
+          sheetData = Array(ROWS)
+            .fill(null)
+            .map((_, row) =>
+              Array(COLS)
+                .fill(null)
+                .map((_, col) => ({
+                  value:
+                    parsed[row] && parsed[row][col] ? parsed[row][col] : "",
+                  formula:
+                    parsed[row] &&
+                    parsed[row][col] &&
+                    parsed[row][col].startsWith("=")
+                      ? parsed[row][col]
+                      : "",
+                  calculated: "",
+                  error: null,
+                })),
+            );
         } else {
           sheetData = parsed;
         }
@@ -320,7 +327,7 @@ sheetContainer.addEventListener("input", (e) => {
 
   function parseCSVRow(row) {
     const result = [];
-    let current = '';
+    let current = "";
     let inQuotes = false;
     let i = 0;
 
@@ -329,18 +336,15 @@ sheetContainer.addEventListener("input", (e) => {
 
       if (char === '"') {
         if (inQuotes && row[i + 1] === '"') {
-          // Escaped quote
           current += '"';
           i += 2;
         } else {
-          // Toggle quote state
           inQuotes = !inQuotes;
           i++;
         }
-      } else if (char === ',' && !inQuotes) {
-        // End of field
+      } else if (char === "," && !inQuotes) {
         result.push(current);
-        current = '';
+        current = "";
         i++;
       } else {
         current += char;
@@ -348,209 +352,8 @@ sheetContainer.addEventListener("input", (e) => {
       }
     }
 
-    // Add the last field
     result.push(current);
     return result;
-  }
-
-  // =================================================================
-  // Sticky Notes
-  // =================================================================
-  const notesContainer = document.getElementById("notes-container");
-  const addNoteBtn = document.getElementById("add-note");
-  const txtOpenBtn = document.getElementById("txt-open");
-  const txtSaveBtn = document.getElementById("txt-save");
-  let notes = [];
-  const NOTE_SEPARATOR = "\n--- bPad Note Break ---\n";
-
-  function saveNotes() {
-    localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
-  }
-
-  function loadNotes() {
-    const savedNotes = localStorage.getItem(STORAGE_KEYS.notes);
-    notes = savedNotes ? JSON.parse(savedNotes) : [];
-    renderNotes();
-  }
-
-  function renderNotes() {
-    notesContainer.innerHTML = "";
-    notes.forEach((noteContent, index) => {
-      const noteEl = document.createElement("div");
-      noteEl.className = "note";
-      noteEl.innerHTML = `
-        <div class="note-header">
-          <button class="note-save" data-index="${index}" title="Save Note">💾</button>
-          <button class="note-delete" data-index="${index}" title="Delete Note">×</button>
-        </div>
-        <textarea data-index="${index}" placeholder="Type your note here...">${noteContent}</textarea>`;
-      notesContainer.appendChild(noteEl);
-    });
-  }
-
-  addNoteBtn.addEventListener("click", () => {
-    notes.push("");
-    saveNotes();
-    renderNotes();
-    // Focus on the new note
-    setTimeout(() => {
-      const textareas = notesContainer.querySelectorAll("textarea");
-      if (textareas.length > 0) {
-        textareas[textareas.length - 1].focus();
-      }
-    }, 50);
-  });
-
-  notesContainer.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("note-delete")) {
-      const index = parseInt(e.target.dataset.index);
-      if (confirm("Are you sure you want to delete this note?")) {
-        notes.splice(index, 1);
-        saveNotes();
-        renderNotes();
-      }
-    }
-
-    if (e.target.classList.contains("note-save")) {
-      const index = parseInt(e.target.dataset.index);
-      const content = notes[index];
-
-      if (!supportsFileSystemAccess) {
-        // Fallback download
-        const blob = new Blob([content], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `note-${new Date().toISOString().slice(0, 10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return;
-      }
-
-      try {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: `note-${new Date().toISOString().slice(0, 10)}.txt`,
-          types: [
-            { description: "Text File", accept: { "text/plain": [".txt"] } },
-          ],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(content);
-        await writable.close();
-      } catch (err) {
-        console.error("Could not save individual note:", err);
-      }
-    }
-  });
-
-  notesContainer.addEventListener("input", (e) => {
-    if (e.target.tagName === "TEXTAREA") {
-      const index = parseInt(e.target.dataset.index);
-      notes[index] = e.target.value;
-      saveNotes();
-    }
-  });
-
-  // Save all notes with fallback
-  txtSaveBtn.addEventListener("click", async () => {
-    const allNotesContent = notes.join(NOTE_SEPARATOR);
-
-    if (!supportsFileSystemAccess) {
-      // Fallback download
-      const blob = new Blob([allNotesContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "all-notes.txt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "all-notes.txt",
-        types: [
-          { description: "Text File", accept: { "text/plain": [".txt"] } },
-        ],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(allNotesContent);
-      await writable.close();
-    } catch (err) {
-      console.error("Failed to save file:", err);
-    }
-  });
-
-  // Open notes with fallback
-  txtOpenBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      // Fallback file input
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".txt";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const contents = await file.text();
-          notes = contents.split(NOTE_SEPARATOR);
-          saveNotes();
-          renderNotes();
-        }
-      };
-      input.click();
-      return;
-    }
-
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [
-          { description: "Text Files", accept: { "text/plain": [".txt"] } },
-        ],
-      });
-      const file = await handle.getFile();
-      const contents = await file.text();
-      notes = contents.split(NOTE_SEPARATOR);
-      saveNotes();
-      renderNotes();
-    } catch (err) {
-      console.error("Failed to open file:", err);
-    }
-  });
-
-  // --- Initial Load From Storage ---
-  loadProcessorContent();
-  loadSheetData();
-  loadNotes();
-
-  // --- Keyboard shortcuts for spreadsheet ---
-  document.addEventListener("keydown", (e) => {
-    if (!document.getElementById("sheet-section").classList.contains("active")) {
-      return;
-    }
-
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key.toLowerCase()) {
-        case 's':
-          e.preventDefault();
-          csvSaveBtn.click();
-          break;
-        case 'o':
-          e.preventDefault();
-          csvOpenBtn.click();
-          break;
-        case 'a':
-          e.preventDefault();
-          // Select all - could be implemented later
-          break;
-      }
-    }
-  });
-});
   }
 
   function renderSheet() {
@@ -570,23 +373,58 @@ sheetContainer.addEventListener("input", (e) => {
   }
 
   function updateCellDisplay(row, col) {
-    const cell = sheetContainer.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    const cell = sheetContainer.querySelector(
+      `[data-row="${row}"][data-col="${col}"]`,
+    );
     if (!cell) return;
 
     const cellData = sheetData[row][col];
 
     if (cellData.error) {
       cell.textContent = cellData.error;
-      cell.classList.add('error');
-      cell.classList.remove('formula');
+      cell.classList.add("error");
+      cell.classList.remove("formula");
     } else if (cellData.formula) {
       cell.textContent = cellData.calculated;
-      cell.classList.add('formula');
-      cell.classList.remove('error');
+      cell.classList.add("formula");
+      cell.classList.remove("error");
     } else {
       cell.textContent = cellData.value;
-      cell.classList.remove('error', 'formula');
+      cell.classList.remove("error", "formula");
     }
+  }
+
+  function recalculateAll() {
+    calculationCache.clear();
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        recalculateCell(i, j);
+      }
+    }
+  }
+
+  function parseCSV(contents) {
+    const rows = contents.split("\n");
+    sheetData = initializeSheetData();
+
+    rows.forEach((row, r) => {
+      if (r < ROWS && row.trim()) {
+        const cols = parseCSVRow(row);
+        cols.forEach((col, c) => {
+          if (c < COLS) {
+            sheetData[r][c].value = col;
+            if (col.startsWith("=")) {
+              sheetData[r][c].formula = col;
+              sheetData[r][c].value = "";
+            }
+          }
+        });
+      }
+    });
+
+    recalculateAll();
+    renderSheet(); // Re-render the sheet with new data
+    updateAllCellDisplays(); // Update the display of all cells
   }
 
   function updateAllCellDisplays() {
@@ -602,7 +440,6 @@ sheetContainer.addEventListener("input", (e) => {
     isUpdating = false;
   }
 
-  // Improved cell reference parsing
   function parseCellRef(ref) {
     const match = ref.match(/^([A-Z]+)(\d+)$/);
     if (!match) return null;
@@ -641,49 +478,45 @@ sheetContainer.addEventListener("input", (e) => {
     }
 
     const numValue = parseFloat(cellData.value);
-    return isNaN(numValue) ? (cellData.value === "" ? 0 : cellData.value) : numValue;
+    return isNaN(numValue)
+      ? cellData.value === ""
+        ? 0
+        : cellData.value
+      : numValue;
   }
 
-  // Enhanced formula evaluation with better error handling
   function evaluateFormula(formula, visited = new Set()) {
     if (!formula || !formula.startsWith("=")) return "#ERROR!";
 
     try {
       const formulaBody = formula.substring(1).trim();
 
-      // Handle SUM function with improved range parsing
       const sumMatch = formulaBody.match(/^SUM\s*\((.+)\)$/i);
       if (sumMatch) {
         return evaluateSumFunction(sumMatch[1], visited);
       }
 
-      // Handle AVERAGE function
       const avgMatch = formulaBody.match(/^AVERAGE\s*\((.+)\)$/i);
       if (avgMatch) {
         return evaluateAverageFunction(avgMatch[1], visited);
       }
 
-      // Handle COUNT function
       const countMatch = formulaBody.match(/^COUNT\s*\((.+)\)$/i);
       if (countMatch) {
         return evaluateCountFunction(countMatch[1], visited);
       }
 
-      // Handle MAX function
       const maxMatch = formulaBody.match(/^MAX\s*\((.+)\)$/i);
       if (maxMatch) {
         return evaluateMaxFunction(maxMatch[1], visited);
       }
 
-      // Handle MIN function
       const minMatch = formulaBody.match(/^MIN\s*\((.+)\)$/i);
       if (minMatch) {
         return evaluateMinFunction(minMatch[1], visited);
       }
 
-      // Handle basic arithmetic with improved parsing
       return evaluateArithmeticExpression(formulaBody, visited);
-
     } catch (error) {
       console.error("Formula evaluation error:", error);
       return "#ERROR!";
@@ -692,38 +525,42 @@ sheetContainer.addEventListener("input", (e) => {
 
   function evaluateSumFunction(args, visited) {
     const values = parseFormulaArgs(args, visited);
-    return values.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+    return values.reduce(
+      (sum, val) => sum + (typeof val === "number" ? val : 0),
+      0,
+    );
   }
 
   function evaluateAverageFunction(args, visited) {
     const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter(val => typeof val === 'number');
-    return numbers.length > 0 ? numbers.reduce((sum, val) => sum + val, 0) / numbers.length : 0;
+    const numbers = values.filter((val) => typeof val === "number");
+    return numbers.length > 0
+      ? numbers.reduce((sum, val) => sum + val, 0) / numbers.length
+      : 0;
   }
 
   function evaluateCountFunction(args, visited) {
     const values = parseFormulaArgs(args, visited);
-    return values.filter(val => typeof val === 'number').length;
+    return values.filter((val) => typeof val === "number").length;
   }
 
   function evaluateMaxFunction(args, visited) {
     const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter(val => typeof val === 'number');
+    const numbers = values.filter((val) => typeof val === "number");
     return numbers.length > 0 ? Math.max(...numbers) : 0;
   }
 
   function evaluateMinFunction(args, visited) {
     const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter(val => typeof val === 'number');
+    const numbers = values.filter((val) => typeof val === "number");
     return numbers.length > 0 ? Math.min(...numbers) : 0;
   }
 
   function parseFormulaArgs(args, visited) {
     const values = [];
-    const argParts = args.split(',').map(arg => arg.trim());
+    const argParts = args.split(",").map((arg) => arg.trim());
 
     for (const arg of argParts) {
-      // Check if it's a range (e.g., A1:C3)
       const rangeMatch = arg.match(/^([A-Z]+\d+):([A-Z]+\d+)$/);
       if (rangeMatch) {
         const startCoords = parseCellRef(rangeMatch[1]);
@@ -753,13 +590,9 @@ sheetContainer.addEventListener("input", (e) => {
             }
           }
         }
-      }
-      // Check if it's a single cell reference
-      else if (parseCellRef(arg)) {
+      } else if (parseCellRef(arg)) {
         values.push(getCellRefValue(arg, visited));
-      }
-      // Check if it's a number
-      else {
+      } else {
         const numValue = parseFloat(arg);
         if (!isNaN(numValue)) {
           values.push(numValue);
@@ -771,22 +604,19 @@ sheetContainer.addEventListener("input", (e) => {
   }
 
   function evaluateArithmeticExpression(expression, visited) {
-    // Enhanced tokenizer that handles cell references, numbers, and operators
     const tokens = expression.match(/([A-Z]+\d+|\d+(?:\.\d+)?|[+\-*/()])/g);
     if (!tokens || tokens.length === 0) return "#ERROR!";
 
-    // Convert tokens to values
-    const processedTokens = tokens.map(token => {
+    const processedTokens = tokens.map((token) => {
       if (parseCellRef(token)) {
         return getCellRefValue(token, visited);
       } else if (!isNaN(parseFloat(token))) {
         return parseFloat(token);
       } else {
-        return token; // Operator or parenthesis
+        return token;
       }
     });
 
-    // Simple expression evaluator (could be enhanced with proper operator precedence)
     try {
       return evaluateTokens(processedTokens);
     } catch (e) {
@@ -795,30 +625,35 @@ sheetContainer.addEventListener("input", (e) => {
   }
 
   function evaluateTokens(tokens) {
-    // Handle single value
     if (tokens.length === 1) {
-      return typeof tokens[0] === 'number' ? tokens[0] : "#ERROR!";
+      return typeof tokens[0] === "number" ? tokens[0] : "#ERROR!";
     }
 
-    // Simple left-to-right evaluation (could be improved with proper precedence)
     let result = tokens[0];
-    if (typeof result !== 'number') return "#ERROR!";
+    if (typeof result !== "number") return "#ERROR!";
 
     for (let i = 1; i < tokens.length; i += 2) {
       const operator = tokens[i];
       const operand = tokens[i + 1];
 
-      if (typeof operand !== 'number') return "#ERROR!";
+      if (typeof operand !== "number") return "#ERROR!";
 
       switch (operator) {
-        case '+': result += operand; break;
-        case '-': result -= operand; break;
-        case '*': result *= operand; break;
-        case '/':
+        case "+":
+          result += operand;
+          break;
+        case "-":
+          result -= operand;
+          break;
+        case "*":
+          result *= operand;
+          break;
+        case "/":
           if (operand === 0) return "#DIV/0!";
           result /= operand;
           break;
-        default: return "#ERROR!";
+        default:
+          return "#ERROR!";
       }
     }
 
@@ -830,7 +665,7 @@ sheetContainer.addEventListener("input", (e) => {
 
     const cellData = sheetData[row][col];
 
-    if (value.startsWith('=')) {
+    if (value.startsWith("=")) {
       cellData.formula = value;
       cellData.value = "";
     } else {
@@ -841,10 +676,8 @@ sheetContainer.addEventListener("input", (e) => {
     cellData.error = null;
     cellData.calculated = "";
 
-    // Clear calculation cache
     calculationCache.clear();
 
-    // Recalculate this cell and dependents
     recalculateCell(row, col);
     saveSheetData();
   }
@@ -855,12 +688,13 @@ sheetContainer.addEventListener("input", (e) => {
     if (cellData.formula) {
       try {
         const result = evaluateFormula(cellData.formula);
-        if (typeof result === 'string' && result.startsWith('#')) {
+        if (typeof result === "string" && result.startsWith("#")) {
           cellData.error = result;
           cellData.calculated = "";
         } else {
           cellData.error = null;
-          cellData.calculated = typeof result === 'number' ? result.toString() : result;
+          cellData.calculated =
+            typeof result === "number" ? result.toString() : result;
         }
       } catch (e) {
         cellData.error = "#ERROR!";
@@ -871,18 +705,8 @@ sheetContainer.addEventListener("input", (e) => {
     updateCellDisplay(row, col);
   }
 
-  function recalculateAll() {
-    calculationCache.clear();
-    for (let i = 0; i < ROWS; i++) {
-      for (let j = 0; j < COLS; j++) {
-        recalculateCell(i, j);
-      }
-    }
-  }
-
-  // Enhanced event handlers
   sheetContainer.addEventListener("focusin", (e) => {
-    if (e.target.classList.contains('sheet-cell')) {
+    if (e.target.classList.contains("sheet-cell")) {
       if (activeCell) activeCell.classList.remove("active");
       activeCell = e.target;
       activeCell.classList.add("active");
@@ -891,16 +715,13 @@ sheetContainer.addEventListener("input", (e) => {
       const col = parseInt(activeCell.dataset.col);
       const cellData = sheetData[row][col];
 
-      // Show formula or value in formula bar
       formulaBar.value = cellData.formula || cellData.value || "";
-
-      // Show raw content in cell while editing
       activeCell.textContent = cellData.formula || cellData.value || "";
     }
   });
 
   sheetContainer.addEventListener("focusout", (e) => {
-    if (e.target.classList.contains('sheet-cell')) {
+    if (e.target.classList.contains("sheet-cell")) {
       const row = parseInt(e.target.dataset.row);
       const col = parseInt(e.target.dataset.col);
       const value = e.target.textContent.trim();
@@ -909,9 +730,16 @@ sheetContainer.addEventListener("input", (e) => {
     }
   });
 
+  sheetContainer.addEventListener("input", (e) => {
+    if (e.target.classList.contains("sheet-cell") && activeCell === e.target) {
+      const row = parseInt(e.target.dataset.row);
+      const col = parseInt(e.target.dataset.col);
+      formulaBar.value = e.target.textContent;
+    }
+  });
+
   formulaBar.addEventListener("input", (e) => {
     if (activeCell) {
-      // Update the cell display while typing
       activeCell.textContent = e.target.value;
     }
   });
@@ -928,13 +756,13 @@ sheetContainer.addEventListener("input", (e) => {
     }
   });
 
-  // Enhanced keyboard navigation
   sheetContainer.addEventListener("keydown", (e) => {
     if (!activeCell) return;
 
     let row = parseInt(activeCell.dataset.row, 10);
     let col = parseInt(activeCell.dataset.col, 10);
-    let newRow = row, newCol = col;
+    let newRow = row,
+      newCol = col;
 
     switch (e.key) {
       case "ArrowUp":
@@ -952,7 +780,10 @@ sheetContainer.addEventListener("input", (e) => {
         }
         break;
       case "ArrowRight":
-        if (e.target.selectionStart === e.target.textContent.length && col < COLS - 1) {
+        if (
+          e.target.selectionStart === e.target.textContent.length &&
+          col < COLS - 1
+        ) {
           newCol++;
           e.preventDefault();
         }
@@ -987,26 +818,31 @@ sheetContainer.addEventListener("input", (e) => {
     }
 
     if (newRow !== row || newCol !== col) {
-      const newCell = sheetContainer.querySelector(`[data-row="${newRow}"][data-col="${newCol}"]`);
+      const newCell = sheetContainer.querySelector(
+        `[data-row="${newRow}"][data-col="${newCol}"]`,
+      );
       if (newCell) {
         newCell.focus();
       }
     }
   });
 
-  // CSV Save with improved parsing
   csvSaveBtn.addEventListener("click", async () => {
     const csvContent = sheetData
       .map((row) =>
         row
           .map((cellData) => {
             const value = cellData.value || "";
-            if (value.includes(",") || value.includes('"') || value.includes('\n')) {
+            if (
+              value.includes(",") ||
+              value.includes('"') ||
+              value.includes("\n")
+            ) {
               return `"${value.replace(/"/g, '""')}"`;
             }
             return value;
           })
-          .join(",")
+          .join(","),
       )
       .join("\n");
 
@@ -1064,23 +900,196 @@ sheetContainer.addEventListener("input", (e) => {
     }
   });
 
-  function parseCSV(contents) {
-    const rows = contents.split("\n");
-    sheetData = initializeSheetData();
+  // =================================================================
+  // Sticky Notes
+  // =================================================================
+  const notesContainer = document.getElementById("notes-container");
+  const addNoteBtn = document.getElementById("add-note");
+  const txtOpenBtn = document.getElementById("txt-open");
+  const txtSaveBtn = document.getElementById("txt-save");
+  let notes = [];
+  const NOTE_SEPARATOR = "\n--- bPad Note Break ---\n";
 
-    rows.forEach((row, r) => {
-      if (r < ROWS && row.trim()) {
-        const cols = parseCSVRow(row);
-        cols.forEach((col, c) => {
-          if (c < COLS) {
-            sheetData[r][c].value = col;
-            if (col.startsWith('=')) {
-              sheetData[r][c].formula = col;
-              sheetData[r][c].value = "";
-            }
-          }
-        });
-      }
+  function saveNotes() {
+    localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
+  }
+
+  function loadNotes() {
+    const savedNotes = localStorage.getItem(STORAGE_KEYS.notes);
+    notes = savedNotes ? JSON.parse(savedNotes) : [];
+    renderNotes();
+  }
+
+  function renderNotes() {
+    notesContainer.innerHTML = "";
+    notes.forEach((noteContent, index) => {
+      const noteEl = document.createElement("div");
+      noteEl.className = "note";
+      noteEl.innerHTML = `
+        <div class="note-header">
+          <button class="note-save" data-index="${index}" title="Save Note">💾</button>
+          <button class="note-delete" data-index="${index}" title="Delete Note">×</button>
+        </div>
+        <textarea data-index="${index}" placeholder="Type your note here...">${noteContent}</textarea>`;
+      notesContainer.appendChild(noteEl);
     });
+  }
 
-    recalculateAll();
+  addNoteBtn.addEventListener("click", () => {
+    notes.push("");
+    saveNotes();
+    renderNotes();
+    setTimeout(() => {
+      const textareas = notesContainer.querySelectorAll("textarea");
+      if (textareas.length > 0) {
+        textareas[textareas.length - 1].focus();
+      }
+    }, 50);
+  });
+
+  notesContainer.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("note-delete")) {
+      const index = parseInt(e.target.dataset.index);
+      if (confirm("Are you sure you want to delete this note?")) {
+        notes.splice(index, 1);
+        saveNotes();
+        renderNotes();
+      }
+    }
+
+    if (e.target.classList.contains("note-save")) {
+      const index = parseInt(e.target.dataset.index);
+      const content = notes[index];
+
+      if (!supportsFileSystemAccess) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `note-${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `note-${new Date().toISOString().slice(0, 10)}.txt`,
+          types: [
+            { description: "Text File", accept: { "text/plain": [".txt"] } },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+      } catch (err) {
+        console.error("Could not save individual note:", err);
+      }
+    }
+  });
+
+  notesContainer.addEventListener("input", (e) => {
+    if (e.target.tagName === "TEXTAREA") {
+      const index = parseInt(e.target.dataset.index);
+      notes[index] = e.target.value;
+      saveNotes();
+    }
+  });
+
+  txtSaveBtn.addEventListener("click", async () => {
+    const allNotesContent = notes.join(NOTE_SEPARATOR);
+
+    if (!supportsFileSystemAccess) {
+      const blob = new Blob([allNotesContent], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "all-notes.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: "all-notes.txt",
+        types: [
+          { description: "Text File", accept: { "text/plain": [".txt"] } },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(allNotesContent);
+      await writable.close();
+    } catch (err) {
+      console.error("Failed to save file:", err);
+    }
+  });
+
+  txtOpenBtn.addEventListener("click", async () => {
+    if (!supportsFileSystemAccess) {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".txt";
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const contents = await file.text();
+          notes = contents.split(NOTE_SEPARATOR);
+          saveNotes();
+          renderNotes();
+        }
+      };
+      input.click();
+      return;
+    }
+
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [
+          { description: "Text Files", accept: { "text/plain": [".txt"] } },
+        ],
+      });
+      const file = await handle.getFile();
+      const contents = await file.text();
+      notes = contents.split(NOTE_SEPARATOR);
+      saveNotes();
+      renderNotes();
+    } catch (err) {
+      console.error("Failed to open file:", err);
+    }
+  });
+
+  // --- Initial Load From Storage ---
+  loadProcessorContent();
+  loadSheetData();
+  loadNotes();
+
+  // --- Keyboard shortcuts for spreadsheet ---
+  document.addEventListener("keydown", (e) => {
+    if (
+      !document.getElementById("sheet-section").classList.contains("active")
+    ) {
+      return;
+    }
+
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case "s":
+          e.preventDefault();
+          csvSaveBtn.click();
+          break;
+        case "o":
+          e.preventDefault();
+          csvOpenBtn.click();
+          break;
+        case "a":
+          e.preventDefault();
+          break;
+      }
+    }
+  });
+});

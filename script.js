@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // --- CORRECTED SAVE RTF LOGIC ---
+  // --- SAVE RTF LOGIC (Unchanged) ---
   wpSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- CORRECTED OPEN RTF LOGIC ---
+  // --- IMPROVED OPEN RTF LOGIC ---
   wpOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -123,20 +123,42 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
       });
       const file = await handle.getFile();
-      const contents = await file.text();
+      let contents = await file.text();
 
-      // Convert basic RTF tags back to HTML
-      let html = contents
-        .replace(/\\par\s?\n?/g, "<br>") // Convert \par to <br>
-        .replace(/\{\\b\s(.*?)\}/g, "<b>$1</b>") // Bold
-        .replace(/\{\\i\s(.*?)\}/g, "<i>$1</i>") // Italic
-        .replace(/\{\\ul\s(.*?)\}/g, "<u>$1</u>"); // Underline
+      // This is a simplified RTF to HTML parser, designed to be the inverse of the save function.
 
-      // Clean up the remaining RTF structure and control words
-      // This regex removes the header, font tables, and other RTF codes.
-      html = html
-        .replace(/\{\*?\\[^{}]+}|[^{\s]*\\.[a-z0-9]+\s?|[\{\}]/g, "")
-        .trim();
+      // 1. Remove RTF header/metadata and the final closing brace for simpler processing.
+      contents = contents.replace(/^{\\rtf1[\\s\\S]*?}\\viewkind4\\uc1\n/, "");
+      contents = contents.replace(/}}$/, "}");
+
+      // 2. Convert paragraph breaks and the app-specific list item format.
+      contents = contents.replace(
+        /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
+        "<li>$1</li>",
+      );
+      contents = contents.replace(/\\par\n?/g, "<br>");
+
+      // 3. Iteratively convert style groups (e.g., {\b ...}) to HTML tags.
+      // This loop handles nested styles by converting the innermost groups first.
+      const replacements = {
+        b: "b",
+        i: "i",
+        ul: "u",
+      };
+
+      let prevContents;
+      do {
+        prevContents = contents;
+        for (const rtfTag in replacements) {
+          const htmlTag = replacements[rtfTag];
+          // Regex to find a tag group that contains NO other curly braces {}.
+          const regex = new RegExp(`{\\\\${rtfTag}\\s?([^{}]+)}`, "g");
+          contents = contents.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
+        }
+      } while (prevContents !== contents); // Loop until no more replacements can be made.
+
+      // 4. Clean up any remaining RTF control words or stray braces.
+      const html = contents.replace(/\\.+?\s?|[\{\}]/g, "").trim();
 
       editor.innerHTML = html;
       editor.dispatchEvent(new Event("input"));

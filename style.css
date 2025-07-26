@@ -155,13 +155,13 @@ main {
     gap: 20px;
 }
 .note {
-    width: 250px;
-    height: 250px;
-    background: #fffbe5;
+    width: 312px;
+    height: 312px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     transition: transform 0.2s;
+    border: 1px solid var(--border-color);
 }
 .note:hover {
     transform: scale(1.02);
@@ -171,7 +171,7 @@ main {
     display: flex;
     justify-content: flex-end;
     gap: 5px;
-    background-color: #f9f4c3;
+    background-color: #e0e0e0;
 }
 .note-header button {
     border: none;
@@ -181,7 +181,7 @@ main {
     font-size: 14px;
 }
 .note-delete {
-    color: #c9302c;
+    color: black;
 }
 .note-save {
     color: var(--primary-color);
@@ -189,7 +189,7 @@ main {
 .note textarea {
     flex-grow: 1;
     border: none;
-    background: transparent;
+    background: white;
     padding: 10px;
     font: inherit;
     resize: none;

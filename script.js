@@ -774,16 +774,15 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         break;
       case "ArrowLeft":
-        if (e.target.selectionStart === 0 && col > 0) {
+        // Always move left if possible, regardless of cursor position
+        if (col > 0) {
           newCol--;
           e.preventDefault();
         }
         break;
       case "ArrowRight":
-        if (
-          e.target.selectionStart === e.target.textContent.length &&
-          col < COLS - 1
-        ) {
+        // Always move right if possible, regardless of cursor position
+        if (col < COLS - 1) {
           newCol++;
           e.preventDefault();
         }
@@ -823,6 +822,13 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (newCell) {
         newCell.focus();
+        // Set cursor position to the end of the cell content
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(newCell);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }
     }
   });

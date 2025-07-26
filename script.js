@@ -1,4 +1,12 @@
-document.addEventListener("DOMContentLoaded", () => {
+sheetContainer.addEventListener("input", (e) => {
+    if (e.target.classList.contains('sheet-cell') && activeCell === e.target) {
+      const row = parseInt(e.target.dataset.row);
+      const col = parseInt(e.target.dataset.col);
+
+      // Update formula bar to match cell content while typing
+      formulaBar.value = e.target.textContent;
+    }
+  });document.addEventListener("DOMContentLoaded", () => {
   // --- PWA Service Worker Registration ---
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -901,6 +909,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  formulaBar.addEventListener("input", (e) => {
+    if (activeCell) {
+      // Update the cell display while typing
+      activeCell.textContent = e.target.value;
+    }
+  });
+
   formulaBar.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && activeCell) {
       e.preventDefault();
@@ -979,7 +994,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // CSV handling with improved parsing
+  // CSV Save with improved parsing
   csvSaveBtn.addEventListener("click", async () => {
     const csvContent = sheetData
       .map((row) =>

@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Do you want to save your current document before creating a new one?",
         )
       ) {
-        wpSaveBtn.click(); // Trigger the existing save function
+        wpSaveBtn.click();
       }
     }
     editor.innerHTML = "";
@@ -75,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // --- CORRECTED SAVE RTF LOGIC ---
   wpSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -90,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const writable = await handle.createWritable();
       const htmlContent = editor.innerHTML;
 
-      // Convert basic HTML to a simple, more valid RTF structure
       const rtfBody = htmlContent
         .replace(/<b>(.*?)<\/b>/g, "{\\b $1}")
         .replace(/<i>(.*?)<\/i>/g, "{\\i $1}")
@@ -100,11 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(
           /<li>(.*?)<\/li>/g,
           "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}",
-        ) // Basic list support
-        .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "") // Remove list container tags
-        .replace(/<[^>]+>/g, ""); // Strip any remaining, unsupported HTML tags
+        )
+        .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "")
+        .replace(/<[^>]+>/g, "");
 
-      // Wrap the body in a minimal RTF document structure
       const rtfContent = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n${rtfBody}}`;
 
       await writable.write(rtfContent);
@@ -114,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- IMPROVED OPEN RTF LOGIC ---
   wpOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -125,22 +121,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const file = await handle.getFile();
       let contents = await file.text();
 
-      // 1. Strip the header and footer to isolate the body.
       const headerRegex =
         /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
       contents = contents.replace(headerRegex, "");
-      contents = contents.replace(/}$/, ""); // Remove the final closing brace
+      contents = contents.replace(/}$/, "");
 
-      // 2. Convert paragraph breaks and list items.
       contents = contents.replace(
         /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
         "<li>$1</li>",
       );
       contents = contents.replace(/\\par\n?/g, "<br>");
 
-      // 3. Iteratively convert style groups (e.g., {\b ...}) to HTML tags.
       const replacements = { b: "b", i: "i", ul: "u" };
-
       let prevContents;
       do {
         prevContents = contents;
@@ -151,9 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } while (prevContents !== contents);
 
-      // 4. Clean up any remaining RTF artifacts.
       const html = contents.replace(/\\.+?\s?|[\{\}]/g, "").trim();
-
       editor.innerHTML = html;
       editor.dispatchEvent(new Event("input"));
     } catch (err) {
@@ -161,14 +151,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Keyboard Shortcuts for Word Processor ---
   document.addEventListener("keydown", (e) => {
     if (
       !document.getElementById("processor-section").classList.contains("active")
     ) {
       return;
     }
-
     if (e.metaKey || e.ctrlKey) {
       switch (e.key.toLowerCase()) {
         case "s":
@@ -202,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveSheetData() {
     localStorage.setItem(STORAGE_KEYS.sheet, JSON.stringify(sheetData));
   }
+
   function loadSheetData() {
     const savedData = localStorage.getItem(STORAGE_KEYS.sheet);
     sheetData = savedData
@@ -212,6 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSheet();
     updateSheetDisplay();
   }
+
   function renderSheet() {
     let tableHTML = '<table class="spreadsheet-table"><thead><tr><th></th>';
     for (let j = 0; j < COLS; j++)
@@ -226,6 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tableHTML += "</tbody></table>";
     sheetContainer.innerHTML = tableHTML;
   }
+
   function updateSheetDisplay() {
     for (let i = 0; i < ROWS; i++) {
       for (let j = 0; j < COLS; j++) {
@@ -244,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
   function getCellRefValue(ref, visited) {
     const col = ref.charCodeAt(0) - 65;
     const row = parseInt(ref.substring(1), 10) - 1;
@@ -260,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return evaluateFormula(cellValue, visited);
     return parseFloat(cellValue) || 0;
   }
+
   function evaluateFormula(formula, visited) {
     if (visited.has(formula)) return "#REF!";
     visited.add(formula);
@@ -320,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return result;
   }
+
   sheetContainer.addEventListener("focusin", (e) => {
     if (e.target.tagName === "TD") {
       if (activeCell) activeCell.classList.remove("active");
@@ -341,6 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sheetData[row][col] = value;
     saveSheetData();
   }
+
   sheetContainer.addEventListener("input", (e) => {
     if (e.target.tagName === "TD") {
       handleSheetInput(
@@ -351,6 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formulaBar.value = e.target.textContent;
     }
   });
+
   formulaBar.addEventListener("input", (e) => {
     if (activeCell) {
       activeCell.textContent = e.target.value;
@@ -361,6 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
   });
+
   formulaBar.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && activeCell) {
       e.preventDefault();
@@ -368,6 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activeCell.focus();
     }
   });
+
   sheetContainer.addEventListener("keydown", (e) => {
     if (!activeCell) return;
     let row = parseInt(activeCell.dataset.row, 10);
@@ -413,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (newCell) newCell.focus();
     }
   });
+
   csvSaveBtn.addEventListener("click", async () => {
     try {
       const handle = await window.showSaveFilePicker({
@@ -426,6 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to save file:", err);
     }
   });
+
   csvOpenBtn.addEventListener("click", async () => {
     try {
       const [handle] = await window.showOpenFilePicker({

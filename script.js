@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =================================================================
-  // Spreadsheet
+  // IMPROVED SPREADSHEET
   // =================================================================
   const sheetContainer = document.getElementById("spreadsheet-container");
   const formulaBar = document.getElementById("formula-bar");
@@ -260,6 +260,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const COLS = 26;
   let sheetData = [];
   let activeCell = null;
+  let isUpdating = false;
+  let calculationCache = new Map();
+
+  // Initialize sheet data structure
+  function initializeSheetData() {
+    return Array(ROWS).fill(null).map(() =>
+      Array(COLS).fill(null).map(() => ({
+        value: "",
+        formula: "",
+        calculated: "",
+        error: null
+      }))
+    );
+  }
 
   function saveSheetData() {
     localStorage.setItem(STORAGE_KEYS.sheet, JSON.stringify(sheetData));
@@ -267,418 +281,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadSheetData() {
     const savedData = localStorage.getItem(STORAGE_KEYS.sheet);
-    sheetData = savedData
-      ? JSON.parse(savedData)
-      : Array(ROWS)
-          .fill(null)
-          .map(() => Array(COLS).fill(""));
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        // Handle legacy data format
+        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0][0] === 'string') {
+          // Convert legacy format
+          sheetData = Array(ROWS).fill(null).map((_, row) =>
+            Array(COLS).fill(null).map((_, col) => ({
+              value: parsed[row] && parsed[row][col] ? parsed[row][col] : "",
+              formula: parsed[row] && parsed[row][col] && parsed[row][col].startsWith('=') ? parsed[row][col] : "",
+              calculated: "",
+              error: null
+            }))
+          );
+        } else {
+          sheetData = parsed;
+        }
+      } catch (e) {
+        console.error("Error loading sheet data:", e);
+        sheetData = initializeSheetData();
+      }
+    } else {
+      sheetData = initializeSheetData();
+    }
     renderSheet();
-    updateSheetDisplay();
+    recalculateAll();
+    saveSheetData();
   }
 
-  function renderSheet() {
-    let tableHTML = '<table class="spreadsheet-table"><thead><tr><th></th>';
-    for (let j = 0; j < COLS; j++)
-      tableHTML += `<th>${String.fromCharCode(65 + j)}</th>`;
-    tableHTML += "</tr></thead><tbody>";
-    for (let i = 0; i < ROWS; i++) {
-      tableHTML += `<tr><th>${i + 1}</th>`;
-      for (let j = 0; j < COLS; j++)
-        tableHTML += `<td data-row="${i}" data-col="${j}" contenteditable="true"></td>`;
-      tableHTML += "</tr>";
-    }
-    tableHTML += "</tbody></table>";
-    sheetContainer.innerHTML = tableHTML;
-  }
+  function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
 
-  function updateSheetDisplay() {
-    for (let i = 0; i < ROWS; i++) {
-      for (let j = 0; j < COLS; j++) {
-        const cell = sheetContainer.querySelector(
-          `[data-row="${i}"][data-col="${j}"]`,
-        );
-        if (!cell) continue; // Safety check
+    while (i < row.length) {
+      const char = row[i];
 
-        const cellValue = sheetData[i][j];
-        if (cellValue && cellValue.toString().startsWith("=")) {
-          const result = evaluateFormula(cellValue, new Set());
-          cell.textContent = result;
-          // Add error styling for error results
-          if (typeof result === "string" && result.startsWith("#")) {
-            cell.style.color = "#c9302c";
-          } else {
-            cell.style.color = "";
-          }
+      if (char === '"') {
+        if (inQuotes && row[i + 1] === '"') {
+          // Escaped quote
+          current += '"';
+          i += 2;
         } else {
-          cell.textContent = cellValue || "";
-          cell.style.color = "";
+          // Toggle quote state
+          inQuotes = !inQuotes;
+          i++;
         }
-      }
-    }
-  }
-
-  function getCellRefValue(ref, visited) {
-    const col = ref.charCodeAt(0) - 65;
-    const row = parseInt(ref.substring(1), 10) - 1;
-    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#REF!";
-
-    const cellValue = sheetData[row][col];
-    if (!cellValue) return 0;
-
-    if (cellValue.toString().startsWith("=")) {
-      const cellFormula = cellValue.toString();
-      if (visited.has(`${row},${col}`)) return "#CIRCULAR!";
-      visited.add(`${row},${col}`);
-      const result = evaluateFormula(cellFormula, visited);
-      visited.delete(`${row},${col}`);
-      return typeof result === "number" ? result : 0;
-    }
-
-    const numValue = parseFloat(cellValue);
-    return isNaN(numValue) ? 0 : numValue;
-  }
-
-  function evaluateFormula(formula, visited) {
-    if (!formula || !formula.startsWith("=")) return "#ERROR!";
-
-    try {
-      const formulaBody = formula.substring(1).toUpperCase().trim();
-
-      // Handle SUM function
-      const sumRegex = /^SUM\((.+)\)$/;
-      if (sumRegex.test(formulaBody)) {
-        const args = formulaBody.match(sumRegex)[1].split(",");
-        let sum = 0;
-
-        for (const arg of args) {
-          const trimmedArg = arg.trim();
-          const rangeRegex = /^([A-Z]+\d+):([A-Z]+\d+)$/;
-
-          if (rangeRegex.test(trimmedArg)) {
-            const [, startRef, endRef] = trimmedArg.match(rangeRegex);
-            const startCol = startRef.charCodeAt(0) - 65;
-            const startRow = parseInt(startRef.substring(1)) - 1;
-            const endCol = endRef.charCodeAt(0) - 65;
-            const endRow = parseInt(endRef.substring(1)) - 1;
-
-            for (
-              let r = Math.min(startRow, endRow);
-              r <= Math.max(startRow, endRow);
-              r++
-            ) {
-              for (
-                let c = Math.min(startCol, endCol);
-                c <= Math.max(startCol, endCol);
-                c++
-              ) {
-                if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-                  const cellValue = sheetData[r][c];
-                  if (cellValue && cellValue.toString().startsWith("=")) {
-                    const newVisited = new Set(visited);
-                    if (newVisited.has(`${r},${c}`)) return "#CIRCULAR!";
-                    newVisited.add(`${r},${c}`);
-                    const result = evaluateFormula(cellValue, newVisited);
-                    sum += typeof result === "number" ? result : 0;
-                  } else {
-                    const numValue = parseFloat(cellValue);
-                    sum += isNaN(numValue) ? 0 : numValue;
-                  }
-                }
-              }
-            }
-          } else {
-            // Single cell reference
-            const cellValue = getCellRefValue(trimmedArg, new Set(visited));
-            sum += typeof cellValue === "number" ? cellValue : 0;
-          }
-        }
-        return sum;
-      }
-
-      // Handle basic arithmetic operations
-      const parts = formulaBody.match(/([A-Z]+\d+|\d+(?:\.\d+)?)|([+\-*\/])/g);
-      if (!parts || parts.length === 0) return "#ERROR!";
-
-      // If only one part, it might be a single cell reference or number
-      if (parts.length === 1) {
-        if (/^[A-Z]+\d+$/.test(parts[0])) {
-          return getCellRefValue(parts[0], new Set(visited));
-        } else {
-          const numValue = parseFloat(parts[0]);
-          return isNaN(numValue) ? "#ERROR!" : numValue;
-        }
-      }
-
-      // For expressions with operators, we need odd number of parts (operand-operator-operand...)
-      if (parts.length % 2 === 0) return "#ERROR!";
-
-      // Get first operand
-      let result;
-      if (/^[A-Z]+\d+$/.test(parts[0])) {
-        result = getCellRefValue(parts[0], new Set(visited));
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current);
+        current = '';
+        i++;
       } else {
-        result = parseFloat(parts[0]);
-        if (isNaN(result)) return "#ERROR!";
-      }
-
-      // Process operators and operands
-      for (let i = 1; i < parts.length; i += 2) {
-        const operator = parts[i];
-        const nextOperandStr = parts[i + 1];
-
-        let nextOperandValue;
-        if (/^[A-Z]+\d+$/.test(nextOperandStr)) {
-          nextOperandValue = getCellRefValue(nextOperandStr, new Set(visited));
-        } else {
-          nextOperandValue = parseFloat(nextOperandStr);
-          if (isNaN(nextOperandValue)) return "#ERROR!";
-        }
-
-        if (typeof nextOperandValue !== "number") return "#ERROR!";
-
-        switch (operator) {
-          case "+":
-            result += nextOperandValue;
-            break;
-          case "-":
-            result -= nextOperandValue;
-            break;
-          case "*":
-            result *= nextOperandValue;
-            break;
-          case "/":
-            if (nextOperandValue === 0) return "#DIV/0!";
-            result /= nextOperandValue;
-            break;
-          default:
-            return "#ERROR!";
-        }
-      }
-
-      return result;
-    } catch (error) {
-      return "#ERROR!";
-    }
-  }
-
-  sheetContainer.addEventListener("focusin", (e) => {
-    if (e.target.tagName === "TD") {
-      if (activeCell) activeCell.classList.remove("active");
-      activeCell = e.target;
-      activeCell.classList.add("active");
-      const row = parseInt(activeCell.dataset.row);
-      const col = parseInt(activeCell.dataset.col);
-      formulaBar.value = sheetData[row][col] || "";
-    }
-  });
-
-  sheetContainer.addEventListener("focusout", (e) => {
-    if (e.target.tagName === "TD") {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-      const value = e.target.textContent.trim();
-
-      // Save the value and update display
-      handleSheetInput(row, col, value);
-      setTimeout(() => updateSheetDisplay(), 50); // Small delay to ensure data is saved
-    }
-  });
-
-  function handleSheetInput(row, col, value) {
-    sheetData[row][col] = value;
-    saveSheetData();
-  }
-
-  sheetContainer.addEventListener("input", (e) => {
-    if (e.target.tagName === "TD") {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-      formulaBar.value = e.target.textContent;
-      // Don't save immediately during input to avoid conflicts
-    }
-  });
-
-  formulaBar.addEventListener("input", (e) => {
-    if (activeCell) {
-      activeCell.textContent = e.target.value;
-      // Don't save immediately during input
-    }
-  });
-
-  formulaBar.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && activeCell) {
-      e.preventDefault();
-      const row = parseInt(activeCell.dataset.row);
-      const col = parseInt(activeCell.dataset.col);
-      const value = formulaBar.value.trim();
-
-      // Save the formula to sheet data
-      handleSheetInput(row, col, value);
-
-      // Update the active cell's text content
-      activeCell.textContent = value;
-
-      // Update the display to show calculated results
-      updateSheetDisplay();
-
-      // Keep focus on the active cell
-      activeCell.focus();
-    }
-  });
-
-  sheetContainer.addEventListener("keydown", (e) => {
-    if (!activeCell) return;
-    let row = parseInt(activeCell.dataset.row, 10);
-    let col = parseInt(activeCell.dataset.col, 10);
-    let newRow = row,
-      newCol = col;
-
-    switch (e.key) {
-      case "ArrowUp":
-        if (row > 0) newRow--;
-        e.preventDefault();
-        break;
-      case "ArrowDown":
-        if (row < ROWS - 1) newRow++;
-        e.preventDefault();
-        break;
-      case "ArrowLeft":
-        if (window.getSelection().anchorOffset === 0) {
-          if (col > 0) newCol--;
-          e.preventDefault();
-        }
-        break;
-      case "ArrowRight":
-        if (
-          window.getSelection().anchorOffset === activeCell.textContent.length
-        ) {
-          if (col < COLS - 1) newCol++;
-          e.preventDefault();
-        }
-        break;
-      case "Enter":
-        if (!e.shiftKey) {
-          e.preventDefault();
-          // Save current cell data before moving
-          const value = activeCell.textContent.trim();
-          handleSheetInput(row, col, value);
-          updateSheetDisplay();
-
-          if (row < ROWS - 1) newRow++;
-        }
-        break;
-      default:
-        return;
-    }
-
-    if (newRow !== row || newCol !== col) {
-      const newCell = sheetContainer.querySelector(
-        `[data-row="${newRow}"][data-col="${newCol}"]`,
-      );
-      if (newCell) {
-        activeCell = null; // Clear active cell to prevent conflicts
-        newCell.focus();
+        current += char;
+        i++;
       }
     }
-  });
 
-  // CSV Save with fallback
-  csvSaveBtn.addEventListener("click", async () => {
-    const csvContent = sheetData
-      .map((row) =>
-        row
-          .map((cell) => {
-            // If cell contains comma, quote it
-            if (cell && cell.toString().includes(",")) {
-              return `"${cell.toString().replace(/"/g, '""')}"`;
-            }
-            return cell || "";
-          })
-          .join(","),
-      )
-      .join("\n");
-
-    if (!supportsFileSystemAccess) {
-      // Fallback download
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "spreadsheet.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "spreadsheet.csv",
-        types: [{ description: "CSV File", accept: { "text/csv": [".csv"] } }],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(csvContent);
-      await writable.close();
-    } catch (err) {
-      console.error("Failed to save file:", err);
-    }
-  });
-
-  // CSV Open with fallback
-  csvOpenBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      // Fallback file input
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".csv";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const contents = await file.text();
-          parseCSV(contents);
-        }
-      };
-      input.click();
-      return;
-    }
-
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [{ description: "CSV Files", accept: { "text/csv": [".csv"] } }],
-      });
-      const file = await handle.getFile();
-      const contents = await file.text();
-      parseCSV(contents);
-    } catch (err) {
-      console.error("Failed to open file:", err);
-    }
-  });
-
-  function parseCSV(contents) {
-    const rows = contents.split("\n");
-    sheetData = Array(ROWS)
-      .fill(null)
-      .map(() => Array(COLS).fill(""));
-
-    rows.forEach((row, r) => {
-      if (r < ROWS && row.trim()) {
-        // Simple CSV parsing - could be improved for quoted fields
-        const cols = row.split(",");
-        cols.forEach((col, c) => {
-          if (c < COLS) {
-            // Remove quotes if present
-            let cellValue = col.trim();
-            if (cellValue.startsWith('"') && cellValue.endsWith('"')) {
-              cellValue = cellValue.slice(1, -1).replace(/""/g, '"');
-            }
-            sheetData[r][c] = cellValue;
-          }
-        });
-      }
-    });
-    updateSheetDisplay();
-    saveSheetData();
+    // Add the last field
+    result.push(current);
+    return result;
   }
 
   // =================================================================
@@ -855,10 +519,553 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSheetData();
   loadNotes();
 
-  // --- Periodically update spreadsheet formulas ---
-  setInterval(() => {
-    if (document.getElementById("sheet-section").classList.contains("active")) {
-      updateSheetDisplay();
+  // --- Keyboard shortcuts for spreadsheet ---
+  document.addEventListener("keydown", (e) => {
+    if (!document.getElementById("sheet-section").classList.contains("active")) {
+      return;
     }
-  }, 3000);
+
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 's':
+          e.preventDefault();
+          csvSaveBtn.click();
+          break;
+        case 'o':
+          e.preventDefault();
+          csvOpenBtn.click();
+          break;
+        case 'a':
+          e.preventDefault();
+          // Select all - could be implemented later
+          break;
+      }
+    }
+  });
 });
+  }
+
+  function renderSheet() {
+    let tableHTML = '<table class="spreadsheet-table"><thead><tr><th></th>';
+    for (let j = 0; j < COLS; j++)
+      tableHTML += `<th>${String.fromCharCode(65 + j)}</th>`;
+    tableHTML += "</tr></thead><tbody>";
+    for (let i = 0; i < ROWS; i++) {
+      tableHTML += `<tr><th>${i + 1}</th>`;
+      for (let j = 0; j < COLS; j++) {
+        tableHTML += `<td data-row="${i}" data-col="${j}" contenteditable="true" class="sheet-cell"></td>`;
+      }
+      tableHTML += "</tr>";
+    }
+    tableHTML += "</tbody></table>";
+    sheetContainer.innerHTML = tableHTML;
+  }
+
+  function updateCellDisplay(row, col) {
+    const cell = sheetContainer.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    if (!cell) return;
+
+    const cellData = sheetData[row][col];
+
+    if (cellData.error) {
+      cell.textContent = cellData.error;
+      cell.classList.add('error');
+      cell.classList.remove('formula');
+    } else if (cellData.formula) {
+      cell.textContent = cellData.calculated;
+      cell.classList.add('formula');
+      cell.classList.remove('error');
+    } else {
+      cell.textContent = cellData.value;
+      cell.classList.remove('error', 'formula');
+    }
+  }
+
+  function updateAllCellDisplays() {
+    if (isUpdating) return;
+    isUpdating = true;
+
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        updateCellDisplay(i, j);
+      }
+    }
+
+    isUpdating = false;
+  }
+
+  // Improved cell reference parsing
+  function parseCellRef(ref) {
+    const match = ref.match(/^([A-Z]+)(\d+)$/);
+    if (!match) return null;
+
+    const colStr = match[1];
+    const rowStr = match[2];
+
+    let col = 0;
+    for (let i = 0; i < colStr.length; i++) {
+      col = col * 26 + (colStr.charCodeAt(i) - 64);
+    }
+    col -= 1; // Convert to 0-based
+
+    const row = parseInt(rowStr) - 1; // Convert to 0-based
+
+    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return null;
+    return { row, col };
+  }
+
+  function getCellRefValue(ref, visited = new Set()) {
+    const coords = parseCellRef(ref);
+    if (!coords) return "#REF!";
+
+    const { row, col } = coords;
+    const cellKey = `${row},${col}`;
+
+    if (visited.has(cellKey)) return "#CIRCULAR!";
+
+    const cellData = sheetData[row][col];
+
+    if (cellData.formula) {
+      visited.add(cellKey);
+      const result = evaluateFormula(cellData.formula, visited);
+      visited.delete(cellKey);
+      return typeof result === "number" ? result : 0;
+    }
+
+    const numValue = parseFloat(cellData.value);
+    return isNaN(numValue) ? (cellData.value === "" ? 0 : cellData.value) : numValue;
+  }
+
+  // Enhanced formula evaluation with better error handling
+  function evaluateFormula(formula, visited = new Set()) {
+    if (!formula || !formula.startsWith("=")) return "#ERROR!";
+
+    try {
+      const formulaBody = formula.substring(1).trim();
+
+      // Handle SUM function with improved range parsing
+      const sumMatch = formulaBody.match(/^SUM\s*\((.+)\)$/i);
+      if (sumMatch) {
+        return evaluateSumFunction(sumMatch[1], visited);
+      }
+
+      // Handle AVERAGE function
+      const avgMatch = formulaBody.match(/^AVERAGE\s*\((.+)\)$/i);
+      if (avgMatch) {
+        return evaluateAverageFunction(avgMatch[1], visited);
+      }
+
+      // Handle COUNT function
+      const countMatch = formulaBody.match(/^COUNT\s*\((.+)\)$/i);
+      if (countMatch) {
+        return evaluateCountFunction(countMatch[1], visited);
+      }
+
+      // Handle MAX function
+      const maxMatch = formulaBody.match(/^MAX\s*\((.+)\)$/i);
+      if (maxMatch) {
+        return evaluateMaxFunction(maxMatch[1], visited);
+      }
+
+      // Handle MIN function
+      const minMatch = formulaBody.match(/^MIN\s*\((.+)\)$/i);
+      if (minMatch) {
+        return evaluateMinFunction(minMatch[1], visited);
+      }
+
+      // Handle basic arithmetic with improved parsing
+      return evaluateArithmeticExpression(formulaBody, visited);
+
+    } catch (error) {
+      console.error("Formula evaluation error:", error);
+      return "#ERROR!";
+    }
+  }
+
+  function evaluateSumFunction(args, visited) {
+    const values = parseFormulaArgs(args, visited);
+    return values.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+  }
+
+  function evaluateAverageFunction(args, visited) {
+    const values = parseFormulaArgs(args, visited);
+    const numbers = values.filter(val => typeof val === 'number');
+    return numbers.length > 0 ? numbers.reduce((sum, val) => sum + val, 0) / numbers.length : 0;
+  }
+
+  function evaluateCountFunction(args, visited) {
+    const values = parseFormulaArgs(args, visited);
+    return values.filter(val => typeof val === 'number').length;
+  }
+
+  function evaluateMaxFunction(args, visited) {
+    const values = parseFormulaArgs(args, visited);
+    const numbers = values.filter(val => typeof val === 'number');
+    return numbers.length > 0 ? Math.max(...numbers) : 0;
+  }
+
+  function evaluateMinFunction(args, visited) {
+    const values = parseFormulaArgs(args, visited);
+    const numbers = values.filter(val => typeof val === 'number');
+    return numbers.length > 0 ? Math.min(...numbers) : 0;
+  }
+
+  function parseFormulaArgs(args, visited) {
+    const values = [];
+    const argParts = args.split(',').map(arg => arg.trim());
+
+    for (const arg of argParts) {
+      // Check if it's a range (e.g., A1:C3)
+      const rangeMatch = arg.match(/^([A-Z]+\d+):([A-Z]+\d+)$/);
+      if (rangeMatch) {
+        const startCoords = parseCellRef(rangeMatch[1]);
+        const endCoords = parseCellRef(rangeMatch[2]);
+
+        if (startCoords && endCoords) {
+          const minRow = Math.min(startCoords.row, endCoords.row);
+          const maxRow = Math.max(startCoords.row, endCoords.row);
+          const minCol = Math.min(startCoords.col, endCoords.col);
+          const maxCol = Math.max(startCoords.col, endCoords.col);
+
+          for (let r = minRow; r <= maxRow; r++) {
+            for (let c = minCol; c <= maxCol; c++) {
+              const cellKey = `${r},${c}`;
+              if (!visited.has(cellKey)) {
+                const cellData = sheetData[r][c];
+                if (cellData.formula) {
+                  visited.add(cellKey);
+                  const result = evaluateFormula(cellData.formula, visited);
+                  visited.delete(cellKey);
+                  values.push(result);
+                } else {
+                  const numValue = parseFloat(cellData.value);
+                  values.push(isNaN(numValue) ? 0 : numValue);
+                }
+              }
+            }
+          }
+        }
+      }
+      // Check if it's a single cell reference
+      else if (parseCellRef(arg)) {
+        values.push(getCellRefValue(arg, visited));
+      }
+      // Check if it's a number
+      else {
+        const numValue = parseFloat(arg);
+        if (!isNaN(numValue)) {
+          values.push(numValue);
+        }
+      }
+    }
+
+    return values;
+  }
+
+  function evaluateArithmeticExpression(expression, visited) {
+    // Enhanced tokenizer that handles cell references, numbers, and operators
+    const tokens = expression.match(/([A-Z]+\d+|\d+(?:\.\d+)?|[+\-*/()])/g);
+    if (!tokens || tokens.length === 0) return "#ERROR!";
+
+    // Convert tokens to values
+    const processedTokens = tokens.map(token => {
+      if (parseCellRef(token)) {
+        return getCellRefValue(token, visited);
+      } else if (!isNaN(parseFloat(token))) {
+        return parseFloat(token);
+      } else {
+        return token; // Operator or parenthesis
+      }
+    });
+
+    // Simple expression evaluator (could be enhanced with proper operator precedence)
+    try {
+      return evaluateTokens(processedTokens);
+    } catch (e) {
+      return "#ERROR!";
+    }
+  }
+
+  function evaluateTokens(tokens) {
+    // Handle single value
+    if (tokens.length === 1) {
+      return typeof tokens[0] === 'number' ? tokens[0] : "#ERROR!";
+    }
+
+    // Simple left-to-right evaluation (could be improved with proper precedence)
+    let result = tokens[0];
+    if (typeof result !== 'number') return "#ERROR!";
+
+    for (let i = 1; i < tokens.length; i += 2) {
+      const operator = tokens[i];
+      const operand = tokens[i + 1];
+
+      if (typeof operand !== 'number') return "#ERROR!";
+
+      switch (operator) {
+        case '+': result += operand; break;
+        case '-': result -= operand; break;
+        case '*': result *= operand; break;
+        case '/':
+          if (operand === 0) return "#DIV/0!";
+          result /= operand;
+          break;
+        default: return "#ERROR!";
+      }
+    }
+
+    return result;
+  }
+
+  function setCellValue(row, col, value) {
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
+
+    const cellData = sheetData[row][col];
+
+    if (value.startsWith('=')) {
+      cellData.formula = value;
+      cellData.value = "";
+    } else {
+      cellData.value = value;
+      cellData.formula = "";
+    }
+
+    cellData.error = null;
+    cellData.calculated = "";
+
+    // Clear calculation cache
+    calculationCache.clear();
+
+    // Recalculate this cell and dependents
+    recalculateCell(row, col);
+    saveSheetData();
+  }
+
+  function recalculateCell(row, col) {
+    const cellData = sheetData[row][col];
+
+    if (cellData.formula) {
+      try {
+        const result = evaluateFormula(cellData.formula);
+        if (typeof result === 'string' && result.startsWith('#')) {
+          cellData.error = result;
+          cellData.calculated = "";
+        } else {
+          cellData.error = null;
+          cellData.calculated = typeof result === 'number' ? result.toString() : result;
+        }
+      } catch (e) {
+        cellData.error = "#ERROR!";
+        cellData.calculated = "";
+      }
+    }
+
+    updateCellDisplay(row, col);
+  }
+
+  function recalculateAll() {
+    calculationCache.clear();
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        recalculateCell(i, j);
+      }
+    }
+  }
+
+  // Enhanced event handlers
+  sheetContainer.addEventListener("focusin", (e) => {
+    if (e.target.classList.contains('sheet-cell')) {
+      if (activeCell) activeCell.classList.remove("active");
+      activeCell = e.target;
+      activeCell.classList.add("active");
+
+      const row = parseInt(activeCell.dataset.row);
+      const col = parseInt(activeCell.dataset.col);
+      const cellData = sheetData[row][col];
+
+      // Show formula or value in formula bar
+      formulaBar.value = cellData.formula || cellData.value || "";
+
+      // Show raw content in cell while editing
+      activeCell.textContent = cellData.formula || cellData.value || "";
+    }
+  });
+
+  sheetContainer.addEventListener("focusout", (e) => {
+    if (e.target.classList.contains('sheet-cell')) {
+      const row = parseInt(e.target.dataset.row);
+      const col = parseInt(e.target.dataset.col);
+      const value = e.target.textContent.trim();
+
+      setCellValue(row, col, value);
+    }
+  });
+
+  formulaBar.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && activeCell) {
+      e.preventDefault();
+      const row = parseInt(activeCell.dataset.row);
+      const col = parseInt(activeCell.dataset.col);
+      const value = formulaBar.value.trim();
+
+      setCellValue(row, col, value);
+      activeCell.focus();
+    }
+  });
+
+  // Enhanced keyboard navigation
+  sheetContainer.addEventListener("keydown", (e) => {
+    if (!activeCell) return;
+
+    let row = parseInt(activeCell.dataset.row, 10);
+    let col = parseInt(activeCell.dataset.col, 10);
+    let newRow = row, newCol = col;
+
+    switch (e.key) {
+      case "ArrowUp":
+        if (row > 0) newRow--;
+        e.preventDefault();
+        break;
+      case "ArrowDown":
+        if (row < ROWS - 1) newRow++;
+        e.preventDefault();
+        break;
+      case "ArrowLeft":
+        if (e.target.selectionStart === 0 && col > 0) {
+          newCol--;
+          e.preventDefault();
+        }
+        break;
+      case "ArrowRight":
+        if (e.target.selectionStart === e.target.textContent.length && col < COLS - 1) {
+          newCol++;
+          e.preventDefault();
+        }
+        break;
+      case "Enter":
+        if (!e.shiftKey) {
+          e.preventDefault();
+          const value = activeCell.textContent.trim();
+          setCellValue(row, col, value);
+
+          if (row < ROWS - 1) newRow++;
+        }
+        break;
+      case "Tab":
+        e.preventDefault();
+        const value = activeCell.textContent.trim();
+        setCellValue(row, col, value);
+
+        if (e.shiftKey) {
+          if (col > 0) newCol--;
+        } else {
+          if (col < COLS - 1) newCol++;
+        }
+        break;
+      case "Delete":
+      case "Backspace":
+        if (e.target.textContent === "") {
+          e.preventDefault();
+          setCellValue(row, col, "");
+        }
+        break;
+    }
+
+    if (newRow !== row || newCol !== col) {
+      const newCell = sheetContainer.querySelector(`[data-row="${newRow}"][data-col="${newCol}"]`);
+      if (newCell) {
+        newCell.focus();
+      }
+    }
+  });
+
+  // CSV handling with improved parsing
+  csvSaveBtn.addEventListener("click", async () => {
+    const csvContent = sheetData
+      .map((row) =>
+        row
+          .map((cellData) => {
+            const value = cellData.value || "";
+            if (value.includes(",") || value.includes('"') || value.includes('\n')) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    if (!supportsFileSystemAccess) {
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "spreadsheet.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: "spreadsheet.csv",
+        types: [{ description: "CSV File", accept: { "text/csv": [".csv"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(csvContent);
+      await writable.close();
+    } catch (err) {
+      console.error("Failed to save file:", err);
+    }
+  });
+
+  csvOpenBtn.addEventListener("click", async () => {
+    if (!supportsFileSystemAccess) {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv";
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const contents = await file.text();
+          parseCSV(contents);
+        }
+      };
+      input.click();
+      return;
+    }
+
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: "CSV Files", accept: { "text/csv": [".csv"] } }],
+      });
+      const file = await handle.getFile();
+      const contents = await file.text();
+      parseCSV(contents);
+    } catch (err) {
+      console.error("Failed to open file:", err);
+    }
+  });
+
+  function parseCSV(contents) {
+    const rows = contents.split("\n");
+    sheetData = initializeSheetData();
+
+    rows.forEach((row, r) => {
+      if (r < ROWS && row.trim()) {
+        const cols = parseCSVRow(row);
+        cols.forEach((col, c) => {
+          if (c < COLS) {
+            sheetData[r][c].value = col;
+            if (col.startsWith('=')) {
+              sheetData[r][c].formula = col;
+              sheetData[r][c].value = "";
+            }
+          }
+        });
+      }
+    });
+
+    recalculateAll();

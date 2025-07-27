@@ -78,12 +78,80 @@ Meeting Notes - July 26, 2025
     - Sarah starts on August 1st.
     - Her laptop and credentials need to be ready.
 
+# DELEGATED TASKS
+Track what you've delegated and follow up systematically.
+
+Example:
+DELEGATED TASKS
+===============
+ASSIGNED TO: Sarah
+Task: Update customer database
+Due: 2025-07-30
+Status: In progress
+Last check-in: 2025-07-25
+Notes: Waiting for IT to provide access
+
+ASSIGNED TO: Mike
+Task: Create Q3 sales report
+Due: 2025-08-01
+Status: Not started
+Last check-in: 2025-07-23
+Notes: Follow up on data sources needed
+
+# SCHEDULE
+Create daily or weekly schedule templates in plaintext. Use simple time blocks to plan your day without the overhead of calendar apps.
+
+Example:
+DAILY SCHEDULE - July 27, 2025
+==============================
+08:00-09:00  Deep work: Project Alpha
+09:00-09:30  Email and Slack catch-up
+09:30-11:00  Client presentation prep
+11:00-12:00  Team standup + follow-ups
+12:00-13:00  Lunch break
+13:00-15:00  Code review and bug fixes
+15:00-15:30  Admin tasks (invoices, reports)
+15:30-17:00  Strategic planning for Q4
+
 # JOURNAL
 Keeping a daily journal in plaintext is a great way to record your thoughts without the clutter of a fancy app. Just create a new file for each entry, perhaps with the date as the filename (e.g., 2025-07-26.txt).
 
 Example:
 July 26, 2025
 Woke up early this morning. The weather today is perfect. Spent the morning working on the garden and then went for a walk by the river. It's nice to have quiet moments like these. I feel really productive today and managed to cross off most of my to-do list. Looking forward to a relaxing evening.
+
+# WEEKLY REFLECTION
+Use plaintext for regular productivity reviews. Track what worked, what didn't, and adjustments for next week.
+
+# HABIT TRACKING
+Use simple symbols to track daily habits and routines. Create monthly grids or simple daily checkmarks.
+
+Example:
+HABIT TRACKER - JULY 2025
+=========================
+Habit: Exercise | Read 30min | No social media before 10am
+07/26: [x]      | [x]        | [ ]
+07/27: [x]      | [ ]        | [x]
+07/28: [ ]      | [x]        | [x]
+
+Legend: [x] = completed, [ ] = missed, [~] = partial
+
+Example:
+WEEK ENDING: July 26, 2025
+===========================
+COMPLETED:
+- Finished user authentication module
+- Resolved 8 customer support tickets
+- Completed quarterly security audit
+
+CHALLENGES:
+- Scope creep on Project Beta (need clearer requirements)
+- Too many interruptions during deep work blocks
+
+IMPROVEMENTS FOR NEXT WEEK:
+- Block calendar for 2-hour focus sessions
+- Set up auto-responder during deep work
+- Schedule requirements review for Project Beta
 
 # PROJECT PLANNING
 You can easily outline an entire project using plaintext. Indentation helps create a clear hierarchy of goals, tasks, and sub-tasks. This method is often used for brainstorming and creating a simple project roadmap.
@@ -122,3 +190,82 @@ AGENDA:
 ACTION ITEMS:
 - [ ] Raj to send final campaign report by EOD.
 - [ ] Sofia to draft creative briefs for August launch.
+
+# CONTACT MANAGEMENT
+Keep simple contact records and interaction history without heavy CRM software.
+
+Example:
+CLIENT: ABC Corporation
+=======================
+Contact: John Smith (john@abc.com)
+Phone: 555-0123
+Last Contact: 2025-07-20
+Status: Active client
+
+INTERACTION HISTORY:
+2025-07-20: Discussed Q4 budget increase (+15%)
+2025-07-01: Delivered monthly report, positive feedback
+2025-06-15: Addressed concerns about delivery timeline
+
+NEXT ACTIONS:
+- Send proposal for additional services by 07/30
+- Schedule quarterly review meeting
+
+# KNOWLEDGE BASE
+Create your own reference system for frequently needed information.
+Example:
+
+QUICK REFERENCE
+===============
+KEYBOARD SHORTCUTS:
+- Cmd+Shift+4: Screenshot selection
+- Cmd+Space: Spotlight search
+- Cmd+Tab: Switch applications
+
+SQL SNIPPETS:
+- COUNT DISTINCT: SELECT COUNT(DISTINCT column) FROM table;
+- DATE RANGE: WHERE date >= '2025-01-01' AND date < '2025-02-01'
+
+USEFUL COMMANDS:
+- Git reset: git reset --hard HEAD~1
+- Docker cleanup: docker system prune -a
+- Kill process: sudo kill -9 [PID]
+
+# TEMPLATE LIBRARY
+Keep a collection of plaintext templates for recurring tasks like email responses, project kickoffs, or status reports.
+
+Example:
+EMAIL TEMPLATES
+===============
+
+PROJECT STATUS UPDATE:
+Subject: [Project Name] - Week of [Date]
+
+Progress This Week:
+- [Achievement 1]
+- [Achievement 2]
+
+Blockers/Concerns:
+- [Issue 1]
+
+Next Week Goals:
+- [Goal 1]
+- [Goal 2]
+
+---
+
+CLIENT FOLLOW-UP:
+Subject: Following up on [Topic]
+
+Hi [Name],
+
+Thanks for taking the time to discuss [topic] yesterday.
+
+Next steps:
+1. [Action item 1]
+2. [Action item 2]
+
+Timeline: [Date]
+
+Best regards,
+[Your name]

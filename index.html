@@ -4,17 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="bEdit - browser text editor">
+        <meta name="description" content="bpad - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="bEdit">
-        <title>bEdit</title>
+        <meta name="apple-mobile-web-app-title" content="bpad">
+        <title>bpad</title>
         <link rel="manifest" href="manifest.json" />
         <link rel="stylesheet" href="style.css">
-		<link rel="icon" type="image/png" sizes="192x192" href="./bedit192.png">
-		<link rel="icon" type="image/png" sizes="512x512" href="./bedit512.png">
-		<link rel="shortcut icon" href="./bedit192.png">
-		<link rel="apple-touch-icon" href="./bedit192.png">
+		<link rel="icon" type="image/png" sizes="192x192" href="./bpad192.png">
+		<link rel="icon" type="image/png" sizes="512x512" href="./bpad512.png">
+		<link rel="shortcut icon" href="./bpad192.png">
+		<link rel="apple-touch-icon" href="./bpad192.png">
         <script src="marked.js"></script>
         <script src="html2canvas.js"></script>
         <script src="jspdf.js"></script>
@@ -39,9 +39,9 @@
                 <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
                 <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
                 <span id="filename-container">
-                    <input id="filename-1" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-1" />
+                    <input id="filename-1" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-1" />
                     <datalist id="recent-files-datalist-1"></datalist>
-                    <input id="filename-2" placeholder="bedit.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <input id="filename-2" placeholder="bpad.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
                     <datalist id="recent-files-datalist-2"></datalist>
                     <button id="recent-files-btn" title="Recent Files">&#9662;</button>
                     <div id="recent-files-dropdown" class="dropdown-content"></div>
@@ -77,7 +77,7 @@
                 </span>
                 <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
             </span>
-            <button id="bedit-btn" title="bEdit help & settings (CTRL + /)"><strong>b</strong></button>
+            <button id="bpad-btn" title="bpad help & settings (CTRL + /)"><strong>b</strong></button>
         </nav>
         <div id="editor-container">
             <div class="editor-pane" id="editor-pane-1">
@@ -87,7 +87,7 @@
                     id="textbox-1"
                     class="textbox"
                     autofocus
-                    placeholder="Welcome to bEdit. Start typing to begin or click the 'b' button for help and settings."
+                    placeholder="Welcome to bpad. Start typing to begin or click the 'b' button for help and settings."
                     spellcheck="false"
                 ></textarea>
             </div>
@@ -147,17 +147,17 @@
         </div>
         <div id="settings-popup" class="popup">
             <button class="close-btn">×</button>
-            <h2>bEdit Settings</h2>
+            <h2>bpad Settings</h2>
             <div class="b-modal-layout">
                 <div class="b-modal-column-left">
                     <p>
-                        Open bedit.org in web browser and start writing. Changes are automatically saved in your browser.<br />
+                        Open bpad.me in web browser and start writing. Changes are automatically saved in your browser.<br />
                         Remember to "Save" a copy of your file before clearing your browser cache.<br />
-                        bEdit can be used offline after the first use. Reopen bedit.org in your browser to continue working on your
+                        bpad can be used offline after the first use. Reopen bpad.me in your browser to continue working on your
                         file.<br />
-                        Files can be opened from your device using the "Open" button or by dragging and dropping in to bEdit.<br />
+                        Files can be opened from your device using the "Open" button or by dragging and dropping in to bpad.<br />
                         To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
-                        bEdit PWA can edit and save local files directly once installed.<br />
+                        bpad PWA can edit and save local files directly once installed.<br />
                     </p>
                         <b>CTRL + N</b> (<span class="shortcut-symbol" id="help-new-btn">&#128196;</span> New) to create a blank file in a new tab.<br />
                         <b>CTRL + O</b> (<span class="shortcut-symbol" id="help-open-btn">&#128194;</span> Open) to open a file from your computer.<br />
@@ -166,17 +166,17 @@
                         <b>CTRL + I</b> (<span class="shortcut-symbol" id="help-split-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M5.063.5A1.563 1.563 0 0 0 3.5 2v12A1.563 1.563 0 0 0 5.063 15.5h5.874A1.563 1.563 0 0 0 12.5 14V2a1.563 1.563 0 0 0-1.563-1.5H5.063zM4.5 2a.563.563 0 0 1 .563-.5h5.874a.563.563 0 0 1 .563.5v12a.563.563 0 0 1-.563.5H5.063a.563.563 0 0 1-.563-.5V2z"/><path d="M7.75 15.5V.5h.5v15h-.5z"/></svg></span> Split) to toggle split/<a href="https://www.markdownguide.org/cheat-sheet/">Markdown</a> view.<br />
                         <b>CTRL + F</b> (<span class="shortcut-symbol" id="help-find-btn">&#128269;</span> Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
                         <b>CTRL + K</b> (<span class="shortcut-symbol" id="help-link-btn">&#128279;</span> Link) to open a web link on current line in a new tab.<br />
-                        <b>CTRL + /</b> (<span class="shortcut-symbol" id="help-settings-btn"><b>b</b></span> Settings) to open the bEdit help and settings window.<br />
+                        <b>CTRL + /</b> (<span class="shortcut-symbol" id="help-settings-btn"><b>b</b></span> Settings) to open the bpad help and settings window.<br />
                         <b>CTRL + =</b> (<span class="shortcut-symbol" id="help-lock-btn">🔒</span> Lock) to lock the current note with a password, or unlock an existing one.<br />
                         <b>CTRL + Z</b> (<span class="shortcut-symbol" id="help-undo-btn">&#x21A9;</span> Undo) to undo the last change and CTRL + Y to redo it.<br />
                         <b>CTRL + M</b> to cycle through Light, Dark, and Snow modes.<br />
-                        <b><span class="shortcut-symbol" id="help-pwa-btn">&#x2B07;</span> PWA</b> installs bEdit as an offline Progressive Web App.<br />
+                        <b><span class="shortcut-symbol" id="help-pwa-btn">&#x2B07;</span> PWA</b> installs bpad as an offline Progressive Web App.<br />
                         <b>&#8595;</b> displays the current line number.<br />
                         <b>&#8594;</b> displays the current character position.<br />
                         <b>=</b> displays the current word count.<br />
                     </p>
                     <p>
-                        bEdit.org does not (and cannot):<br />
+                        bpad.me does not (and cannot):<br />
                         <ul>
                         <li>access your content,</li>
                         <li>criticize your writing or coding,</li>
@@ -187,9 +187,9 @@
                         </ul>
                     </p>
                     <p>
-                        bEdit was created by <a href="https://barney.me">Barney</a>.<br />
+                        bpad was created by <a href="https://barney.me">Barney</a>.<br />
                         Read just some of the ways you can use
-                        <a href="https://bedit.org/plaintext.txt">plaintext</a>. I hope you find bEdit useful. If you want to support bEdit.org buy me a
+                        <a href="https://bpad.me/plaintext.txt">plaintext</a>. I hope you find bpad useful. If you want to support bpad.me buy me a
                         <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.
                     </p>
                 </div>

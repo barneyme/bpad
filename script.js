@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
     regexCheckbox: document.getElementById("regex-checkbox"),
     splitViewBtn: document.getElementById("split-view-btn"),
     editorContainer: document.getElementById("editor-container"),
-    beditBtn: document.getElementById("bedit-btn"),
+    bpadBtn: document.getElementById("bpad-btn"),
     passwordInput: document.getElementById("password-input"),
     passwordSubmitBtn: document.getElementById("password-submit-btn"),
     defaultWordWrapCheck: document.getElementById("default-word-wrap"),
@@ -172,11 +172,11 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   function saveSettings() {
-    localStorage.setItem("bedit-settings", JSON.stringify(settings));
+    localStorage.setItem("bpad-settings", JSON.stringify(settings));
   }
 
   function loadSettings() {
-    const savedSettings = localStorage.getItem("bedit-settings");
+    const savedSettings = localStorage.getItem("bpad-settings");
     settings = savedSettings
       ? { ...defaultSettings, ...JSON.parse(savedSettings) }
       : { ...defaultSettings };
@@ -217,13 +217,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function saveProtectedNotes() {
     localStorage.setItem(
-      "bedit-protected-notes",
+      "bpad-protected-notes",
       JSON.stringify(protectedNotes),
     );
   }
 
   function loadProtectedNotes() {
-    const savedNotes = localStorage.getItem("bedit-protected-notes");
+    const savedNotes = localStorage.getItem("bpad-protected-notes");
     protectedNotes = savedNotes ? JSON.parse(savedNotes) : {};
   }
 
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (content.trim() === "") {
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
-        "Welcome to bEdit. Start typing to begin or click the 'b' button for help and settings.";
+        "Welcome to bpad. Start typing to begin or click the 'b' button for help and settings.";
       updateAllUI();
       storeLocally(elements.textbox1);
       alert(
@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
-        "Welcome to bEdit. Start typing to begin or click the 'b' button for help and settings.";
+        "Welcome to bpad. Start typing to begin or click the 'b' button for help and settings.";
       updateAllUI();
       storeLocally(elements.textbox1);
       alert("Note locked and saved.");
@@ -394,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (!window.name) {
-    window.name = `bedit-tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    window.name = `bpad-tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   const tabId = window.name;
 
@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function storeLocally(textbox) {
     if (!textbox) return;
-    const key = `bedit_${tabId}_${textbox.id}`;
+    const key = `bpad_${tabId}_${textbox.id}`;
     localStorage.setItem(key, textbox.value);
   }
 
@@ -508,7 +508,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getRecentFiles() {
-    const files = localStorage.getItem("bedit-recent-files");
+    const files = localStorage.getItem("bpad-recent-files");
     return files ? JSON.parse(files) : [];
   }
 
@@ -517,7 +517,7 @@ document.addEventListener("DOMContentLoaded", function () {
     recentFiles = recentFiles.filter(
       (file) => file.filename !== filenameToRemove,
     );
-    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
+    localStorage.setItem("bpad-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
 
@@ -561,7 +561,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (recentFiles.length > MAX_RECENT_FILES) {
       recentFiles.pop();
     }
-    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
+    localStorage.setItem("bpad-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
 
@@ -662,7 +662,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? elements.filenameBox1
             : elements.filenameBox2;
         const saveAsHandle = await window.showSaveFilePicker({
-          suggestedName: filenameBox.value || "bedit.txt",
+          suggestedName: filenameBox.value || "bpad.txt",
           types: [
             {
               description: "Text Files",
@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", function () {
       activeTextbox === elements.textbox2
         ? elements.filenameBox2
         : elements.filenameBox1;
-    const filename = filenameBox.value || "bedit.txt";
+    const filename = filenameBox.value || "bpad.txt";
     addRecentFile(filename, content);
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -1035,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleExportHTML() {
     const content = elements.previewPane2.innerHTML;
     const filename =
-      (elements.filenameBox1.value || "bedit").replace(/\.[^/.]+$/, "") +
+      (elements.filenameBox1.value || "bpad").replace(/\.[^/.]+$/, "") +
       ".html";
     const fullHtml = `
         <!DOCTYPE html>
@@ -1068,7 +1068,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const { jsPDF } = window.jspdf;
     const content = elements.previewPane2;
     const filename =
-      (elements.filenameBox1.value || "bedit").replace(/\.[^/.]+$/, "") +
+      (elements.filenameBox1.value || "bpad").replace(/\.[^/.]+$/, "") +
       ".pdf";
 
     html2canvas(content).then((canvas) => {
@@ -1195,7 +1195,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const blob = new Blob([settingsString], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "bedit-settings.json";
+    a.download = "bpad-settings.json";
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -1288,7 +1288,7 @@ document.addEventListener("DOMContentLoaded", function () {
       activeTextbox === elements.textbox1
         ? elements.filenameBox1
         : elements.filenameBox2;
-    const subject = encodeURIComponent(filenameBox.value || "Note from bEdit");
+    const subject = encodeURIComponent(filenameBox.value || "Note from bpad");
     const body = encodeURIComponent(content);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
@@ -1529,7 +1529,7 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.undoButton.addEventListener("click", undo);
   elements.openNewTabBtn.addEventListener("click", openNewTab);
   elements.splitViewBtn.addEventListener("click", () => toggleSplitView());
-  elements.beditBtn.addEventListener("click", () =>
+  elements.bpadBtn.addEventListener("click", () =>
     togglePopup("settings", true),
   );
 
@@ -1656,7 +1656,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("resize", adjustTextareaHeight);
 
   const savedContent1 = localStorage.getItem(
-    `bedit_${tabId}_${elements.textbox1.id}`,
+    `bpad_${tabId}_${elements.textbox1.id}`,
   );
   if (savedContent1) {
     elements.textbox1.value = savedContent1;
@@ -1665,7 +1665,7 @@ document.addEventListener("DOMContentLoaded", function () {
     addToHistory(elements.textbox1.value, 0);
   }
   const savedContent2 = localStorage.getItem(
-    `bedit_${tabId}_${elements.textbox2.id}`,
+    `bpad_${tabId}_${elements.textbox2.id}`,
   );
   if (savedContent2) {
     elements.textbox2.value = savedContent2;

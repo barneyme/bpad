@@ -194,7 +194,7 @@ button:disabled {
     border-color: #5dade2;
     color: white;
 }
-#bedit-btn {
+#bpad-btn {
     margin-left: auto;
     background-color: #2980b9;
     border-color: #5dade2;
@@ -205,7 +205,7 @@ button:disabled {
 #find-replace-button:hover,
 #undo:hover:not(:disabled),
 #openNewTab:hover,
-#bedit-btn:hover,
+#bpad-btn:hover,
 #split-view-btn:hover,
 #wrap-btn:hover,
 #email-btn:hover,
@@ -557,7 +557,7 @@ body.dark-mode #install-app,
 body.dark-mode #theme-toggle,
 body.dark-mode #split-view-btn,
 body.dark-mode #wrap-btn,
-body.dark-mode #bedit-btn,
+body.dark-mode #bpad-btn,
 body.dark-mode #email-btn,
 body.dark-mode #recent-files-btn,
 body.dark-mode #preview-btn,
@@ -575,7 +575,7 @@ body.dark-mode #install-app:hover,
 body.dark-mode #theme-toggle:hover,
 body.dark-mode #split-view-btn:hover,
 body.dark-mode #wrap-btn:hover,
-body.dark-mode #bedit-btn:hover,
+body.dark-mode #bpad-btn:hover,
 body.dark-mode #email-btn:hover,
 body.dark-mode #recent-files-btn:hover,
 body.dark-mode #preview-btn:hover,
@@ -758,7 +758,7 @@ body.snow-mode #export-pdf-btn {
     border-color: #add8e6;
     color: #2c3e50;
 }
-body.snow-mode #bedit-btn {
+body.snow-mode #bpad-btn {
     background-color: #87ceeb;
     border-color: #add8e6;
     color: #2c3e50;
@@ -773,7 +773,7 @@ body.snow-mode #theme-toggle:hover,
 body.snow-mode #split-view-btn:hover,
 body.snow-mode #wrap-btn:hover,
 body.snow-mode #email-btn:hover,
-body.snow-mode #bedit-btn:hover,
+body.snow-mode #bpad-btn:hover,
 body.snow-mode #preview-btn:hover,
 body.snow-mode #export-html-btn:hover,
 body.snow-mode #export-pdf-btn:hover {

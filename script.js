@@ -1,1101 +1,1745 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // --- PWA Service Worker Registration ---
+document.addEventListener("DOMContentLoaded", function () {
+  const elements = {
+    textbox1: document.getElementById("textbox-1"),
+    textbox2: document.getElementById("textbox-2"),
+    filenameBox1: document.getElementById("filename-1"),
+    filenameBox2: document.getElementById("filename-2"),
+    recentFilesDatalist1: document.getElementById("recent-files-datalist-1"),
+    recentFilesDatalist2: document.getElementById("recent-files-datalist-2"),
+    recentFilesBtn: document.getElementById("recent-files-btn"),
+    recentFilesDropdown: document.getElementById("recent-files-dropdown"),
+    linePosition: document.getElementById("line-position"),
+    charPosition: document.getElementById("char-position"),
+    wordCount: document.getElementById("word-count"),
+    openLinkBtn: document.getElementById("open-link-btn"),
+    overlay: document.getElementById("popup-overlay"),
+    openInput1: document.getElementById("open-input-1"),
+    openInput2: document.getElementById("open-input-2"),
+    findText: document.getElementById("find-text"),
+    replaceText: document.getElementById("replace-text"),
+    findCount: document.getElementById("find-count"),
+    undoButton: document.getElementById("undo"),
+    nav: document.querySelector("nav"),
+    findBtn: document.getElementById("find-btn"),
+    replaceBtn: document.getElementById("replace-btn"),
+    replaceAllBtn: document.getElementById("replace-all-btn"),
+    openBtn: document.getElementById("open"),
+    saveBtn: document.getElementById("save"),
+    emailBtn: document.getElementById("email-btn"),
+    openNewTabBtn: document.getElementById("openNewTab"),
+    findReplaceBtn: document.getElementById("find-replace-button"),
+    closeButtons: document.querySelectorAll(".close-btn"),
+    installButton: document.getElementById("install-app"),
+    highlightLayer1: document.getElementById("highlight-layer-1"),
+    highlightLayer2: document.getElementById("highlight-layer-2"),
+    activeLine1: document.getElementById("active-line-1"),
+    activeLine2: document.getElementById("active-line-2"),
+    caseSensitiveCheckbox: document.getElementById("case-sensitive-checkbox"),
+    regexCheckbox: document.getElementById("regex-checkbox"),
+    splitViewBtn: document.getElementById("split-view-btn"),
+    editorContainer: document.getElementById("editor-container"),
+    beditBtn: document.getElementById("bedit-btn"),
+    passwordInput: document.getElementById("password-input"),
+    passwordSubmitBtn: document.getElementById("password-submit-btn"),
+    defaultWordWrapCheck: document.getElementById("default-word-wrap"),
+    defaultSplitViewCheck: document.getElementById("default-split-view"),
+    defaultAutoIndentCheck: document.getElementById("default-auto-indent"),
+    defaultTurboBoostCheck: document.getElementById("default-turbo-boost"),
+    enableSpellCheckerCheck: document.getElementById("enable-spell-checker"),
+    autoCloseBracketsCheck: document.getElementById("auto-close-brackets"),
+    focusModeCheck: document.getElementById("focus-mode-check"),
+    defaultThemeSelect: document.getElementById("default-theme"),
+    dateFormatSelect: document.getElementById("date-format-select"),
+    exportSettingsBtn: document.getElementById("export-settings-btn"),
+    importSettingsBtn: document.getElementById("import-settings-btn"),
+    importSettingsInput: document.getElementById("import-settings-input"),
+    helpNewBtn: document.getElementById("help-new-btn"),
+    helpOpenBtn: document.getElementById("help-open-btn"),
+    helpSaveBtn: document.getElementById("help-save-btn"),
+    helpEmailBtn: document.getElementById("help-email-btn"),
+    helpSplitBtn: document.getElementById("help-split-btn"),
+    helpFindBtn: document.getElementById("help-find-btn"),
+    helpLinkBtn: document.getElementById("help-link-btn"),
+    helpSettingsBtn: document.getElementById("help-settings-btn"),
+    helpLockBtn: document.getElementById("help-lock-btn"),
+    helpUndoBtn: document.getElementById("help-undo-btn"),
+    helpPwaBtn: document.getElementById("help-pwa-btn"),
+    previewBtn: document.getElementById("preview-btn"),
+    exportHtmlBtn: document.getElementById("export-html-btn"),
+    exportPdfBtn: document.getElementById("export-pdf-btn"),
+    previewPane2: document.getElementById("preview-pane-2"),
+  };
+  const popups = {
+    findReplace: document.getElementById("find-replace-popup"),
+    settings: document.getElementById("settings-popup"),
+    password: document.getElementById("password-popup"),
+  };
+
+  async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+    return window.crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"],
+    );
+  }
+
+  async function encrypt(data, password) {
+    const enc = new TextEncoder();
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const ciphertext = await window.crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      enc.encode(data),
+    );
+    const bufferToBase64 = (buffer) =>
+      btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    return {
+      salt: bufferToBase64(salt),
+      iv: bufferToBase64(iv),
+      ciphertext: bufferToBase64(ciphertext),
+    };
+  }
+
+  async function decrypt(encryptedData, password) {
+    const base64ToBuffer = (base64) =>
+      Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    try {
+      const salt = base64ToBuffer(encryptedData.salt);
+      const iv = base64ToBuffer(encryptedData.iv);
+      const ciphertext = base64ToBuffer(encryptedData.ciphertext);
+      const key = await deriveKey(password, salt);
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        ciphertext,
+      );
+      const dec = new TextDecoder();
+      return dec.decode(decrypted);
+    } catch (e) {
+      console.error("Decryption failed", e);
+      return null;
+    }
+  }
+
+  async function getNoteId(password) {
+    const enc = new TextEncoder();
+    const data = enc.encode(password);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  let deferredPrompt;
+  let activeTextbox = elements.textbox1;
+  let currentLinkUrl = null;
+  const MAX_RECENT_FILES = 5;
+  let protectedNotes = {};
+  let activeProtectedNotePassword = null;
+  let fileHandles = {
+    "textbox-1": null,
+    "textbox-2": null,
+  };
+
+  let settings = {};
+  const defaultSettings = {
+    wordWrap: false,
+    splitView: false,
+    theme: "light",
+    autoIndent: false,
+    turboBoost: false,
+    spellCheck: false,
+    autoCloseBrackets: false,
+    focusMode: false,
+    dateFormat: "DD-MMM-YYYY",
+    expansions: {},
+  };
+
+  function saveSettings() {
+    localStorage.setItem("bedit-settings", JSON.stringify(settings));
+  }
+
+  function loadSettings() {
+    const savedSettings = localStorage.getItem("bedit-settings");
+    settings = savedSettings
+      ? { ...defaultSettings, ...JSON.parse(savedSettings) }
+      : { ...defaultSettings };
+  }
+
+  function applySettings(isInitialLoad = false) {
+    const isWordWrapEnabled = settings.wordWrap;
+    elements.textbox1.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
+    elements.textbox2.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
+
+    elements.textbox1.spellcheck = settings.spellCheck;
+    elements.textbox2.spellcheck = settings.spellCheck;
+
+    document.body.className = document.body.className
+      .replace(/\b(dark|snow)-mode\b/g, "")
+      .trim();
+    if (settings.theme === "dark") {
+      document.body.classList.add("dark-mode");
+    } else if (settings.theme === "snow") {
+      document.body.classList.add("snow-mode");
+    }
+
+    if (isInitialLoad && settings.splitView) {
+      toggleSplitView(true);
+    }
+
+    elements.defaultWordWrapCheck.checked = settings.wordWrap;
+    elements.defaultSplitViewCheck.checked = settings.splitView;
+    elements.defaultAutoIndentCheck.checked = settings.autoIndent;
+    elements.defaultTurboBoostCheck.checked = settings.turboBoost;
+    elements.enableSpellCheckerCheck.checked = settings.spellCheck;
+    elements.autoCloseBracketsCheck.checked = settings.autoCloseBrackets;
+    elements.focusModeCheck.checked = settings.focusMode;
+    elements.defaultThemeSelect.value = settings.theme;
+    elements.dateFormatSelect.value = settings.dateFormat;
+    initializeExpansionSettings();
+  }
+
+  function saveProtectedNotes() {
+    localStorage.setItem(
+      "bedit-protected-notes",
+      JSON.stringify(protectedNotes),
+    );
+  }
+
+  function loadProtectedNotes() {
+    const savedNotes = localStorage.getItem("bedit-protected-notes");
+    protectedNotes = savedNotes ? JSON.parse(savedNotes) : {};
+  }
+
+  async function lockAndSaveProtectedNote() {
+    if (!activeProtectedNotePassword) return;
+
+    const content = elements.textbox1.value;
+    const password = activeProtectedNotePassword;
+    activeProtectedNotePassword = null;
+
+    if (content.trim() === "") {
+      elements.textbox1.value = "";
+      elements.textbox1.placeholder =
+        "Welcome to bEdit. Start typing to begin or click the 'b' button for help and settings.";
+      updateAllUI();
+      storeLocally(elements.textbox1);
+      alert(
+        "Protected note session ended. No content was saved as the note was empty.",
+      );
+      return;
+    }
+
+    try {
+      const encryptedData = await encrypt(content, password);
+      const noteId = await getNoteId(password);
+      protectedNotes[noteId] = encryptedData;
+      saveProtectedNotes();
+
+      elements.textbox1.value = "";
+      elements.textbox1.placeholder =
+        "Welcome to bEdit. Start typing to begin or click the 'b' button for help and settings.";
+      updateAllUI();
+      storeLocally(elements.textbox1);
+      alert("Note locked and saved.");
+    } catch (error) {
+      console.error("Encryption failed:", error);
+      alert("Error: Could not lock and save the note.");
+      activeProtectedNotePassword = password;
+    }
+  }
+
+  async function handlePasswordSubmit() {
+    const password = elements.passwordInput.value;
+    elements.passwordInput.value = "";
+    if (!password) {
+      togglePopup(null, false);
+      return;
+    }
+
+    togglePopup(null, false);
+
+    const noteId = await getNoteId(password);
+
+    if (protectedNotes.hasOwnProperty(noteId)) {
+      const encryptedData = protectedNotes[noteId];
+      const decryptedContent = await decrypt(encryptedData, password);
+
+      if (decryptedContent !== null) {
+        addToHistory(elements.textbox1.value, elements.textbox1.selectionStart);
+        elements.textbox1.value = decryptedContent;
+        elements.textbox1.placeholder =
+          "Note unlocked. Press Ctrl + = to lock and save.";
+        activeProtectedNotePassword = password;
+        updateAllUI();
+        storeLocally(elements.textbox1);
+        elements.textbox1.focus();
+      } else {
+        alert("Incorrect password.");
+        elements.textbox1.focus();
+      }
+    } else {
+      addToHistory(elements.textbox1.value, elements.textbox1.selectionStart);
+      elements.textbox1.value = "";
+      elements.textbox1.placeholder =
+        "New protected note. Type content and press Ctrl + = to lock and save.";
+      activeProtectedNotePassword = password;
+      updateAllUI();
+      storeLocally(elements.textbox1);
+      elements.textbox1.focus();
+    }
+  }
+
+  function enterFullScreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  }
+
+  function exitFullScreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+
+  function onFullScreenChange() {
+    const isFullScreen = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+    if (settings.focusMode !== isFullScreen) {
+      settings.focusMode = isFullScreen;
+      elements.focusModeCheck.checked = isFullScreen;
+      saveSettings();
+    }
+  }
+
+  function isPWAInstalled() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      navigator.standalone === true
+    );
+  }
+
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+  }
+
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => console.log("Service Worker registered", reg))
-        .catch((err) =>
-          console.error("Service Worker registration failed", err),
-        );
-    });
-  }
-
-  // --- Local Storage Keys ---
-  const STORAGE_KEYS = {
-    processor: "bpad-wordprocessor-content",
-    sheet: "bpad-spreadsheet-data",
-    notes: "bpad-notes-data",
-  };
-
-  // --- Tab Navigation ---
-  const tabs = document.querySelectorAll(".tab-btn");
-  const sections = document.querySelectorAll(".app-section");
-
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("active"));
-      sections.forEach((s) => s.classList.remove("active"));
-      tab.classList.add("active");
-      document
-        .getElementById(tab.id.replace("tab-", "") + "-section")
-        .classList.add("active");
-    });
-  });
-
-  // =================================================================
-  // Word Processor
-  // =================================================================
-  const editor = document.getElementById("editor");
-  const wpFormatBtns = document.querySelectorAll(".wp-format");
-  const wpNewBtn = document.getElementById("wp-new");
-  const wpOpenBtn = document.getElementById("wp-open");
-  const wpSaveBtn = document.getElementById("wp-save");
-
-  function loadProcessorContent() {
-    const savedContent = localStorage.getItem(STORAGE_KEYS.processor);
-    if (savedContent) {
-      editor.innerHTML = savedContent;
-    }
-  }
-
-  editor.addEventListener("input", () => {
-    localStorage.setItem(STORAGE_KEYS.processor, editor.innerHTML);
-  });
-
-  wpNewBtn.addEventListener("click", () => {
-    if (editor.textContent.trim().length > 0) {
-      if (
-        confirm(
-          "Do you want to save your current document before creating a new one?",
-        )
-      ) {
-        wpSaveBtn.click();
-      }
-    }
-    editor.innerHTML = "";
-    localStorage.removeItem(STORAGE_KEYS.processor);
-  });
-
-  wpFormatBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.execCommand(btn.dataset.command, false, null);
-      editor.focus();
-      editor.dispatchEvent(new Event("input"));
-    });
-  });
-
-  // Check if File System Access API is supported
-  const supportsFileSystemAccess = "showSaveFilePicker" in window;
-
-  wpSaveBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      // Fallback for browsers that don't support File System Access API
-      const htmlContent = editor.innerHTML;
-      const rtfBody = htmlContent
-        .replace(/<b>(.*?)<\/b>/g, "{\\b $1}")
-        .replace(/<i>(.*?)<\/i>/g, "{\\i $1}")
-        .replace(/<u>(.*?)<\/u>/g, "{\\ul $1}")
-        .replace(/<br>/g, "\\par\n")
-        .replace(/<p>(.*?)<\/p>/g, "$1\\par\n")
-        .replace(
-          /<li>(.*?)<\/li>/g,
-          "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}",
-        )
-        .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "")
-        .replace(/<[^>]+>/g, "");
-
-      const rtfContent = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n${rtfBody}}`;
-
-      const blob = new Blob([rtfContent], { type: "application/rtf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "document.rtf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "document.rtf",
-        types: [
-          {
-            description: "Rich Text Format",
-            accept: { "application/rtf": [".rtf"] },
-          },
-        ],
-      });
-      const writable = await handle.createWritable();
-      const htmlContent = editor.innerHTML;
-
-      const rtfBody = htmlContent
-        .replace(/<b>(.*?)<\/b>/g, "{\\b $1}")
-        .replace(/<i>(.*?)<\/i>/g, "{\\i $1}")
-        .replace(/<u>(.*?)<\/u>/g, "{\\ul $1}")
-        .replace(/<br>/g, "\\par\n")
-        .replace(/<p>(.*?)<\/p>/g, "$1\\par\n")
-        .replace(
-          /<li>(.*?)<\/li>/g,
-          "{\\pard\\fi360\\li720\\bullet\t$1\\par\n}",
-        )
-        .replace(/<ol>|<\/ol>|<ul>|<\/ul>/g, "")
-        .replace(/<[^>]+>/g, "");
-
-      const rtfContent = `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n${rtfBody}}`;
-
-      await writable.write(rtfContent);
-      await writable.close();
-    } catch (err) {
-      console.error("Failed to save RTF file:", err);
-    }
-  });
-
-  wpOpenBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      // Fallback for browsers that don't support File System Access API
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".rtf";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          let contents = await file.text();
-
-          const headerRegex =
-            /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
-          contents = contents.replace(headerRegex, "");
-          contents = contents.replace(/}$/, "");
-
-          contents = contents.replace(
-            /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
-            "<li>$1</li>",
-          );
-          contents = contents.replace(/\\par\n?/g, "<br>");
-
-          const replacements = { b: "b", i: "i", ul: "u" };
-          let prevContents;
-          do {
-            prevContents = contents;
-            for (const rtfTag in replacements) {
-              const htmlTag = replacements[rtfTag];
-              const regex = new RegExp(`{\\\\${rtfTag}\\s?([^{}]+)}`, "g");
-              contents = contents.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
-            }
-          } while (prevContents !== contents);
-
-          const html = contents.replace(/\\.+?\s?|[\{\}]/g, "").trim();
-          editor.innerHTML = html;
-          editor.dispatchEvent(new Event("input"));
-        }
-      };
-      input.click();
-      return;
-    }
-
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [
-          { description: "RTF Files", accept: { "application/rtf": [".rtf"] } },
-        ],
-      });
-      const file = await handle.getFile();
-      let contents = await file.text();
-
-      const headerRegex =
-        /^{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\viewkind4\\uc1\n/;
-      contents = contents.replace(headerRegex, "");
-      contents = contents.replace(/}$/, "");
-
-      contents = contents.replace(
-        /{\\pard\\fi360\\li720\\bullet\t([^}]+?)\\par\n?}/g,
-        "<li>$1</li>",
-      );
-      contents = contents.replace(/\\par\n?/g, "<br>");
-
-      const replacements = { b: "b", i: "i", ul: "u" };
-      let prevContents;
-      do {
-        prevContents = contents;
-        for (const rtfTag in replacements) {
-          const htmlTag = replacements[rtfTag];
-          const regex = new RegExp(`{\\\\${rtfTag}\\s?([^{}]+)}`, "g");
-          contents = contents.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
-        }
-      } while (prevContents !== contents);
-
-      const html = contents.replace(/\\.+?\s?|[\{\}]/g, "").trim();
-      editor.innerHTML = html;
-      editor.dispatchEvent(new Event("input"));
-    } catch (err) {
-      console.error("Failed to open file:", err);
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (
-      !document.getElementById("processor-section").classList.contains("active")
-    ) {
-      return;
-    }
-    if (e.metaKey || e.ctrlKey) {
-      switch (e.key.toLowerCase()) {
-        case "s":
-          e.preventDefault();
-          wpSaveBtn.click();
-          break;
-        case "o":
-          e.preventDefault();
-          wpOpenBtn.click();
-          break;
-        case "n":
-          e.preventDefault();
-          wpNewBtn.click();
-          break;
-      }
-    }
-  });
-
-  // =================================================================
-  // IMPROVED SPREADSHEET
-  // =================================================================
-  const sheetContainer = document.getElementById("spreadsheet-container");
-  const formulaBar = document.getElementById("formula-bar");
-  const csvOpenBtn = document.getElementById("csv-open");
-  const csvSaveBtn = document.getElementById("csv-save");
-  const ROWS = 100;
-  const COLS = 26;
-  let sheetData = [];
-  let activeCell = null;
-  let isUpdating = false;
-  let calculationCache = new Map();
-
-  function initializeSheetData() {
-    return Array(ROWS)
-      .fill(null)
-      .map(() =>
-        Array(COLS)
-          .fill(null)
-          .map(() => ({
-            value: "",
-            formula: "",
-            calculated: "",
-            error: null,
-          })),
-      );
-  }
-
-  function saveSheetData() {
-    localStorage.setItem(STORAGE_KEYS.sheet, JSON.stringify(sheetData));
-  }
-
-  function loadSheetData() {
-    const savedData = localStorage.getItem(STORAGE_KEYS.sheet);
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        if (
-          Array.isArray(parsed) &&
-          parsed.length > 0 &&
-          typeof parsed[0][0] === "string"
-        ) {
-          sheetData = Array(ROWS)
-            .fill(null)
-            .map((_, row) =>
-              Array(COLS)
-                .fill(null)
-                .map((_, col) => ({
-                  value:
-                    parsed[row] && parsed[row][col] ? parsed[row][col] : "",
-                  formula:
-                    parsed[row] &&
-                    parsed[row][col] &&
-                    parsed[row][col].startsWith("=")
-                      ? parsed[row][col]
-                      : "",
-                  calculated: "",
-                  error: null,
-                })),
-            );
-        } else {
-          sheetData = parsed;
-        }
-      } catch (e) {
-        console.error("Error loading sheet data:", e);
-        sheetData = initializeSheetData();
-      }
-    } else {
-      sheetData = initializeSheetData();
-    }
-    renderSheet();
-    recalculateAll();
-    saveSheetData();
-  }
-
-  function parseCSVRow(row) {
-    const result = [];
-    let current = "";
-    let inQuotes = false;
-    let i = 0;
-
-    while (i < row.length) {
-      const char = row[i];
-
-      if (char === '"') {
-        if (inQuotes && row[i + 1] === '"') {
-          current += '"';
-          i += 2;
-        } else {
-          inQuotes = !inQuotes;
-          i++;
-        }
-      } else if (char === "," && !inQuotes) {
-        result.push(current);
-        current = "";
-        i++;
-      } else {
-        current += char;
-        i++;
-      }
-    }
-
-    result.push(current);
-    return result;
-  }
-
-  function renderSheet() {
-    let tableHTML = '<table class="spreadsheet-table"><thead><tr><th></th>';
-    for (let j = 0; j < COLS; j++)
-      tableHTML += `<th>${String.fromCharCode(65 + j)}</th>`;
-    tableHTML += "</tr></thead><tbody>";
-    for (let i = 0; i < ROWS; i++) {
-      tableHTML += `<tr><th>${i + 1}</th>`;
-      for (let j = 0; j < COLS; j++) {
-        tableHTML += `<td data-row="${i}" data-col="${j}" contenteditable="true" class="sheet-cell"></td>`;
-      }
-      tableHTML += "</tr>";
-    }
-    tableHTML += "</tbody></table>";
-    sheetContainer.innerHTML = tableHTML;
-  }
-
-  function updateCellDisplay(row, col) {
-    const cell = sheetContainer.querySelector(
-      `[data-row="${row}"][data-col="${col}"]`,
-    );
-    if (!cell) return;
-
-    const cellData = sheetData[row][col];
-
-    if (cellData.error) {
-      cell.textContent = cellData.error;
-      cell.classList.add("error");
-      cell.classList.remove("formula");
-    } else if (cellData.formula) {
-      cell.textContent = cellData.calculated;
-      cell.classList.add("formula");
-      cell.classList.remove("error");
-    } else {
-      cell.textContent = cellData.value;
-      cell.classList.remove("error", "formula");
-    }
-  }
-
-  function recalculateAll() {
-    calculationCache.clear();
-    for (let i = 0; i < ROWS; i++) {
-      for (let j = 0; j < COLS; j++) {
-        recalculateCell(i, j);
-      }
-    }
-  }
-
-  function parseCSV(contents) {
-    const rows = contents.split("\n");
-    sheetData = initializeSheetData();
-
-    rows.forEach((row, r) => {
-      if (r < ROWS && row.trim()) {
-        const cols = parseCSVRow(row);
-        cols.forEach((col, c) => {
-          if (c < COLS) {
-            sheetData[r][c].value = col;
-            if (col.startsWith("=")) {
-              sheetData[r][c].formula = col;
-              sheetData[r][c].value = "";
-            }
-          }
+        .register("./service-worker.js")
+        .then((registration) => {
+          console.log("ServiceWorker registration successful");
+        })
+        .catch((error) => {
+          console.log("ServiceWorker registration failed: ", error);
         });
-      }
     });
 
-    recalculateAll();
-    renderSheet(); // Re-render the sheet with new data
-    updateAllCellDisplays(); // Update the display of all cells
-  }
+    if (!isPWAInstalled()) {
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isMobileDevice() || /Android/i.test(navigator.userAgent)) {
+          elements.installButton.style.display = "inline-flex";
+        }
+      });
 
-  function updateAllCellDisplays() {
-    if (isUpdating) return;
-    isUpdating = true;
+      elements.installButton.addEventListener("click", (e) => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          deferredPrompt = null;
+        });
+      });
 
-    for (let i = 0; i < ROWS; i++) {
-      for (let j = 0; j < COLS; j++) {
-        updateCellDisplay(i, j);
-      }
-    }
-
-    isUpdating = false;
-  }
-
-  function parseCellRef(ref) {
-    const match = ref.match(/^([A-Z]+)(\d+)$/);
-    if (!match) return null;
-
-    const colStr = match[1];
-    const rowStr = match[2];
-
-    let col = 0;
-    for (let i = 0; i < colStr.length; i++) {
-      col = col * 26 + (colStr.charCodeAt(i) - 64);
-    }
-    col -= 1; // Convert to 0-based
-
-    const row = parseInt(rowStr) - 1; // Convert to 0-based
-
-    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return null;
-    return { row, col };
-  }
-
-  function getCellRefValue(ref, visited = new Set()) {
-    const coords = parseCellRef(ref);
-    if (!coords) return "#REF!";
-
-    const { row, col } = coords;
-    const cellKey = `${row},${col}`;
-
-    if (visited.has(cellKey)) return "#CIRCULAR!";
-
-    const cellData = sheetData[row][col];
-
-    if (cellData.formula) {
-      visited.add(cellKey);
-      const result = evaluateFormula(cellData.formula, visited);
-      visited.delete(cellKey);
-      return typeof result === "number" ? result : 0;
-    }
-
-    const numValue = parseFloat(cellData.value);
-    return isNaN(numValue)
-      ? cellData.value === ""
-        ? 0
-        : cellData.value
-      : numValue;
-  }
-
-  function evaluateFormula(formula, visited = new Set()) {
-    if (!formula || !formula.startsWith("=")) return "#ERROR!";
-
-    try {
-      const formulaBody = formula.substring(1).trim();
-
-      const sumMatch = formulaBody.match(/^SUM\s*\((.+)\)$/i);
-      if (sumMatch) {
-        return evaluateSumFunction(sumMatch[1], visited);
-      }
-
-      const avgMatch = formulaBody.match(/^AVERAGE\s*\((.+)\)$/i);
-      if (avgMatch) {
-        return evaluateAverageFunction(avgMatch[1], visited);
-      }
-
-      const countMatch = formulaBody.match(/^COUNT\s*\((.+)\)$/i);
-      if (countMatch) {
-        return evaluateCountFunction(countMatch[1], visited);
-      }
-
-      const maxMatch = formulaBody.match(/^MAX\s*\((.+)\)$/i);
-      if (maxMatch) {
-        return evaluateMaxFunction(maxMatch[1], visited);
-      }
-
-      const minMatch = formulaBody.match(/^MIN\s*\((.+)\)$/i);
-      if (minMatch) {
-        return evaluateMinFunction(minMatch[1], visited);
-      }
-
-      return evaluateArithmeticExpression(formulaBody, visited);
-    } catch (error) {
-      console.error("Formula evaluation error:", error);
-      return "#ERROR!";
+      window.addEventListener("appinstalled", (evt) => {
+        elements.installButton.style.display = "none";
+      });
     }
   }
 
-  function evaluateSumFunction(args, visited) {
-    const values = parseFormulaArgs(args, visited);
-    return values.reduce(
-      (sum, val) => sum + (typeof val === "number" ? val : 0),
-      0,
+  if (!window.name) {
+    window.name = `bedit-tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  const tabId = window.name;
+
+  let saveTimer;
+  let currentMatches = [];
+  let currentMatchIndex = -1;
+  const MAX_HISTORY = 100;
+  let history = [];
+  let currentHistoryIndex = -1;
+  let isUndoing = false;
+  let lastChangeTime = 0;
+  const CHANGE_DELAY = 1000;
+  let cachedCharWidth = 0;
+
+  let historyCursorPositions = [];
+
+  function adjustTextareaHeight() {
+    elements.editorContainer.style.top = `${elements.nav.offsetHeight}px`;
+  }
+
+  function storeLocally(textbox) {
+    if (!textbox) return;
+    const key = `bedit_${tabId}_${textbox.id}`;
+    localStorage.setItem(key, textbox.value);
+  }
+
+  function updateLinkButtonState() {
+    const text = activeTextbox.value;
+    const cursorPos = activeTextbox.selectionStart;
+
+    const lineStartIndex = text.lastIndexOf("\n", cursorPos - 1) + 1;
+    let lineEndIndex = text.indexOf("\n", cursorPos);
+    if (lineEndIndex === -1) {
+      lineEndIndex = text.length;
+    }
+
+    const currentLineText = text.substring(lineStartIndex, lineEndIndex);
+    const urlRegex = /https?:\/\/[^\s]+/g;
+    let match;
+    let foundLink = null;
+
+    while ((match = urlRegex.exec(currentLineText)) !== null) {
+      const urlStartIndexInLine = match.index;
+      const urlEndIndexInLine = urlStartIndexInLine + match[0].length;
+      const cursorIndexInLine = cursorPos - lineStartIndex;
+
+      if (
+        cursorIndexInLine >= urlStartIndexInLine &&
+        cursorIndexInLine <= urlEndIndexInLine
+      ) {
+        foundLink = match[0];
+        break;
+      }
+    }
+    currentLinkUrl = foundLink;
+    elements.openLinkBtn.style.display = foundLink ? "inline-flex" : "none";
+  }
+
+  function updateAllUI() {
+    updateCursorPosition();
+    updateActiveLineHighlight();
+    updateWordCount();
+    updateLinkButtonState();
+    updateUndoRedoButtons();
+  }
+
+  function updateCursorPosition() {
+    const text = activeTextbox.value;
+    const cursorPos = activeTextbox.selectionStart;
+    const lines = text.substring(0, cursorPos).split("\n");
+    elements.linePosition.textContent = lines.length;
+    elements.charPosition.textContent = lines[lines.length - 1].length + 1;
+  }
+
+  function updateActiveLineHighlight() {
+    const activeLineEl =
+      activeTextbox === elements.textbox1
+        ? elements.activeLine1
+        : elements.activeLine2;
+    if (!activeLineEl) return;
+
+    const text = activeTextbox.value;
+    const cursorPos = activeTextbox.selectionStart;
+    const lines = text.substring(0, cursorPos).split("\n");
+    const lineIndex = lines.length - 1;
+
+    const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
+
+    activeLineEl.style.top = `${lineIndex * lineHeight}px`;
+    activeLineEl.style.height = `${lineHeight}px`;
+    activeLineEl.style.display = "block";
+  }
+
+  function updateWordCount() {
+    const text1 = elements.textbox1.value.trim();
+    const text2 = elements.textbox2.value.trim();
+
+    const words1 = text1
+      ? text1.split(/\s+/).filter((word) => word.length > 0)
+      : [];
+    let totalWords = words1.length;
+
+    if (elements.editorContainer.classList.contains("split-view-active")) {
+      const words2 = text2
+        ? text2.split(/\s+/).filter((word) => word.length > 0)
+        : [];
+      totalWords += words2.length;
+    }
+
+    elements.wordCount.textContent = totalWords.toString();
+  }
+
+  function getRecentFiles() {
+    const files = localStorage.getItem("bedit-recent-files");
+    return files ? JSON.parse(files) : [];
+  }
+
+  function removeRecentFile(filenameToRemove) {
+    let recentFiles = getRecentFiles();
+    recentFiles = recentFiles.filter(
+      (file) => file.filename !== filenameToRemove,
     );
+    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
+    updateRecentFilesUI();
   }
 
-  function evaluateAverageFunction(args, visited) {
-    const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter((val) => typeof val === "number");
-    return numbers.length > 0
-      ? numbers.reduce((sum, val) => sum + val, 0) / numbers.length
-      : 0;
-  }
+  function updateRecentFilesUI() {
+    const files = getRecentFiles();
+    const {
+      recentFilesDatalist1,
+      recentFilesDatalist2,
+      recentFilesDropdown,
+      recentFilesBtn,
+    } = elements;
 
-  function evaluateCountFunction(args, visited) {
-    const values = parseFormulaArgs(args, visited);
-    return values.filter((val) => typeof val === "number").length;
-  }
+    recentFilesDatalist1.innerHTML = "";
+    recentFilesDatalist2.innerHTML = "";
+    recentFilesDropdown.innerHTML = "";
 
-  function evaluateMaxFunction(args, visited) {
-    const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter((val) => typeof val === "number");
-    return numbers.length > 0 ? Math.max(...numbers) : 0;
-  }
+    recentFilesBtn.disabled = files.length === 0;
 
-  function evaluateMinFunction(args, visited) {
-    const values = parseFormulaArgs(args, visited);
-    const numbers = values.filter((val) => typeof val === "number");
-    return numbers.length > 0 ? Math.min(...numbers) : 0;
-  }
+    const fragment = document.createDocumentFragment();
+    files.forEach((file) => {
+      const option = document.createElement("option");
+      option.value = file.filename;
+      fragment.appendChild(option);
 
-  function parseFormulaArgs(args, visited) {
-    const values = [];
-    const argParts = args.split(",").map((arg) => arg.trim());
-
-    for (const arg of argParts) {
-      const rangeMatch = arg.match(/^([A-Z]+\d+):([A-Z]+\d+)$/);
-      if (rangeMatch) {
-        const startCoords = parseCellRef(rangeMatch[1]);
-        const endCoords = parseCellRef(rangeMatch[2]);
-
-        if (startCoords && endCoords) {
-          const minRow = Math.min(startCoords.row, endCoords.row);
-          const maxRow = Math.max(startCoords.row, endCoords.row);
-          const minCol = Math.min(startCoords.col, endCoords.col);
-          const maxCol = Math.max(startCoords.col, endCoords.col);
-
-          for (let r = minRow; r <= maxRow; r++) {
-            for (let c = minCol; c <= maxCol; c++) {
-              const cellKey = `${r},${c}`;
-              if (!visited.has(cellKey)) {
-                const cellData = sheetData[r][c];
-                if (cellData.formula) {
-                  visited.add(cellKey);
-                  const result = evaluateFormula(cellData.formula, visited);
-                  visited.delete(cellKey);
-                  values.push(result);
-                } else {
-                  const numValue = parseFloat(cellData.value);
-                  values.push(isNaN(numValue) ? 0 : numValue);
-                }
-              }
-            }
-          }
-        }
-      } else if (parseCellRef(arg)) {
-        values.push(getCellRefValue(arg, visited));
-      } else {
-        const numValue = parseFloat(arg);
-        if (!isNaN(numValue)) {
-          values.push(numValue);
-        }
-      }
-    }
-
-    return values;
-  }
-
-  function evaluateArithmeticExpression(expression, visited) {
-    const tokens = expression.match(/([A-Z]+\d+|\d+(?:\.\d+)?|[+\-*/()])/g);
-    if (!tokens || tokens.length === 0) return "#ERROR!";
-
-    const processedTokens = tokens.map((token) => {
-      if (parseCellRef(token)) {
-        return getCellRefValue(token, visited);
-      } else if (!isNaN(parseFloat(token))) {
-        return parseFloat(token);
-      } else {
-        return token;
-      }
+      const dropdownItem = document.createElement("div");
+      dropdownItem.className = "recent-file-item";
+      dropdownItem.dataset.filename = file.filename;
+      dropdownItem.innerHTML = `<span class="recent-filename">${file.filename}</span><span class="delete-recent-btn" title="Remove from list" data-filename="${file.filename}"> [X]</span>`;
+      recentFilesDropdown.appendChild(dropdownItem);
     });
 
-    try {
-      return evaluateTokens(processedTokens);
-    } catch (e) {
-      return "#ERROR!";
-    }
+    recentFilesDatalist1.appendChild(fragment.cloneNode(true));
+    recentFilesDatalist2.appendChild(fragment);
   }
 
-  function evaluateTokens(tokens) {
-    if (tokens.length === 1) {
-      return typeof tokens[0] === "number" ? tokens[0] : "#ERROR!";
+  function addRecentFile(filename, content) {
+    if (!filename || content === null || content === undefined) return;
+    let recentFiles = getRecentFiles();
+    recentFiles = recentFiles.filter((file) => file.filename !== filename);
+    recentFiles.unshift({ filename, content, timestamp: Date.now() });
+    if (recentFiles.length > MAX_RECENT_FILES) {
+      recentFiles.pop();
     }
+    localStorage.setItem("bedit-recent-files", JSON.stringify(recentFiles));
+    updateRecentFilesUI();
+  }
 
-    let result = tokens[0];
-    if (typeof result !== "number") return "#ERROR!";
+  function openDroppedFile(file, targetTextbox, targetFilenameBox) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      targetTextbox.value = content;
+      targetFilenameBox.value = file.name;
+      addRecentFile(file.name, content);
+      storeLocally(targetTextbox);
 
-    for (let i = 1; i < tokens.length; i += 2) {
-      const operator = tokens[i];
-      const operand = tokens[i + 1];
-
-      if (typeof operand !== "number") return "#ERROR!";
-
-      switch (operator) {
-        case "+":
-          result += operand;
-          break;
-        case "-":
-          result -= operand;
-          break;
-        case "*":
-          result *= operand;
-          break;
-        case "/":
-          if (operand === 0) return "#DIV/0!";
-          result /= operand;
-          break;
-        default:
-          return "#ERROR!";
+      if (targetTextbox === elements.textbox1) {
+        history = [];
+        historyCursorPositions = [];
+        currentHistoryIndex = -1;
+        addToHistory(content, 0);
       }
-    }
-
-    return result;
+      activeTextbox = targetTextbox;
+      updateAllUI();
+    };
+    reader.onerror = (e) => {
+      console.warn("Could not read the file.", file.name, e);
+    };
+    reader.readAsText(file);
   }
 
-  function setCellValue(row, col, value) {
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
-
-    const cellData = sheetData[row][col];
-
-    if (value.startsWith("=")) {
-      cellData.formula = value;
-      cellData.value = "";
-    } else {
-      cellData.value = value;
-      cellData.formula = "";
-    }
-
-    cellData.error = null;
-    cellData.calculated = "";
-
-    calculationCache.clear();
-
-    recalculateCell(row, col);
-    saveSheetData();
-  }
-
-  function recalculateCell(row, col) {
-    const cellData = sheetData[row][col];
-
-    if (cellData.formula) {
+  async function openFile() {
+    if ("showOpenFilePicker" in window) {
       try {
-        const result = evaluateFormula(cellData.formula);
-        if (typeof result === "string" && result.startsWith("#")) {
-          cellData.error = result;
-          cellData.calculated = "";
-        } else {
-          cellData.error = null;
-          cellData.calculated =
-            typeof result === "number" ? result.toString() : result;
-        }
-      } catch (e) {
-        cellData.error = "#ERROR!";
-        cellData.calculated = "";
-      }
-    }
+        const [handle] = await window.showOpenFilePicker();
+        const file = await handle.getFile();
+        const targetTextbox =
+          activeTextbox === elements.textbox2
+            ? elements.textbox2
+            : elements.textbox1;
+        const targetFilenameBox =
+          activeTextbox === elements.textbox2
+            ? elements.filenameBox2
+            : elements.filenameBox1;
 
-    updateCellDisplay(row, col);
+        fileHandles[targetTextbox.id] = handle;
+        openDroppedFile(file, targetTextbox, targetFilenameBox);
+      } catch (err) {
+        console.log("Open file dialog was cancelled or failed.", err);
+      }
+    } else {
+      const openInput =
+        activeTextbox === elements.textbox2
+          ? elements.openInput2
+          : elements.openInput1;
+      openInput.click();
+    }
   }
 
-  sheetContainer.addEventListener("focusin", (e) => {
-    if (e.target.classList.contains("sheet-cell")) {
-      if (activeCell) activeCell.classList.remove("active");
-      activeCell = e.target;
-      activeCell.classList.add("active");
-
-      const row = parseInt(activeCell.dataset.row);
-      const col = parseInt(activeCell.dataset.col);
-      const cellData = sheetData[row][col];
-
-      formulaBar.value = cellData.formula || cellData.value || "";
-      activeCell.textContent = cellData.formula || cellData.value || "";
+  function handleFileOpen(event, targetTextbox, targetFilenameBox) {
+    const file = event.target.files[0];
+    if (file) {
+      fileHandles[targetTextbox.id] = null;
+      openDroppedFile(file, targetTextbox, targetFilenameBox);
     }
-  });
+  }
 
-  sheetContainer.addEventListener("focusout", (e) => {
-    if (e.target.classList.contains("sheet-cell")) {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-      const value = e.target.textContent.trim();
-
-      setCellValue(row, col, value);
-    }
-  });
-
-  sheetContainer.addEventListener("input", (e) => {
-    if (e.target.classList.contains("sheet-cell") && activeCell === e.target) {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-      formulaBar.value = e.target.textContent;
-    }
-  });
-
-  formulaBar.addEventListener("input", (e) => {
-    if (activeCell) {
-      activeCell.textContent = e.target.value;
-    }
-  });
-
-  formulaBar.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && activeCell) {
-      e.preventDefault();
-      const row = parseInt(activeCell.dataset.row);
-      const col = parseInt(activeCell.dataset.col);
-      const value = formulaBar.value.trim();
-
-      setCellValue(row, col, value);
-      activeCell.focus();
-    }
-  });
-
-  sheetContainer.addEventListener("keydown", (e) => {
-    if (!activeCell) return;
-
-    let row = parseInt(activeCell.dataset.row, 10);
-    let col = parseInt(activeCell.dataset.col, 10);
-    let newRow = row,
-      newCol = col;
-
-    switch (e.key) {
-      case "ArrowUp":
-        if (row > 0) newRow--;
-        e.preventDefault();
-        break;
-      case "ArrowDown":
-        if (row < ROWS - 1) newRow++;
-        e.preventDefault();
-        break;
-      case "ArrowLeft":
-        // Always move left if possible, regardless of cursor position
-        if (col > 0) {
-          newCol--;
-          e.preventDefault();
-        }
-        break;
-      case "ArrowRight":
-        // Always move right if possible, regardless of cursor position
-        if (col < COLS - 1) {
-          newCol++;
-          e.preventDefault();
-        }
-        break;
-      case "Enter":
-        if (!e.shiftKey) {
-          e.preventDefault();
-          const value = activeCell.textContent.trim();
-          setCellValue(row, col, value);
-
-          if (row < ROWS - 1) newRow++;
-        }
-        break;
-      case "Tab":
-        e.preventDefault();
-        const value = activeCell.textContent.trim();
-        setCellValue(row, col, value);
-
-        if (e.shiftKey) {
-          if (col > 0) newCol--;
-        } else {
-          if (col < COLS - 1) newCol++;
-        }
-        break;
-      case "Delete":
-      case "Backspace":
-        if (e.target.textContent === "") {
-          e.preventDefault();
-          setCellValue(row, col, "");
-        }
-        break;
-    }
-
-    if (newRow !== row || newCol !== col) {
-      const newCell = sheetContainer.querySelector(
-        `[data-row="${newRow}"][data-col="${newCol}"]`,
+  async function saveFile() {
+    if (activeTextbox === elements.textbox1 && activeProtectedNotePassword) {
+      const userConfirmed = confirm(
+        "Warning: This is a password-protected note. Saving it to your device will remove the password protection and save the content as plain text. Are you sure you want to continue?",
       );
-      if (newCell) {
-        newCell.focus();
-        // Set cursor position to the end of the cell content
-        const range = document.createRange();
-        const selection = window.getSelection();
-        range.selectNodeContents(newCell);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    }
-  });
-
-  csvSaveBtn.addEventListener("click", async () => {
-    const csvContent = sheetData
-      .map((row) =>
-        row
-          .map((cellData) => {
-            const value = cellData.value || "";
-            if (
-              value.includes(",") ||
-              value.includes('"') ||
-              value.includes("\n")
-            ) {
-              return `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-          })
-          .join(","),
-      )
-      .join("\n");
-
-    if (!supportsFileSystemAccess) {
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "spreadsheet.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "spreadsheet.csv",
-        types: [{ description: "CSV File", accept: { "text/csv": [".csv"] } }],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(csvContent);
-      await writable.close();
-    } catch (err) {
-      console.error("Failed to save file:", err);
-    }
-  });
-
-  csvOpenBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".csv";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const contents = await file.text();
-          parseCSV(contents);
-        }
-      };
-      input.click();
-      return;
-    }
-
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [{ description: "CSV Files", accept: { "text/csv": [".csv"] } }],
-      });
-      const file = await handle.getFile();
-      const contents = await file.text();
-      parseCSV(contents);
-    } catch (err) {
-      console.error("Failed to open file:", err);
-    }
-  });
-
-  // =================================================================
-  // Sticky Notes
-  // =================================================================
-  const notesContainer = document.getElementById("notes-container");
-  const addNoteBtn = document.getElementById("add-note");
-  const txtOpenBtn = document.getElementById("txt-open");
-  const txtSaveBtn = document.getElementById("txt-save");
-  let notes = [];
-  const NOTE_SEPARATOR = "\n--- bPad Note Break ---\n";
-
-  function saveNotes() {
-    localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
-  }
-
-  function loadNotes() {
-    const savedNotes = localStorage.getItem(STORAGE_KEYS.notes);
-    notes = savedNotes ? JSON.parse(savedNotes) : [];
-    renderNotes();
-  }
-
-  function renderNotes() {
-    notesContainer.innerHTML = "";
-    notes.forEach((noteContent, index) => {
-      const noteEl = document.createElement("div");
-      noteEl.className = "note";
-      noteEl.innerHTML = `
-        <div class="note-header">
-          <button class="note-save" data-index="${index}" title="Save Note">💾</button>
-          <button class="note-delete" data-index="${index}" title="Delete Note">×</button>
-        </div>
-        <textarea data-index="${index}" placeholder="Type your note here...">${noteContent}</textarea>`;
-      notesContainer.appendChild(noteEl);
-    });
-  }
-
-  addNoteBtn.addEventListener("click", () => {
-    notes.push("");
-    saveNotes();
-    renderNotes();
-    setTimeout(() => {
-      const textareas = notesContainer.querySelectorAll("textarea");
-      if (textareas.length > 0) {
-        textareas[textareas.length - 1].focus();
-      }
-    }, 50);
-  });
-
-  notesContainer.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("note-delete")) {
-      const index = parseInt(e.target.dataset.index);
-      if (confirm("Are you sure you want to delete this note?")) {
-        notes.splice(index, 1);
-        saveNotes();
-        renderNotes();
-      }
-    }
-
-    if (e.target.classList.contains("note-save")) {
-      const index = parseInt(e.target.dataset.index);
-      const content = notes[index];
-
-      if (!supportsFileSystemAccess) {
-        const blob = new Blob([content], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `note-${new Date().toISOString().slice(0, 10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      if (!userConfirmed) {
         return;
       }
+    }
 
+    const handle = fileHandles[activeTextbox.id];
+    const content = activeTextbox.value;
+
+    if (handle && "createWritable" in handle) {
       try {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: `note-${new Date().toISOString().slice(0, 10)}.txt`,
-          types: [
-            { description: "Text File", accept: { "text/plain": [".txt"] } },
-          ],
-        });
         const writable = await handle.createWritable();
         await writable.write(content);
         await writable.close();
+        addRecentFile(handle.name, content);
+        console.log("File saved successfully to existing handle.");
+        return;
       } catch (err) {
-        console.error("Could not save individual note:", err);
+        console.error(
+          'Could not save to existing handle. Fallback to "Save As".',
+          err,
+        );
+        fileHandles[activeTextbox.id] = null;
       }
     }
-  });
 
-  notesContainer.addEventListener("input", (e) => {
-    if (e.target.tagName === "TEXTAREA") {
-      const index = parseInt(e.target.dataset.index);
-      notes[index] = e.target.value;
-      saveNotes();
+    if ("showSaveFilePicker" in window) {
+      try {
+        const filenameBox =
+          activeTextbox === elements.textbox1
+            ? elements.filenameBox1
+            : elements.filenameBox2;
+        const saveAsHandle = await window.showSaveFilePicker({
+          suggestedName: filenameBox.value || "bedit.txt",
+          types: [
+            {
+              description: "Text Files",
+              accept: {
+                "text/plain": [
+                  ".txt",
+                  ".text",
+                  ".js",
+                  ".css",
+                  ".html",
+                  ".md",
+                  ".json",
+                ],
+              },
+            },
+          ],
+        });
+        fileHandles[activeTextbox.id] = saveAsHandle;
+        filenameBox.value = saveAsHandle.name;
+
+        const writable = await saveAsHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        addRecentFile(saveAsHandle.name, content);
+        return;
+      } catch (err) {
+        console.log("Save As dialog was cancelled or failed.", err);
+        return;
+      }
+    }
+
+    const filenameBox =
+      activeTextbox === elements.textbox2
+        ? elements.filenameBox2
+        : elements.filenameBox1;
+    const filename = filenameBox.value || "bedit.txt";
+    addRecentFile(filename, content);
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function openNewTab() {
+    window.open(window.location.href, "_blank");
+  }
+
+  function togglePopup(popupId, show) {
+    Object.values(popups).forEach((popup) => (popup.style.display = "none"));
+    elements.overlay.style.display = "none";
+
+    if (show && popupId && popups[popupId]) {
+      popups[popupId].style.display = "block";
+      elements.overlay.style.display = "block";
+      if (popupId === "findReplace" && elements.findText) {
+        elements.findText.focus();
+        elements.findText.select();
+        findAllMatches();
+      } else if (popupId === "settings") {
+        applySettings();
+      } else if (popupId === "password") {
+        elements.passwordInput.focus();
+      }
+    } else {
+      currentMatchIndex = -1;
+      currentMatches = [];
+      updateHighlights();
+    }
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      togglePopup(null, false);
     }
   });
 
-  txtSaveBtn.addEventListener("click", async () => {
-    const allNotesContent = notes.join(NOTE_SEPARATOR);
-
-    if (!supportsFileSystemAccess) {
-      const blob = new Blob([allNotesContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "all-notes.txt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "all-notes.txt",
-        types: [
-          { description: "Text File", accept: { "text/plain": [".txt"] } },
-        ],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(allNotesContent);
-      await writable.close();
-    } catch (err) {
-      console.error("Failed to save file:", err);
-    }
-  });
-
-  txtOpenBtn.addEventListener("click", async () => {
-    if (!supportsFileSystemAccess) {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".txt";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const contents = await file.text();
-          notes = contents.split(NOTE_SEPARATOR);
-          saveNotes();
-          renderNotes();
-        }
-      };
-      input.click();
-      return;
-    }
-
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [
-          { description: "Text Files", accept: { "text/plain": [".txt"] } },
-        ],
-      });
-      const file = await handle.getFile();
-      const contents = await file.text();
-      notes = contents.split(NOTE_SEPARATOR);
-      saveNotes();
-      renderNotes();
-    } catch (err) {
-      console.error("Failed to open file:", err);
-    }
-  });
-
-  // --- Initial Load From Storage ---
-  loadProcessorContent();
-  loadSheetData();
-  loadNotes();
-
-  // --- Keyboard shortcuts for spreadsheet ---
-  document.addEventListener("keydown", (e) => {
+  function addToHistory(state, cursorPosition) {
     if (
-      !document.getElementById("sheet-section").classList.contains("active")
+      activeTextbox !== elements.textbox1 ||
+      history[currentHistoryIndex] === state
     ) {
       return;
     }
 
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key.toLowerCase()) {
-        case "s":
-          e.preventDefault();
-          csvSaveBtn.click();
-          break;
+    if (currentHistoryIndex < history.length - 1) {
+      history.splice(currentHistoryIndex + 1);
+      historyCursorPositions.splice(currentHistoryIndex + 1);
+    }
+    history.push(state);
+    historyCursorPositions.push(cursorPosition);
+    if (history.length > MAX_HISTORY) {
+      history.shift();
+      historyCursorPositions.shift();
+    }
+    currentHistoryIndex = history.length - 1;
+    updateUndoRedoButtons();
+  }
+
+  function undo() {
+    if (activeTextbox !== elements.textbox1 || currentHistoryIndex <= 0) return;
+    currentHistoryIndex--;
+    restoreState();
+  }
+
+  function redo() {
+    if (
+      activeTextbox !== elements.textbox1 ||
+      currentHistoryIndex >= history.length - 1
+    )
+      return;
+    currentHistoryIndex++;
+    restoreState();
+  }
+
+  function restoreState() {
+    isUndoing = true;
+    elements.textbox1.value = history[currentHistoryIndex];
+    const cursorPos = historyCursorPositions[currentHistoryIndex];
+    elements.textbox1.focus();
+    elements.textbox1.setSelectionRange(cursorPos, cursorPos);
+
+    activeTextbox = elements.textbox1;
+    updateAllUI();
+    storeLocally(elements.textbox1);
+    updateHighlights();
+    isUndoing = false;
+  }
+
+  function updateUndoRedoButtons() {
+    const isPrimaryActive = activeTextbox === elements.textbox1;
+    elements.undoButton.disabled = !isPrimaryActive || currentHistoryIndex <= 0;
+  }
+
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function findAllMatches() {
+    const searchTerm = elements.findText.value;
+    const text = activeTextbox.value;
+    if (!searchTerm) {
+      currentMatches = [];
+    } else {
+      const isCaseSensitive = elements.caseSensitiveCheckbox.checked;
+      const isRegex = elements.regexCheckbox.checked;
+      const flags = isCaseSensitive ? "g" : "gi";
+      const pattern = isRegex ? searchTerm : escapeRegExp(searchTerm);
+
+      try {
+        const regex = new RegExp(pattern, flags);
+        currentMatches = [...text.matchAll(regex)].map((match) => ({
+          start: match.index,
+          end: match.index + match[0].length,
+        }));
+      } catch (e) {
+        currentMatches = [];
+        console.error("Invalid Regex:", e);
+      }
+    }
+    currentMatchIndex = -1;
+    updateFindCount();
+    updateHighlights();
+  }
+
+  function getCharWidth(textbox) {
+    if (cachedCharWidth > 0) return cachedCharWidth;
+    const span = document.createElement("span");
+    span.style.font = getComputedStyle(textbox).font;
+    span.style.position = "absolute";
+    span.style.visibility = "hidden";
+    span.style.whiteSpace = "pre";
+    document.body.appendChild(span);
+    span.textContent = "M";
+    cachedCharWidth = span.getBoundingClientRect().width;
+    document.body.removeChild(span);
+    return cachedCharWidth;
+  }
+
+  function updateHighlights() {
+    const highlightLayer =
+      activeTextbox === elements.textbox1
+        ? elements.highlightLayer1
+        : elements.highlightLayer2;
+    highlightLayer.innerHTML = "";
+
+    if (
+      currentMatches.length === 0 ||
+      currentMatchIndex < 0 ||
+      currentMatchIndex >= currentMatches.length
+    ) {
+      return;
+    }
+
+    const match = currentMatches[currentMatchIndex];
+    const text = activeTextbox.value;
+    const frag = document.createDocumentFragment();
+    const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
+    const charWidth = getCharWidth(activeTextbox);
+
+    const textBefore = text.substring(0, match.start);
+    const lines = textBefore.split("\n");
+    const lineIndex = lines.length - 1;
+    const charPos = lines[lineIndex].length;
+
+    const highlight = document.createElement("div");
+    highlight.className = "highlight";
+    highlight.style.cssText = `top: ${lineIndex * lineHeight}px; left: ${charPos * charWidth}px; width: ${(match.end - match.start) * charWidth}px; height: ${lineHeight}px;`;
+
+    frag.appendChild(highlight);
+    highlightLayer.appendChild(frag);
+  }
+
+  function updateFindCount() {
+    if (elements.findText.value === "") {
+      elements.findCount.textContent = "";
+    } else {
+      elements.findCount.textContent = `${currentMatches.length} match${currentMatches.length === 1 ? "" : "es"}`;
+    }
+  }
+
+  function findNext() {
+    if (currentMatches.length === 0 && elements.findText.value) {
+      findAllMatches();
+    }
+    if (currentMatches.length === 0) return;
+
+    const currentPosition = activeTextbox.selectionStart;
+
+    let nextMatchIndex;
+
+    if (
+      currentMatchIndex !== -1 &&
+      currentMatches[currentMatchIndex] &&
+      currentMatches[currentMatchIndex].start === currentPosition
+    ) {
+      nextMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
+    } else {
+      nextMatchIndex = currentMatches.findIndex(
+        (match) => match.start >= currentPosition,
+      );
+      if (nextMatchIndex === -1) {
+        nextMatchIndex = 0;
+      }
+    }
+
+    if (nextMatchIndex !== -1) {
+      currentMatchIndex = nextMatchIndex;
+      const match = currentMatches[currentMatchIndex];
+      activeTextbox.setSelectionRange(match.start, match.end);
+
+      const highlightLayer =
+        activeTextbox === elements.textbox1
+          ? elements.highlightLayer1
+          : elements.highlightLayer2;
+      if (highlightLayer.children[currentMatchIndex]) {
+        const matchTop = highlightLayer.children[currentMatchIndex].offsetTop;
+        activeTextbox.scrollTop = matchTop - activeTextbox.clientHeight / 2;
+      }
+      updateHighlights();
+    }
+  }
+
+  function replaceCurrentMatch() {
+    const replacement = elements.replaceText.value;
+    const { selectionStart, selectionEnd } = activeTextbox;
+    if (selectionStart === selectionEnd) {
+      findNext();
+      return;
+    }
+    const currentText = activeTextbox.value;
+    addToHistory(currentText, selectionStart);
+    activeTextbox.value =
+      currentText.slice(0, selectionStart) +
+      replacement +
+      currentText.slice(selectionEnd);
+
+    const newCursorPos = selectionStart + replacement.length;
+    activeTextbox.setSelectionRange(newCursorPos, newCursorPos);
+
+    storeLocally(activeTextbox);
+    updateAllUI();
+    findAllMatches();
+  }
+
+  function replaceAll() {
+    const replacement = elements.replaceText.value;
+    const searchTerm = elements.findText.value;
+    if (!searchTerm) return;
+    addToHistory(activeTextbox.value, activeTextbox.selectionStart);
+    const isCaseSensitive = elements.caseSensitiveCheckbox.checked;
+    const isRegex = elements.regexCheckbox.checked;
+    const flags = isCaseSensitive ? "g" : "gi";
+    const pattern = isRegex ? searchTerm : escapeRegExp(searchTerm);
+    try {
+      const regex = new RegExp(pattern, flags);
+      activeTextbox.value = activeTextbox.value.replace(regex, replacement);
+      storeLocally(activeTextbox);
+      updateAllUI();
+      findAllMatches();
+    } catch (e) {
+      console.error("Invalid Regex for replace all:", e);
+    }
+  }
+
+  function cycleTheme() {
+    const themes = ["light", "dark", "snow"];
+    const currentThemeIndex = themes.indexOf(settings.theme);
+    settings.theme = themes[(currentThemeIndex + 1) % themes.length];
+    saveSettings();
+    applySettings();
+  }
+
+  function toggleSplitView(forceOn = false) {
+    const container = elements.editorContainer;
+    let isActive;
+    if (forceOn) {
+      isActive = true;
+      container.classList.add("split-view-active");
+    } else {
+      isActive = container.classList.toggle("split-view-active");
+    }
+
+    elements.filenameBox2.style.display = isActive ? "inline-block" : "none";
+    elements.previewBtn.style.display = isActive ? "inline-flex" : "none";
+
+    if (!isActive) {
+      // If turning split view off, also turn off preview mode
+      if (container.classList.contains("preview-active")) {
+        togglePreviewMode();
+      }
+    }
+    (isActive ? elements.textbox2 : elements.textbox1).focus();
+    updateWordCount();
+    return isActive;
+  }
+
+  function togglePreviewMode() {
+    const container = elements.editorContainer;
+    const isPreviewing = container.classList.toggle("preview-active");
+
+    elements.textbox2.style.display = isPreviewing ? "none" : "block";
+    elements.activeLine2.style.display = isPreviewing ? "none" : "block";
+    elements.highlightLayer2.style.display = isPreviewing ? "none" : "block";
+    elements.filenameBox2.style.display = isPreviewing
+      ? "none"
+      : "inline-block";
+
+    elements.previewPane2.style.display = isPreviewing ? "block" : "none";
+    elements.exportHtmlBtn.style.display = isPreviewing
+      ? "inline-flex"
+      : "none";
+    elements.exportPdfBtn.style.display = isPreviewing ? "inline-flex" : "none";
+
+    if (isPreviewing) {
+      updatePreview();
+      elements.textbox1.addEventListener("input", updatePreview);
+    } else {
+      elements.textbox1.removeEventListener("input", updatePreview);
+    }
+  }
+
+  function updatePreview() {
+    const markdownText = elements.textbox1.value;
+    elements.previewPane2.innerHTML = marked.parse(markdownText);
+  }
+
+  function handleExportHTML() {
+    const content = elements.previewPane2.innerHTML;
+    const filename =
+      (elements.filenameBox1.value || "bedit").replace(/\.[^/.]+$/, "") +
+      ".html";
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${filename}</title>
+            <style>
+                body { font-family: sans-serif; line-height: 1.6; padding: 2em; max-width: 800px; margin: 0 auto; }
+                h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+                code { background-color: #f7f7f7; padding: 0.2em 0.4em; border-radius: 3px; }
+                pre code { display: block; padding: 0.5em; border-radius: 4px; overflow-x: auto; }
+            </style>
+        </head>
+        <body>
+            ${content}
+        </body>
+        </html>
+      `;
+    const blob = new Blob([fullHtml], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function handleExportPDF() {
+    const { jsPDF } = window.jspdf;
+    const content = elements.previewPane2;
+    const filename =
+      (elements.filenameBox1.value || "bedit").replace(/\.[^/.]+$/, "") +
+      ".pdf";
+
+    html2canvas(content).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "pt",
+        format: "a4",
+      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasHeight / canvasWidth;
+      const newHeight = pdfWidth * ratio;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, newHeight);
+      pdf.save(filename);
+    });
+  }
+
+  function initializeExpansionSettings() {
+    const container = document.getElementById("text-expansion-content");
+    if (!container) return;
+    container.innerHTML = "";
+    if (!settings.expansions) settings.expansions = {};
+
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < 26; i++) {
+      const char = String.fromCharCode(97 + i);
+      const shortcutKey = `.${char}`;
+      const row = document.createElement("div");
+      row.className = "expansion-row";
+      row.innerHTML = `
+        <label for="expansion-input-${char}">${shortcutKey}</label>
+        <input type="text" id="expansion-input-${char}" placeholder="Expanded text for ${shortcutKey}">
+      `;
+      const input = row.querySelector("input");
+
+      if (char === "d") {
+        input.value = "(Date)";
+        input.readOnly = true;
+        input.title = "This is a built-in shortcut for the current date.";
+      } else {
+        input.value = settings.expansions[char] || "";
+        input.addEventListener("input", () => {
+          settings.expansions[char] = input.value;
+          saveSettings();
+        });
+      }
+      fragment.appendChild(row);
+    }
+    container.appendChild(fragment);
+  }
+
+  function handleExpansion(event) {
+    if (!settings.expansions) return;
+    const textbox = event.target;
+    const text = textbox.value;
+    const cursorPos = textbox.selectionStart;
+    const triggerMatch = text.substring(0, cursorPos).match(/\.([a-z])\s$/);
+
+    if (triggerMatch) {
+      const key = triggerMatch[1];
+      let expansionText;
+
+      if (key === "d") {
+        const date = new Date();
+        const day = String(date.getDate()).padStart(2, "0");
+        const monthNum = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        const yearShort = String(year).slice(-2);
+        const monthNames = [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ];
+        const monthName = monthNames[date.getMonth()];
+
+        switch (settings.dateFormat) {
+          case "MM/DD/YY":
+            expansionText = `${monthNum}/${day}/${yearShort}`;
+            break;
+          case "YYYY-MMM-DD":
+            expansionText = `${year}-${monthName}-${day}`;
+            break;
+          case "YYMMYY":
+            expansionText = `${yearShort}${monthNum}${yearShort}`;
+            break;
+          case "DD-MMM-YYYY":
+          default:
+            expansionText = `${day}-${monthName}-${year}`;
+            break;
+        }
+      } else {
+        expansionText = settings.expansions[key];
+      }
+
+      if (expansionText) {
+        event.preventDefault();
+        const triggerLength = 3;
+        const textBefore = text.substring(0, cursorPos - triggerLength);
+        const textAfter = text.substring(cursorPos);
+        addToHistory(textbox.value, cursorPos);
+        textbox.value = textBefore + expansionText + textAfter;
+        const newCursorPos = textBefore.length + expansionText.length;
+        textbox.setSelectionRange(newCursorPos, newCursorPos);
+        updateAllUI();
+        storeLocally(textbox);
+      }
+    }
+  }
+
+  function handleExportSettings() {
+    const settingsString = JSON.stringify(settings, null, 2);
+    const blob = new Blob([settingsString], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "bedit-settings.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function handleImportSettings(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedSettings = JSON.parse(e.target.result);
+        settings = { ...defaultSettings, ...importedSettings };
+        saveSettings();
+        applySettings();
+        alert("Settings imported successfully!");
+      } catch (error) {
+        alert(
+          "Error: Could not parse settings file. Please make sure it's a valid JSON file.",
+        );
+        console.error("Settings import error:", error);
+      }
+    };
+    reader.onerror = () => {
+      alert("Error reading the file.");
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  }
+
+  function openRecentFile(filename) {
+    const recentFiles = getRecentFiles();
+    const selectedFile = recentFiles.find((file) => file.filename === filename);
+
+    if (selectedFile) {
+      const targetTextbox = activeTextbox;
+      const targetFilenameBox =
+        targetTextbox === elements.textbox1
+          ? elements.filenameBox1
+          : elements.filenameBox2;
+
+      targetTextbox.value = selectedFile.content;
+      targetFilenameBox.value = selectedFile.filename;
+      fileHandles[targetTextbox.id] = null;
+
+      storeLocally(targetTextbox);
+      if (targetTextbox === elements.textbox1) {
+        addToHistory(selectedFile.content, 0);
+      }
+      updateAllUI();
+      targetTextbox.focus();
+    }
+  }
+
+  function handleFilenameChange(event) {
+    openRecentFile(event.target.value);
+  }
+
+  function openHighlightedLink() {
+    const textbox = activeTextbox;
+    if (!textbox) return;
+
+    const selectedText = textbox.value
+      .substring(textbox.selectionStart, textbox.selectionEnd)
+      .trim();
+    let urlToOpen = selectedText || currentLinkUrl;
+
+    if (!urlToOpen) return;
+
+    let url = urlToOpen;
+    if (!/^https?:\/\//i.test(url)) {
+      url = "https://" + url;
+    }
+
+    try {
+      new URL(url);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      console.error("The text is not a valid URL:", url, e);
+    }
+  }
+
+  function shareViaEmail() {
+    const content = activeTextbox.value;
+    if (!content) {
+      alert("There is no content to email.");
+      return;
+    }
+    const filenameBox =
+      activeTextbox === elements.textbox1
+        ? elements.filenameBox1
+        : elements.filenameBox2;
+    const subject = encodeURIComponent(filenameBox.value || "Note from bEdit");
+    const body = encodeURIComponent(content);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  function handleKeyDown(event) {
+    const targetTextbox = event.target.closest(".textbox");
+    if (!targetTextbox) return;
+
+    const pairs = {
+      "(": ")",
+      "[": "]",
+      "{": "}",
+      "'": "'",
+      '"': '"',
+      "<": ">",
+    };
+    const openChars = Object.keys(pairs);
+    if (settings.autoCloseBrackets && openChars.includes(event.key)) {
+      event.preventDefault();
+      const openChar = event.key;
+      const closeChar = pairs[openChar];
+      const s = targetTextbox.selectionStart;
+      const e = targetTextbox.selectionEnd;
+      const text = targetTextbox.value;
+      addToHistory(text, s);
+      if (s !== e) {
+        const selectedText = text.substring(s, e);
+        targetTextbox.value = `${text.substring(0, s)}${openChar}${selectedText}${closeChar}${text.substring(e)}`;
+        targetTextbox.selectionStart = s + 1;
+        targetTextbox.selectionEnd = e + 1;
+      } else {
+        targetTextbox.value = `${text.substring(0, s)}${openChar}${closeChar}${text.substring(e)}`;
+        targetTextbox.selectionStart = targetTextbox.selectionEnd = s + 1;
+      }
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        storeLocally(targetTextbox);
+      }, 500);
+      updateAllUI();
+      return;
+    }
+
+    if (event.key === "Enter") {
+      if (settings.autoIndent) {
+        event.preventDefault();
+        const s = targetTextbox.selectionStart;
+        const e = targetTextbox.selectionEnd;
+        const text = targetTextbox.value;
+        const lineStart = text.lastIndexOf("\n", s - 1) + 1;
+        const currentLine = text.substring(lineStart, s);
+        const indentation = currentLine.match(/^\s*/)[0];
+
+        addToHistory(text, s);
+
+        const newText = `${text.substring(0, s)}\n${indentation}${text.substring(e)}`;
+        const newCursorPos = s + 1 + indentation.length;
+
+        targetTextbox.value = newText;
+        targetTextbox.selectionStart = targetTextbox.selectionEnd =
+          newCursorPos;
+        updateAllUI();
+      }
+      return;
+    }
+
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const tabSpaces = "    ";
+      const s = targetTextbox.selectionStart;
+      const e = targetTextbox.selectionEnd;
+      addToHistory(targetTextbox.value, s);
+      targetTextbox.value = `${targetTextbox.value.substring(0, s)}${tabSpaces}${targetTextbox.value.substring(e)}`;
+      targetTextbox.selectionStart = targetTextbox.selectionEnd =
+        s + tabSpaces.length;
+      updateAllUI();
+      return;
+    }
+
+    if (event.ctrlKey || event.metaKey) {
+      const key = event.key.toLowerCase();
+      if ("osfkzynhmie/=".includes(key)) {
+        event.preventDefault();
+      }
+      switch (key) {
         case "o":
-          e.preventDefault();
-          csvOpenBtn.click();
+          openFile();
           break;
-        case "a":
-          e.preventDefault();
+        case "s":
+          saveFile();
+          break;
+        case "e":
+          shareViaEmail();
+          break;
+        case "f":
+          togglePopup("findReplace", true);
+          break;
+        case "k":
+          openHighlightedLink();
+          break;
+        case "z":
+          undo();
+          break;
+        case "y":
+          redo();
+          break;
+        case "n":
+          openNewTab();
+          break;
+        case "m":
+          cycleTheme();
+          break;
+        case "i":
+          toggleSplitView();
+          break;
+        case "/":
+          togglePopup("settings", true);
+          break;
+        case "=":
+          if (activeProtectedNotePassword) {
+            lockAndSaveProtectedNote();
+          } else {
+            togglePopup("password", true);
+          }
           break;
       }
     }
+
+    if (
+      [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Home",
+        "End",
+        "PageUp",
+        "PageDown",
+      ].includes(event.key)
+    ) {
+      setTimeout(updateAllUI, 0);
+    }
+  }
+
+  function handleMouseUp() {
+    setTimeout(updateAllUI, 0);
+  }
+
+  function handleInput(event) {
+    const targetTextbox = event.target;
+    handleExpansion(event);
+    updateAllUI();
+    if (popups.findReplace.style.display === "block") {
+      findAllMatches();
+    }
+
+    if (!isUndoing) {
+      const now = Date.now();
+      if (now - lastChangeTime > CHANGE_DELAY || history.length === 0) {
+        addToHistory(targetTextbox.value, targetTextbox.selectionStart);
+        lastChangeTime = now;
+      }
+    }
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      storeLocally(targetTextbox);
+    }, 500);
+  }
+
+  loadSettings();
+  loadProtectedNotes();
+  applySettings(true);
+
+  [elements.textbox1, elements.textbox2].forEach((tb) => {
+    tb.addEventListener("focus", (e) => {
+      activeTextbox = e.target;
+      updateAllUI();
+    });
+    tb.addEventListener("click", (e) => {
+      activeTextbox = e.target;
+      updateAllUI();
+    });
+    tb.addEventListener("keydown", handleKeyDown);
+    tb.addEventListener("keyup", updateActiveLineHighlight);
+    tb.addEventListener("mouseup", handleMouseUp);
+    tb.addEventListener("input", handleInput);
   });
+
+  [elements.filenameBox1, elements.filenameBox2].forEach((box) => {
+    box.addEventListener("change", handleFilenameChange);
+  });
+
+  elements.openBtn.addEventListener("click", openFile);
+  elements.saveBtn.addEventListener("click", saveFile);
+  elements.emailBtn.addEventListener("click", shareViaEmail);
+  elements.openInput1.addEventListener("change", (e) =>
+    handleFileOpen(e, elements.textbox1, elements.filenameBox1),
+  );
+  elements.openInput2.addEventListener("change", (e) =>
+    handleFileOpen(e, elements.textbox2, elements.filenameBox2),
+  );
+  elements.recentFilesBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dropdown = elements.recentFilesDropdown;
+    dropdown.style.display =
+      dropdown.style.display === "block" ? "none" : "block";
+  });
+  elements.recentFilesDropdown.addEventListener("click", (e) => {
+    const target = e.target;
+    e.stopPropagation();
+    if (target.classList.contains("delete-recent-btn")) {
+      removeRecentFile(target.dataset.filename);
+    } else {
+      const item = target.closest(".recent-file-item");
+      if (item) {
+        openRecentFile(item.dataset.filename);
+        elements.recentFilesDropdown.style.display = "none";
+      }
+    }
+  });
+
+  document.addEventListener("fullscreenchange", onFullScreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullScreenChange);
+  document.addEventListener("mozfullscreenchange", onFullScreenChange);
+  document.addEventListener("MSFullscreenChange", onFullScreenChange);
+
+  window.addEventListener("click", (e) => {
+    if (!elements.recentFilesBtn.contains(e.target)) {
+      elements.recentFilesDropdown.style.display = "none";
+    }
+  });
+
+  elements.findReplaceBtn.addEventListener("click", () =>
+    togglePopup("findReplace", true),
+  );
+  elements.openLinkBtn.addEventListener("click", openHighlightedLink);
+  elements.undoButton.addEventListener("click", undo);
+  elements.openNewTabBtn.addEventListener("click", openNewTab);
+  elements.splitViewBtn.addEventListener("click", () => toggleSplitView());
+  elements.beditBtn.addEventListener("click", () =>
+    togglePopup("settings", true),
+  );
+
+  elements.previewBtn.addEventListener("click", togglePreviewMode);
+  elements.exportHtmlBtn.addEventListener("click", handleExportHTML);
+  elements.exportPdfBtn.addEventListener("click", handleExportPDF);
+
+  elements.defaultWordWrapCheck.addEventListener("change", (e) => {
+    settings.wordWrap = e.target.checked;
+    saveSettings();
+    applySettings();
+  });
+  elements.defaultSplitViewCheck.addEventListener("change", (e) => {
+    settings.splitView = e.target.checked;
+    saveSettings();
+  });
+  elements.defaultAutoIndentCheck.addEventListener("change", (e) => {
+    settings.autoIndent = e.target.checked;
+    saveSettings();
+  });
+  elements.defaultTurboBoostCheck.addEventListener("change", (e) => {
+    settings.turboBoost = e.target.checked;
+    saveSettings();
+  });
+  elements.enableSpellCheckerCheck.addEventListener("change", (e) => {
+    settings.spellCheck = e.target.checked;
+    saveSettings();
+    applySettings();
+  });
+  elements.autoCloseBracketsCheck.addEventListener("change", (e) => {
+    settings.autoCloseBrackets = e.target.checked;
+    saveSettings();
+  });
+  elements.focusModeCheck.addEventListener("change", (e) => {
+    settings.focusMode = e.target.checked;
+    saveSettings();
+    if (settings.focusMode) {
+      enterFullScreen();
+    } else {
+      exitFullScreen();
+    }
+  });
+  elements.defaultThemeSelect.addEventListener("change", (e) => {
+    settings.theme = e.target.value;
+    saveSettings();
+    applySettings();
+  });
+  elements.dateFormatSelect.addEventListener("change", (e) => {
+    settings.dateFormat = e.target.value;
+    saveSettings();
+  });
+  elements.exportSettingsBtn.addEventListener("click", handleExportSettings);
+  elements.importSettingsBtn.addEventListener("click", () =>
+    elements.importSettingsInput.click(),
+  );
+  elements.importSettingsInput.addEventListener("change", handleImportSettings);
+
+  elements.findText.addEventListener("input", findAllMatches);
+  elements.findText.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      findNext();
+    }
+  });
+  elements.caseSensitiveCheckbox.addEventListener("change", findAllMatches);
+  elements.regexCheckbox.addEventListener("change", findAllMatches);
+  elements.findBtn.addEventListener("click", findNext);
+  elements.replaceBtn.addEventListener("click", replaceCurrentMatch);
+  elements.replaceAllBtn.addEventListener("click", replaceAll);
+  elements.passwordSubmitBtn.addEventListener("click", handlePasswordSubmit);
+  elements.passwordInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handlePasswordSubmit();
+    }
+  });
+
+  elements.closeButtons.forEach((button) => {
+    button.addEventListener("click", () => togglePopup(null, false));
+  });
+
+  elements.overlay.addEventListener("click", () => togglePopup(null, false));
+
+  elements.helpNewBtn.addEventListener("click", () => {
+    openNewTab();
+  });
+  elements.helpOpenBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+    openFile();
+  });
+  elements.helpSaveBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+    saveFile();
+  });
+  elements.helpEmailBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+    shareViaEmail();
+  });
+  elements.helpSplitBtn.addEventListener("click", toggleSplitView);
+  elements.helpFindBtn.addEventListener("click", () => {
+    togglePopup("findReplace", true);
+  });
+  elements.helpLinkBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+    openHighlightedLink();
+  });
+  elements.helpSettingsBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+  });
+  elements.helpLockBtn.addEventListener("click", () => {
+    if (activeProtectedNotePassword) {
+      togglePopup(null, false);
+      lockAndSaveProtectedNote();
+    } else {
+      togglePopup("password", true);
+    }
+  });
+  elements.helpUndoBtn.addEventListener("click", undo);
+  elements.helpPwaBtn.addEventListener("click", () => {
+    if (elements.installButton) elements.installButton.click();
+  });
+
+  adjustTextareaHeight();
+  window.addEventListener("resize", adjustTextareaHeight);
+
+  const savedContent1 = localStorage.getItem(
+    `bedit_${tabId}_${elements.textbox1.id}`,
+  );
+  if (savedContent1) {
+    elements.textbox1.value = savedContent1;
+    addToHistory(savedContent1, 0);
+  } else {
+    addToHistory(elements.textbox1.value, 0);
+  }
+  const savedContent2 = localStorage.getItem(
+    `bedit_${tabId}_${elements.textbox2.id}`,
+  );
+  if (savedContent2) {
+    elements.textbox2.value = savedContent2;
+  }
+
+  updateAllUI();
+  updateRecentFilesUI();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("readme") === "true") {
+    togglePopup("readme", true);
+  }
+
+  const { editorContainer } = elements;
+  editorContainer.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    editorContainer.classList.add("drag-over");
+  });
+  editorContainer.addEventListener("dragleave", (event) => {
+    event.preventDefault();
+    editorContainer.classList.remove("drag-over");
+  });
+  editorContainer.addEventListener("drop", (event) => {
+    event.preventDefault();
+    editorContainer.classList.remove("drag-over");
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const targetTextbox = event.target.closest(".textbox");
+    if (targetTextbox === elements.textbox2) {
+      fileHandles[elements.textbox2.id] = null;
+      openDroppedFile(files[0], elements.textbox2, elements.filenameBox2);
+    } else {
+      fileHandles[elements.textbox1.id] = null;
+      openDroppedFile(files[0], elements.textbox1, elements.filenameBox1);
+      if (
+        files.length > 1 &&
+        elements.editorContainer.classList.contains("split-view-active")
+      ) {
+        fileHandles[elements.textbox2.id] = null;
+        openDroppedFile(files[1], elements.textbox2, elements.filenameBox2);
+      }
+    }
+  });
+
+  if ("launchQueue" in window) {
+    launchQueue.setConsumer(async (launchParams) => {
+      if (!launchParams.files || launchParams.files.length === 0) {
+        return;
+      }
+      for (const fileHandle of launchParams.files) {
+        let targetTextbox, targetFilenameBox;
+        if (
+          activeTextbox === elements.textbox1 &&
+          elements.textbox1.value === ""
+        ) {
+          targetTextbox = elements.textbox1;
+          targetFilenameBox = elements.filenameBox1;
+        } else if (
+          elements.editorContainer.classList.contains("split-view-active") &&
+          elements.textbox2.value === ""
+        ) {
+          targetTextbox = elements.textbox2;
+          targetFilenameBox = elements.filenameBox2;
+        } else {
+          targetTextbox = elements.textbox1;
+          targetFilenameBox = elements.filenameBox1;
+        }
+        fileHandles[targetTextbox.id] = fileHandle;
+        const file = await fileHandle.getFile();
+        openDroppedFile(file, targetTextbox, targetFilenameBox);
+      }
+    });
+  }
 });

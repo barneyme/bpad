@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>bPad</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
         <style>
             * {
                 margin: 0;
@@ -361,7 +362,7 @@
                 border: 1px solid #e2e8f0;
                 border-radius: 5px;
                 margin-right: 10px;
-                background-color: #f7fafc;
+                background-color: #f1f5f9 !important;
             }
 
             @media (max-width: 1024px) {
@@ -519,7 +520,7 @@
         <div class="container">
             <!-- File Manager -->
             <div class="panel file-manager">
-                <h2>📁 Files</h2>
+                <h2>📝 Files</h2>
                 <div class="file-controls">
                     <button class="btn" onclick="createNewFile()">New</button>
                     <button
@@ -546,7 +547,6 @@
                         value="untitled.txt"
                     />
                 </div>
-                <div class="file-list" id="fileList"></div>
                 <textarea
                     class="text-editor"
                     id="textEditor"
@@ -689,19 +689,7 @@
             }
 
             function updateFileList() {
-                const fileList = document.getElementById("fileList");
-                fileList.innerHTML = "";
-
-                Object.keys(currentFiles).forEach((filename) => {
-                    const fileItem = document.createElement("div");
-                    fileItem.className = "file-item";
-                    if (filename === activeFile) {
-                        fileItem.classList.add("active");
-                    }
-                    fileItem.textContent = filename;
-                    fileItem.onclick = () => selectFile(filename);
-                    fileList.appendChild(fileItem);
-                });
+                // File list display removed - functionality preserved for internal state management
             }
 
             function selectFile(filename) {
@@ -1227,3 +1215,4 @@
         </script>
     </body>
 </html>
+                

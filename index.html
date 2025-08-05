@@ -162,7 +162,7 @@
             }
 
             .calendar-day {
-                aspect-ratio: 1;
+                height: 35px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -170,8 +170,9 @@
                 border-radius: 5px;
                 cursor: pointer;
                 transition: all 0.2s;
-                font-size: 12px;
+                font-size: 11px;
                 position: relative;
+                font-weight: 500;
             }
 
             .calendar-day:hover {
@@ -188,6 +189,56 @@
             .calendar-day.has-events {
                 background: #38b2ac;
                 color: white;
+                font-weight: bold;
+                box-shadow: 0 0 0 2px #2d8e8a;
+            }
+
+            .calendar-day.has-events::after {
+                content: '●';
+                position: absolute;
+                bottom: 2px;
+                right: 3px;
+                font-size: 8px;
+                color: #ffffff;
+            }
+
+            .event-tooltip {
+                position: absolute;
+                background: #2d3748;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                z-index: 1000;
+                max-width: 250px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                pointer-events: none;
+                opacity: 0;
+                transform: translateY(-5px);
+                transition: opacity 0.2s, transform 0.2s;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .event-tooltip.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .event-tooltip.multiple-events {
+                white-space: normal;
+                line-height: 1.4;
+            }
+
+            .event-tooltip::before {
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border: 5px solid transparent;
+                border-top-color: #2d3748;
             }
 
             .calendar-day.selected {
@@ -200,6 +251,8 @@
                 font-weight: bold;
                 background: #e2e8f0;
                 color: #4a5568;
+                height: 30px;
+                font-size: 10px;
             }
 
             .event-input {
@@ -211,22 +264,29 @@
             }
 
             .events-list {
-                max-height: 150px;
+                max-height: 180px;
                 overflow-y: auto;
                 border: 1px solid #e2e8f0;
                 border-radius: 5px;
                 padding: 10px;
+                background: #fafafa;
             }
 
             .event-item {
                 background: #f0fff4;
-                padding: 8px;
-                margin-bottom: 5px;
-                border-radius: 5px;
+                padding: 8px 10px;
+                margin-bottom: 6px;
+                border-radius: 6px;
                 border-left: 4px solid #38b2ac;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                transition: transform 0.2s;
+            }
+
+            .event-item:hover {
+                transform: translateX(3px);
             }
 
             .delete-btn {
@@ -301,6 +361,7 @@
                 border: 1px solid #e2e8f0;
                 border-radius: 5px;
                 margin-right: 10px;
+                background-color: #f7fafc;
             }
 
             @media (max-width: 1024px) {
@@ -366,9 +427,9 @@
                 }
 
                 .calendar-day {
-                    font-size: 11px;
-                    min-height: 35px;
-                    aspect-ratio: auto;
+                    font-size: 10px;
+                    min-height: 30px;
+                    height: 30px;
                 }
 
                 .btn {
@@ -413,8 +474,14 @@
                 }
 
                 .calendar-day {
-                    min-height: 30px;
-                    font-size: 10px;
+                    min-height: 25px;
+                    height: 25px;
+                    font-size: 9px;
+                }
+
+                .day-header {
+                    height: 25px;
+                    font-size: 9px;
                 }
 
                 .todo-item {
@@ -769,6 +836,11 @@
                     }
 
                     dayElement.onclick = () => selectDate(dateKey, dayElement);
+                    
+                    // Add hover events for tooltip
+                    dayElement.onmouseenter = (e) => showEventTooltip(e, dateKey);
+                    dayElement.onmouseleave = () => hideEventTooltip();
+                    
                     grid.appendChild(dayElement);
                 }
             }
@@ -930,6 +1002,64 @@
                     }
                 };
                 input.click();
+            }
+
+            // Event tooltip functions
+            let eventTooltip = null;
+
+            function showEventTooltip(event, dateKey) {
+                if (!calendarEvents[dateKey] || calendarEvents[dateKey].length === 0) {
+                    return;
+                }
+
+                hideEventTooltip(); // Remove any existing tooltip
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'event-tooltip';
+                
+                const events = calendarEvents[dateKey];
+                if (events.length === 1) {
+                    tooltip.textContent = events[0];
+                } else {
+                    tooltip.classList.add('multiple-events');
+                    tooltip.innerHTML = events.map(event => `• ${event}`).join('<br>');
+                }
+
+                document.body.appendChild(tooltip);
+                eventTooltip = tooltip;
+
+                // Position the tooltip
+                const rect = event.target.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                let top = rect.top - tooltipRect.height - 10;
+
+                // Adjust if tooltip goes off screen
+                if (left < 10) left = 10;
+                if (left + tooltipRect.width > window.innerWidth - 10) {
+                    left = window.innerWidth - tooltipRect.width - 10;
+                }
+                if (top < 10) {
+                    top = rect.bottom + 10;
+                    // Move arrow to top
+                    tooltip.style.setProperty('--arrow-position', 'top');
+                }
+
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+
+                // Show tooltip with animation
+                setTimeout(() => {
+                    tooltip.classList.add('show');
+                }, 10);
+            }
+
+            function hideEventTooltip() {
+                if (eventTooltip) {
+                    eventTooltip.remove();
+                    eventTooltip = null;
+                }
             }
 
             // Todo List with localStorage

@@ -4,7 +4,10 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>bPad</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
+        />
         <style>
             * {
                 margin: 0;
@@ -195,7 +198,7 @@
             }
 
             .calendar-day.has-events::after {
-                content: '●';
+                content: "●";
                 position: absolute;
                 bottom: 2px;
                 right: 3px;
@@ -216,7 +219,9 @@
                 pointer-events: none;
                 opacity: 0;
                 transform: translateY(-5px);
-                transition: opacity 0.2s, transform 0.2s;
+                transition:
+                    opacity 0.2s,
+                    transform 0.2s;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -233,7 +238,7 @@
             }
 
             .event-tooltip::before {
-                content: '';
+                content: "";
                 position: absolute;
                 top: 100%;
                 left: 50%;
@@ -282,7 +287,7 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                 transition: transform 0.2s;
             }
 
@@ -327,6 +332,23 @@
                 margin-bottom: 8px;
                 border-radius: 8px;
                 transition: all 0.2s;
+                cursor: grab;
+                user-select: none;
+            }
+
+            .todo-item:active {
+                cursor: grabbing;
+            }
+
+            .todo-item.dragging {
+                opacity: 0.5;
+                transform: rotate(2deg);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+
+            .todo-item.drag-over {
+                border-top: 3px solid #4299e1;
+                margin-top: 8px;
             }
 
             .todo-item:hover {
@@ -520,7 +542,7 @@
         <div class="container">
             <!-- File Manager -->
             <div class="panel file-manager">
-                <h2>📝 Files</h2>
+                <h2>📝 Notes</h2>
                 <div class="file-controls">
                     <button class="btn" onclick="createNewFile()">New</button>
                     <button
@@ -556,7 +578,7 @@
 
             <!-- Calendar -->
             <div class="panel calendar">
-                <h2>📅 Calendar</h2>
+                <h2>📅 Dates</h2>
                 <div
                     style="
                         display: flex;
@@ -591,7 +613,7 @@
 
             <!-- Todo List -->
             <div class="panel todo">
-                <h2>✅ Todo</h2>
+                <h2>✅ Tasks</h2>
                 <div
                     style="
                         display: flex;
@@ -824,11 +846,12 @@
                     }
 
                     dayElement.onclick = () => selectDate(dateKey, dayElement);
-                    
+
                     // Add hover events for tooltip
-                    dayElement.onmouseenter = (e) => showEventTooltip(e, dateKey);
+                    dayElement.onmouseenter = (e) =>
+                        showEventTooltip(e, dateKey);
                     dayElement.onmouseleave = () => hideEventTooltip();
-                    
+
                     grid.appendChild(dayElement);
                 }
             }
@@ -996,21 +1019,26 @@
             let eventTooltip = null;
 
             function showEventTooltip(event, dateKey) {
-                if (!calendarEvents[dateKey] || calendarEvents[dateKey].length === 0) {
+                if (
+                    !calendarEvents[dateKey] ||
+                    calendarEvents[dateKey].length === 0
+                ) {
                     return;
                 }
 
                 hideEventTooltip(); // Remove any existing tooltip
 
-                const tooltip = document.createElement('div');
-                tooltip.className = 'event-tooltip';
-                
+                const tooltip = document.createElement("div");
+                tooltip.className = "event-tooltip";
+
                 const events = calendarEvents[dateKey];
                 if (events.length === 1) {
                     tooltip.textContent = events[0];
                 } else {
-                    tooltip.classList.add('multiple-events');
-                    tooltip.innerHTML = events.map(event => `• ${event}`).join('<br>');
+                    tooltip.classList.add("multiple-events");
+                    tooltip.innerHTML = events
+                        .map((event) => `• ${event}`)
+                        .join("<br>");
                 }
 
                 document.body.appendChild(tooltip);
@@ -1019,8 +1047,8 @@
                 // Position the tooltip
                 const rect = event.target.getBoundingClientRect();
                 const tooltipRect = tooltip.getBoundingClientRect();
-                
-                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+                let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
                 let top = rect.top - tooltipRect.height - 10;
 
                 // Adjust if tooltip goes off screen
@@ -1031,15 +1059,15 @@
                 if (top < 10) {
                     top = rect.bottom + 10;
                     // Move arrow to top
-                    tooltip.style.setProperty('--arrow-position', 'top');
+                    tooltip.style.setProperty("--arrow-position", "top");
                 }
 
-                tooltip.style.left = left + 'px';
-                tooltip.style.top = top + 'px';
+                tooltip.style.left = left + "px";
+                tooltip.style.top = top + "px";
 
                 // Show tooltip with animation
                 setTimeout(() => {
-                    tooltip.classList.add('show');
+                    tooltip.classList.add("show");
                 }, 10);
             }
 
@@ -1215,4 +1243,3 @@
         </script>
     </body>
 </html>
-                

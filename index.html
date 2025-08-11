@@ -6,7 +6,7 @@
         <title>bPad</title>
         <link
             rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
         />
         <style>
             * {
@@ -16,1230 +16,843 @@
             }
 
             body {
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background: white;
-                min-height: 100vh;
-                padding: 20px;
+                font-family: "Courier New", monospace;
+                background: #f8f8f8;
+                height: 100vh;
+                position: relative;
+                transition: background 0.3s ease;
             }
 
-            .container {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
-                gap: 20px;
-                max-width: 1400px;
-                margin: 0 auto;
-                height: calc(100vh - 40px);
+            body.dark-mode {
+                background: #1a1a1a;
             }
 
-            .panel {
-                background: rgba(255, 255, 255, 0.95);
-                border-radius: 15px;
-                padding: 25px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                overflow-y: auto;
-            }
-
-            .file-manager {
-                grid-row: 1 / -1;
-            }
-
-            .calendar {
-                grid-column: 2;
-                grid-row: 1;
-            }
-
-            .todo {
-                grid-column: 2;
-                grid-row: 2;
-            }
-
-            h2 {
-                color: #4a5568;
-                margin-bottom: 20px;
-                font-size: 1.5em;
-                border-bottom: 2px solid #e2e8f0;
-                padding-bottom: 10px;
-            }
-
-            /* File Manager Styles */
-            .file-controls {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-            }
-
-            .btn {
-                background: linear-gradient(135deg, #4299e1, #3182ce);
-                color: white;
+            #editor {
+                width: 100%;
+                height: 100vh;
                 border: none;
-                padding: 10px 15px;
-                border-radius: 8px;
-                cursor: pointer;
+                outline: none;
+                padding: 20px;
+                font-family: "Courier New", monospace;
                 font-size: 14px;
-                transition: all 0.3s ease;
+                line-height: 1.5;
+                background: white;
+                color: #333;
+                resize: none;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                transition:
+                    background 0.3s ease,
+                    color 0.3s ease,
+                    border 0.2s ease;
             }
 
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+            #editor.drag-over {
+                border: 3px dashed #007acc;
+                background: rgba(0, 122, 204, 0.1);
             }
 
-            .btn:active {
-                transform: translateY(0);
+            body.dark-mode #editor {
+                background: #2d2d2d;
+                color: #e0e0e0;
             }
 
-            .file-input {
+            body.dark-mode #editor.drag-over {
+                border: 3px dashed #4a9eff;
+                background: rgba(74, 158, 255, 0.1);
+            }
+
+            #bufferBar {
                 display: none;
             }
 
-            .file-list {
-                margin-bottom: 20px;
-                max-height: 150px;
-                overflow-y: auto;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
+            #shortcuts {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
                 padding: 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.3s;
+                pointer-events: none;
+                z-index: 1000;
             }
 
-            .file-item {
-                padding: 8px;
-                cursor: pointer;
-                border-radius: 5px;
-                margin-bottom: 5px;
-                transition: background-color 0.2s;
+            #shortcuts.show {
+                opacity: 1;
             }
 
-            .file-item:hover {
-                background-color: #f7fafc;
+            #hoverHint {
+                position: fixed;
+                top: 15px;
+                right: 15px;
+                width: 8px;
+                height: 8px;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 50%;
+                transition: opacity 0.3s;
+                pointer-events: none;
+                z-index: 999;
             }
 
-            .file-item.active {
-                background-color: #e6fffa;
-                border-left: 4px solid #38b2ac;
+            body.dark-mode #hoverHint {
+                background: rgba(255, 255, 255, 0.3);
             }
 
-            .text-editor {
-                width: 100%;
-                min-height: 300px;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                padding: 15px;
-                font-family: "Courier New", monospace;
-                font-size: 14px;
-                resize: vertical;
-                background: #fafafa;
-                line-height: 1.5;
+            #hoverHint.hide {
+                opacity: 0;
             }
 
-            .text-editor:focus {
-                outline: none;
-                border-color: #4299e1;
-                box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+            #fileInput {
+                display: none;
             }
 
-            /* Calendar Styles */
-            .calendar-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
+            #mobileControls {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                display: none;
+                gap: 8px;
+                z-index: 1000;
             }
 
-            .calendar-nav {
-                background: #4299e1;
+            .mobile-btn {
+                width: 40px;
+                height: 40px;
+                background: rgba(0, 0, 0, 0.8);
                 color: white;
                 border: none;
-                padding: 8px 12px;
-                border-radius: 5px;
+                border-radius: 4px;
                 cursor: pointer;
-            }
-
-            .calendar-grid {
-                display: grid;
-                grid-template-columns: repeat(7, 1fr);
-                gap: 2px;
-                margin-bottom: 20px;
-            }
-
-            .calendar-day {
-                height: 35px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: #f8f9fa;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 11px;
-                position: relative;
-                font-weight: 500;
+                font-size: 16px;
+                transition: background 0.2s;
             }
 
-            .calendar-day:hover {
-                background: #e9ecef;
-                transform: scale(1.05);
+            .mobile-btn:hover {
+                background: rgba(0, 0, 0, 0.9);
             }
 
-            .calendar-day.today {
-                background: #4299e1;
-                color: white;
-                font-weight: bold;
-            }
-
-            .calendar-day.has-events {
-                background: #38b2ac;
-                color: white;
-                font-weight: bold;
-                box-shadow: 0 0 0 2px #2d8e8a;
-            }
-
-            .calendar-day.has-events::after {
-                content: "●";
-                position: absolute;
-                bottom: 2px;
-                right: 3px;
-                font-size: 8px;
-                color: #ffffff;
-            }
-
-            .event-tooltip {
-                position: absolute;
-                background: #2d3748;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                z-index: 1000;
-                max-width: 250px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                pointer-events: none;
-                opacity: 0;
-                transform: translateY(-5px);
-                transition:
-                    opacity 0.2s,
-                    transform 0.2s;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .event-tooltip.show {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            .event-tooltip.multiple-events {
-                white-space: normal;
-                line-height: 1.4;
-            }
-
-            .event-tooltip::before {
-                content: "";
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                border: 5px solid transparent;
-                border-top-color: #2d3748;
-            }
-
-            .calendar-day.selected {
-                background: #667eea;
-                color: white;
-                box-shadow: 0 0 0 2px #4299e1;
-            }
-
-            .day-header {
-                font-weight: bold;
-                background: #e2e8f0;
-                color: #4a5568;
-                height: 30px;
-                font-size: 10px;
-            }
-
-            .event-input {
-                width: 100%;
-                padding: 10px;
-                border: 1px solid #e2e8f0;
-                border-radius: 5px;
-                margin-bottom: 10px;
-            }
-
-            .events-list {
-                max-height: 180px;
-                overflow-y: auto;
-                border: 1px solid #e2e8f0;
-                border-radius: 5px;
-                padding: 10px;
-                background: #fafafa;
-            }
-
-            .event-item {
-                background: #f0fff4;
-                padding: 8px 10px;
-                margin-bottom: 6px;
-                border-radius: 6px;
-                border-left: 4px solid #38b2ac;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                transition: transform 0.2s;
-            }
-
-            .event-item:hover {
-                transform: translateX(3px);
-            }
-
-            .delete-btn {
-                background: #e53e3e;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                border-radius: 3px;
-                cursor: pointer;
-                font-size: 12px;
-            }
-
-            /* Todo Styles */
-            .todo-input {
-                width: calc(100% - 90px);
-                padding: 10px;
-                border: 1px solid #e2e8f0;
-                border-radius: 5px;
-                margin-bottom: 15px;
-            }
-
-            .add-todo-btn {
-                width: 80px;
-                margin-left: 10px;
-            }
-
-            .todo-list {
-                max-height: 250px;
-                overflow-y: auto;
-            }
-
-            .todo-item {
-                display: flex;
-                align-items: center;
-                padding: 10px;
-                background: #f8f9fa;
-                margin-bottom: 8px;
-                border-radius: 8px;
-                transition: all 0.2s;
-                cursor: grab;
-                user-select: none;
-            }
-
-            .todo-item:active {
-                cursor: grabbing;
-            }
-
-            .todo-item.dragging {
-                opacity: 0.5;
-                transform: rotate(2deg);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-
-            .todo-item.drag-over {
-                border-top: 3px solid #4299e1;
-                margin-top: 8px;
-            }
-
-            .todo-item:hover {
-                transform: translateX(5px);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .todo-item.completed {
-                background: #f0fff4;
-                text-decoration: line-through;
-                opacity: 0.7;
-            }
-
-            .todo-checkbox {
-                margin-right: 10px;
-                transform: scale(1.2);
-            }
-
-            .todo-text {
-                flex: 1;
-                font-size: 14px;
-            }
-
-            .todo-controls {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 15px;
-            }
-
-            .filename-input {
-                width: 200px;
-                padding: 8px;
-                border: 1px solid #e2e8f0;
-                border-radius: 5px;
-                margin-right: 10px;
-                background-color: #f1f5f9 !important;
-            }
-
-            @media (max-width: 1024px) {
-                .container {
-                    grid-template-columns: 1fr;
-                    grid-template-rows: auto auto auto;
-                    gap: 15px;
-                }
-
-                .file-manager,
-                .calendar,
-                .todo {
-                    grid-column: 1;
-                    grid-row: auto;
-                }
-
-                .panel {
-                    padding: 20px;
-                }
-
-                .file-controls {
-                    flex-direction: column;
-                    gap: 8px;
-                }
-
-                .file-controls .btn {
-                    width: 100%;
-                }
-
-                .filename-input {
-                    width: 100%;
-                    margin-right: 0;
-                    margin-bottom: 10px;
-                }
+            .mobile-btn:active {
+                transform: scale(0.95);
             }
 
             @media (max-width: 768px) {
-                body {
-                    padding: 10px;
+                #mobileControls {
+                    display: flex;
                 }
 
-                .container {
-                    height: auto;
-                    gap: 10px;
+                #shortcuts {
+                    display: none;
                 }
 
-                .panel {
-                    padding: 15px;
-                }
-
-                h2 {
-                    font-size: 1.3em;
-                    margin-bottom: 15px;
-                }
-
-                .text-editor {
-                    min-height: 200px;
-                    font-size: 16px; /* Prevents zoom on iOS */
-                }
-
-                .calendar-grid {
-                    gap: 1px;
-                }
-
-                .calendar-day {
-                    font-size: 10px;
-                    min-height: 30px;
-                    height: 30px;
-                }
-
-                .btn {
-                    padding: 12px 15px;
-                    font-size: 16px; /* Prevents zoom on iOS */
-                }
-
-                .event-input,
-                .todo-input,
-                .filename-input {
-                    font-size: 16px; /* Prevents zoom on iOS */
-                    padding: 12px;
-                }
-
-                .todo-input {
-                    width: calc(100% - 100px);
-                }
-
-                .add-todo-btn {
-                    width: 90px;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .file-controls {
-                    gap: 5px;
-                }
-
-                .calendar-header {
-                    flex-direction: column;
-                    gap: 10px;
-                    text-align: center;
-                }
-
-                .calendar-nav {
-                    padding: 10px 20px;
-                }
-
-                #currentMonth {
-                    font-size: 1.1em;
-                    font-weight: bold;
-                }
-
-                .calendar-day {
-                    min-height: 25px;
-                    height: 25px;
-                    font-size: 9px;
-                }
-
-                .day-header {
-                    height: 25px;
-                    font-size: 9px;
-                }
-
-                .todo-item {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 8px;
-                }
-
-                .todo-item .delete-btn {
-                    align-self: flex-end;
-                }
-
-                .todo-controls {
-                    flex-direction: column;
-                    gap: 8px;
-                }
-
-                .todo-controls .btn {
-                    width: 100%;
-                }
-
-                .event-item {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 8px;
-                }
-
-                .event-item .delete-btn {
-                    align-self: flex-end;
+                #editor {
+                    height: 100vh;
                 }
             }
         </style>
     </head>
     <body>
-        <div class="container">
-            <!-- File Manager -->
-            <div class="panel file-manager">
-                <h2>📝 Notes</h2>
-                <div class="file-controls">
-                    <button class="btn" onclick="createNewFile()">New</button>
-                    <button
-                        class="btn"
-                        onclick="document.getElementById('fileInput').click()"
-                    >
-                        Open
-                    </button>
-                    <button class="btn" onclick="saveCurrentFile()">
-                        Save
-                    </button>
-                    <input
-                        type="file"
-                        id="fileInput"
-                        class="file-input"
-                        accept=".txt"
-                        onchange="openFile(event)"
-                    />
-                    <input
-                        type="text"
-                        id="filenameInput"
-                        class="filename-input"
-                        placeholder="filename.txt"
-                        value="untitled.txt"
-                    />
-                </div>
-                <textarea
-                    class="text-editor"
-                    id="textEditor"
-                    placeholder="Start typing your text here..."
-                ></textarea>
-            </div>
+        <textarea id="editor" placeholder="..."></textarea>
 
-            <!-- Calendar -->
-            <div class="panel calendar">
-                <h2>📅 Dates</h2>
-                <div
-                    style="
-                        display: flex;
-                        gap: 10px;
-                        margin-bottom: 15px;
-                        flex-wrap: wrap;
-                    "
-                >
-                    <input
-                        type="text"
-                        class="event-input"
-                        id="eventInput"
-                        placeholder="Add event for selected date..."
-                        style="flex: 1; margin-bottom: 0"
-                    />
-                    <button class="btn" onclick="addEvent()">Add</button>
-                    <button class="btn" onclick="saveCalendar()">Save</button>
-                    <button class="btn" onclick="loadCalendar()">Load</button>
-                </div>
-                <div class="calendar-header">
-                    <button class="calendar-nav" onclick="previousMonth()">
-                        &lt;
-                    </button>
-                    <span id="currentMonth"></span>
-                    <button class="calendar-nav" onclick="nextMonth()">
-                        &gt;
-                    </button>
-                </div>
-                <div class="calendar-grid" id="calendarGrid"></div>
-                <div class="events-list" id="eventsList"></div>
-            </div>
+        <div id="hoverHint"></div>
 
-            <!-- Todo List -->
-            <div class="panel todo">
-                <h2>✅ Tasks</h2>
-                <div
-                    style="
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 15px;
-                    "
-                >
-                    <input
-                        type="text"
-                        class="todo-input"
-                        id="todoInput"
-                        placeholder="Add a new task..."
-                    />
-                    <button class="btn add-todo-btn" onclick="addTodo()">
-                        Add
-                    </button>
-                </div>
-                <div class="todo-controls">
-                    <button class="btn" onclick="saveTodos()">Save</button>
-                    <button class="btn" onclick="loadTodos()">Load</button>
-                    <button class="btn" onclick="clearCompleted()">
-                        Clear
-                    </button>
-                </div>
-                <div class="todo-list" id="todoList"></div>
-            </div>
+        <div id="shortcuts">
+            <div>..................................</div>
+            <div>bPad : browser Editor</div>
+            <div>..................................</div>
+            <div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
+            <div id="wordCount">Words: 0 | Lines: 0</div>
+            <div>..................................</div>
+            <div>HELP</div>
+            <div>Ctrl/Cmd + N : New tab</div>
+            <div>bpad.me/abc : New note named abc</div>
+            <div>Ctrl/Cmd + O : Open file</div>
+            <div>Drag/drop file in to bpad to open</div>
+            <div>Opening file adds it to new buffer</div>
+            <div>Ctrl/Cmd + 1~9 : Switch buffers</div>
+            <div>Ctrl/Cmd + ←/→ Move through buffers</div>
+            <div>Ctrl/Cmd + S : Save file</div>
+            <div>Files saved automatically in browser</div>
+            <div>Ctrl/Cmd + W : Close buffer</div>
+            <div>Ctrl/Cmd + D : Dark/light mode</div>
+            <div>F11 : Full screen</div>
+            <div>..................................</div>
+            <div>Made by Barney</div>
+            <div>..................................</div>
         </div>
 
+        <div id="mobileControls">
+            <button class="mobile-btn" id="openBtn" title="Open file">
+                📁
+            </button>
+            <button class="mobile-btn" id="saveBtn" title="Save file">
+                💾
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" accept=".txt,.md,.js,.html,.css" />
+
         <script>
-            // File Manager with localStorage
-            let currentFiles =
-                JSON.parse(localStorage.getItem("currentFiles")) || {};
-            let activeFile = localStorage.getItem("activeFile") || null;
+            // Wait for DOM to be fully loaded
+            document.addEventListener("DOMContentLoaded", function () {
+                // Get DOM elements
+                const editor = document.getElementById("editor");
+                const shortcuts = document.getElementById("shortcuts");
+                const fileInput = document.getElementById("fileInput");
+                const openBtn = document.getElementById("openBtn");
+                const saveBtn = document.getElementById("saveBtn");
+                const wordCount = document.getElementById("wordCount");
+                const currentBuffer = document.getElementById("currentBuffer");
+                const hoverHint = document.getElementById("hoverHint");
 
-            function createNewFile() {
-                const filename =
-                    document.getElementById("filenameInput").value ||
-                    "untitled.txt";
-                currentFiles[filename] = "";
-                activeFile = filename;
-                document.getElementById("textEditor").value = "";
-                updateFileList();
-                saveToStorage();
-            }
+                let showTimeout;
+                let tabId = generateTabId();
 
-            function openFile(event) {
-                const file = event.target.files[0];
-                if (file && file.type === "text/plain") {
+                // Buffer management
+                let buffers = [];
+                let activeBufferIndex = 0;
+
+                // Generate unique tab ID
+                function generateTabId() {
+                    const path = window.location.pathname;
+                    const pathSegments = path
+                        .split("/")
+                        .filter((segment) => segment !== "");
+                    const tabFromPath = pathSegments[pathSegments.length - 1];
+                    if (tabFromPath && tabFromPath !== "index.html") {
+                        return tabFromPath;
+                    }
+                    return Math.random().toString(36).substr(2, 6);
+                }
+
+                // Helper function to get filename without extension for URL
+                function getFileNameForUrl(fileName) {
+                    // Remove extension and sanitize for URL
+                    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+                    return nameWithoutExt
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]/g, "");
+                }
+
+                // Update URL based on current buffer
+                function updateUrlForCurrentBuffer() {
+                    const buffer = buffers[activeBufferIndex];
+                    if (!buffer) return;
+
+                    let urlPath;
+                    if (buffer.name === "bpad.txt") {
+                        // For default buffer, use random ID
+                        urlPath = `/${tabId}`;
+                    } else {
+                        // For opened files, use filename
+                        const urlName = getFileNameForUrl(buffer.name);
+                        urlPath = `/${urlName}`;
+                    }
+
+                    // Only update if the path is different
+                    if (window.location.pathname !== urlPath) {
+                        window.history.replaceState({}, "", urlPath);
+                    }
+                }
+
+                // Buffer class
+                class FileBuffer {
+                    constructor(
+                        name = "bpad.txt",
+                        content = "",
+                        fileHandle = null,
+                    ) {
+                        this.name = name;
+                        this.content = content;
+                        this.originalContent = content;
+                        this.fileHandle = fileHandle;
+                        this.id = Math.random().toString(36).substr(2, 9);
+                    }
+
+                    get isModified() {
+                        return this.content !== this.originalContent;
+                    }
+
+                    markSaved() {
+                        this.originalContent = this.content;
+                    }
+                }
+
+                // Initialize with first buffer
+                function initializeBuffers() {
+                    const savedContent =
+                        localStorage.getItem(`bpad_${tabId}_editorContent`) ||
+                        "";
+                    buffers = [new FileBuffer("bpad.txt", savedContent)];
+                    buffers[0].originalContent = savedContent;
+                    activeBufferIndex = 0;
+                    updateBufferBar();
+                    loadActiveBuffer();
+                    updateUrlForCurrentBuffer();
+                }
+
+                // Storage key helper
+                function getStorageKey(key) {
+                    return `bpad_${tabId}_${key}`;
+                }
+
+                // Buffer management functions
+                function createNewBuffer(
+                    name = "bpad.txt",
+                    content = "",
+                    fileHandle = null,
+                ) {
+                    const buffer = new FileBuffer(name, content, fileHandle);
+                    buffers.push(buffer);
+                    activeBufferIndex = buffers.length - 1;
+                    updateBufferBar();
+                    loadActiveBuffer();
+                    updateUrlForCurrentBuffer(); // Update URL when new buffer is created
+                    return buffer;
+                }
+
+                function switchToBuffer(index) {
+                    if (index < 0 || index >= buffers.length) return;
+
+                    // Save current buffer content
+                    if (buffers[activeBufferIndex]) {
+                        buffers[activeBufferIndex].content = editor.value;
+                    }
+
+                    activeBufferIndex = index;
+                    loadActiveBuffer();
+                    updateBufferBar();
+                    updateUrlForCurrentBuffer(); // Update URL when switching buffers
+                }
+
+                function closeBuffer(index) {
+                    if (buffers.length === 1) return; // Don't close the last buffer
+
+                    const buffer = buffers[index];
+                    if (buffer.isModified) {
+                        if (
+                            !confirm(
+                                `"${buffer.name}" has unsaved changes. Close anyway?`,
+                            )
+                        ) {
+                            return;
+                        }
+                    }
+
+                    buffers.splice(index, 1);
+
+                    // Adjust active buffer index
+                    if (activeBufferIndex >= index && activeBufferIndex > 0) {
+                        activeBufferIndex--;
+                    } else if (activeBufferIndex >= buffers.length) {
+                        activeBufferIndex = buffers.length - 1;
+                    }
+
+                    updateBufferBar();
+                    loadActiveBuffer();
+                    updateUrlForCurrentBuffer(); // Update URL when buffer is closed
+                }
+
+                function loadActiveBuffer() {
+                    const buffer = buffers[activeBufferIndex];
+                    if (buffer) {
+                        editor.value = buffer.content;
+                        updateWordCount();
+                        editor.focus();
+                    }
+                }
+
+                function updateBufferBar() {
+                    // Update current buffer indicator in shortcuts
+                    if (currentBuffer) {
+                        const buffer = buffers[activeBufferIndex];
+                        const modifiedText =
+                            buffer && buffer.isModified ? " (modified)" : "";
+                        currentBuffer.textContent = `Buffer: ${activeBufferIndex + 1}/${buffers.length} - ${buffer ? buffer.name : "unknown"}${modifiedText}`;
+                    }
+                }
+
+                // Dark mode functions
+                function loadDarkMode() {
+                    const isDarkMode =
+                        localStorage.getItem("darkMode") === "true";
+                    if (isDarkMode) {
+                        document.body.classList.add("dark-mode");
+                    }
+                }
+
+                function toggleDarkMode() {
+                    document.body.classList.toggle("dark-mode");
+                    const isDarkMode =
+                        document.body.classList.contains("dark-mode");
+                    localStorage.setItem("darkMode", isDarkMode);
+                }
+
+                // Update word count
+                function updateWordCount() {
+                    const text = editor.value;
+                    const words =
+                        text.trim() === ""
+                            ? 0
+                            : text.trim().split(/\s+/).length;
+                    const lines = text === "" ? 0 : text.split("\n").length;
+                    wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
+                }
+
+                // Update URL with tab ID (now handles both random and file-based URLs)
+                function updateUrlWithTabId() {
+                    const currentPath = window.location.pathname;
+                    const pathSegments = currentPath
+                        .split("/")
+                        .filter((segment) => segment !== "");
+                    const lastSegment = pathSegments[pathSegments.length - 1];
+
+                    // If no specific path or it's index.html, generate random URL
+                    if (
+                        !lastSegment ||
+                        lastSegment === "index.html" ||
+                        lastSegment.includes(".")
+                    ) {
+                        const basePath = pathSegments
+                            .filter((segment) => !segment.includes("."))
+                            .join("/");
+                        const newPath = basePath
+                            ? `/${basePath}/${tabId}`
+                            : `/${tabId}`;
+                        window.history.replaceState({}, "", newPath);
+                    }
+                }
+
+                // Save file function
+                async function saveFile() {
+                    const buffer = buffers[activeBufferIndex];
+                    if (!buffer) return;
+
+                    const content = editor.value;
+                    buffer.content = content;
+
+                    // Check if File System Access API is supported and we have a file handle
+                    if ("showSaveFilePicker" in window && buffer.fileHandle) {
+                        try {
+                            // Save directly to the existing file
+                            const writable =
+                                await buffer.fileHandle.createWritable();
+                            await writable.write(content);
+                            await writable.close();
+
+                            buffer.markSaved();
+                            updateBufferBar();
+                            showSaveIndicator("Saved!");
+                            return;
+                        } catch (err) {
+                            console.log(
+                                "Direct save failed, falling back to download:",
+                                err,
+                            );
+                        }
+                    }
+
+                    // Check if File System Access API is supported for new files
+                    if ("showSaveFilePicker" in window && !buffer.fileHandle) {
+                        try {
+                            const options = {
+                                suggestedName: buffer.name,
+                                types: [
+                                    {
+                                        description: "Text files",
+                                        accept: {
+                                            "text/plain": [".txt"],
+                                            "text/markdown": [".md"],
+                                            "text/javascript": [".js"],
+                                            "text/html": [".html"],
+                                            "text/css": [".css"],
+                                            "application/json": [".json"],
+                                        },
+                                    },
+                                ],
+                            };
+
+                            buffer.fileHandle =
+                                await window.showSaveFilePicker(options);
+                            const writable =
+                                await buffer.fileHandle.createWritable();
+                            await writable.write(content);
+                            await writable.close();
+
+                            // Update buffer name to match saved file
+                            buffer.name = buffer.fileHandle.name;
+                            buffer.markSaved();
+                            updateBufferBar();
+                            updateUrlForCurrentBuffer(); // Update URL when file is saved with new name
+                            showSaveIndicator("Saved!");
+                            return;
+                        } catch (err) {
+                            if (err.name !== "AbortError") {
+                                console.log(
+                                    "Save picker failed, falling back to download:",
+                                    err,
+                                );
+                            }
+                        }
+                    }
+
+                    // Fallback: download method for unsupported browsers
+                    const blob = new Blob([content], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = buffer.name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    buffer.markSaved();
+                    updateBufferBar();
+                    showSaveIndicator("Downloaded!");
+                }
+
+                // Show save success indicator
+                function showSaveIndicator(message) {
+                    let indicator = document.getElementById("saveIndicator");
+                    if (!indicator) {
+                        indicator = document.createElement("div");
+                        indicator.id = "saveIndicator";
+                        indicator.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: rgba(0, 150, 0, 0.9);
+                            color: white;
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            font-size: 14px;
+                            z-index: 2000;
+                            opacity: 0;
+                            transition: opacity 0.3s;
+                            pointer-events: none;
+                        `;
+                        document.body.appendChild(indicator);
+                    }
+
+                    indicator.textContent = message;
+                    indicator.style.opacity = "1";
+
+                    setTimeout(() => {
+                        indicator.style.opacity = "0";
+                    }, 2000);
+                }
+
+                // Open file function
+                async function openFile() {
+                    // Check if File System Access API is supported
+                    if ("showOpenFilePicker" in window) {
+                        try {
+                            const [handle] = await window.showOpenFilePicker({
+                                types: [
+                                    {
+                                        description: "Text files",
+                                        accept: {
+                                            "text/plain": [".txt"],
+                                            "text/markdown": [".md"],
+                                            "text/javascript": [".js"],
+                                            "text/html": [".html"],
+                                            "text/css": [".css"],
+                                            "application/json": [".json"],
+                                            "text/xml": [".xml"],
+                                            "text/csv": [".csv"],
+                                            "application/javascript": [".js"],
+                                            "text/typescript": [".ts"],
+                                            "text/jsx": [".jsx"],
+                                            "text/tsx": [".tsx"],
+                                        },
+                                    },
+                                ],
+                                multiple: false,
+                            });
+
+                            const file = await handle.getFile();
+                            const content = await file.text();
+
+                            createNewBuffer(file.name, content, handle);
+                            return;
+                        } catch (err) {
+                            if (err.name !== "AbortError") {
+                                console.log(
+                                    "File picker failed, falling back to input:",
+                                    err,
+                                );
+                            }
+                        }
+                    }
+
+                    // Fallback to traditional file input
+                    fileInput.click();
+                }
+
+                // New tab function
+                function newTab() {
+                    const newId = Math.random().toString(36).substr(2, 6);
+                    const newUrl = `${window.location.origin}/${newId}`;
+                    window.open(newUrl, "_blank");
+                }
+
+                // Toggle fullscreen
+                function toggleFullscreen() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement
+                            .requestFullscreen()
+                            .catch((err) => {
+                                console.log(
+                                    `Error attempting to enable fullscreen: ${err.message}`,
+                                );
+                            });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                }
+
+                // Event Listeners
+
+                // Editor input listener
+                editor.addEventListener("input", function () {
+                    const buffer = buffers[activeBufferIndex];
+                    if (buffer) {
+                        buffer.content = editor.value;
+                        updateBufferBar();
+                    }
+                    localStorage.setItem(
+                        getStorageKey("editorContent"),
+                        editor.value,
+                    );
+                    updateWordCount();
+                });
+
+                // File input listener (fallback)
+                fileInput.addEventListener("change", function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        loadFileContent(file);
+                    }
+                });
+
+                // Function to load file content
+                function loadFileContent(file) {
                     const reader = new FileReader();
                     reader.onload = function (e) {
-                        const filename = file.name;
-                        const content = e.target.result;
-                        currentFiles[filename] = content;
-                        activeFile = filename;
-                        document.getElementById("textEditor").value = content;
-                        document.getElementById("filenameInput").value =
-                            filename;
-                        updateFileList();
-                        saveToStorage();
+                        createNewBuffer(file.name, e.target.result, null);
                     };
                     reader.readAsText(file);
                 }
-            }
 
-            function saveCurrentFile() {
-                if (!activeFile) {
-                    createNewFile();
-                }
+                // Drag and drop functionality
+                editor.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    editor.classList.add("drag-over");
+                });
 
-                const content = document.getElementById("textEditor").value;
-                const filename =
-                    document.getElementById("filenameInput").value ||
-                    activeFile;
-
-                // Update the file content
-                if (activeFile && activeFile !== filename) {
-                    delete currentFiles[activeFile];
-                }
-                currentFiles[filename] = content;
-                activeFile = filename;
-
-                // Download the file
-                const blob = new Blob([content], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                updateFileList();
-                saveToStorage();
-            }
-
-            function updateFileList() {
-                // File list display removed - functionality preserved for internal state management
-            }
-
-            function selectFile(filename) {
-                activeFile = filename;
-                document.getElementById("textEditor").value =
-                    currentFiles[filename];
-                document.getElementById("filenameInput").value = filename;
-                updateFileList();
-                saveToStorage();
-            }
-
-            function saveToStorage() {
-                localStorage.setItem(
-                    "currentFiles",
-                    JSON.stringify(currentFiles),
-                );
-                localStorage.setItem("activeFile", activeFile);
-            }
-
-            // Update current file content when typing
-            document
-                .getElementById("textEditor")
-                .addEventListener("input", function () {
-                    if (activeFile) {
-                        currentFiles[activeFile] = this.value;
-                        saveToStorage();
+                editor.addEventListener("dragleave", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!editor.contains(e.relatedTarget)) {
+                        editor.classList.remove("drag-over");
                     }
                 });
 
-            // Load file state on startup
-            function loadFileState() {
-                if (activeFile && currentFiles[activeFile] !== undefined) {
-                    document.getElementById("textEditor").value =
-                        currentFiles[activeFile];
-                    document.getElementById("filenameInput").value = activeFile;
-                    updateFileList();
-                } else if (Object.keys(currentFiles).length === 0) {
-                    createNewFile();
-                } else {
-                    updateFileList();
-                }
-            }
+                editor.addEventListener("drop", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    editor.classList.remove("drag-over");
 
-            // Calendar with localStorage
-            let currentDate = new Date();
-            let selectedDate = localStorage.getItem("selectedDate") || null;
-            let calendarEvents =
-                JSON.parse(localStorage.getItem("calendarEvents")) || {};
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        const allowedTypes = [
+                            "text/plain",
+                            "text/html",
+                            "text/css",
+                            "text/javascript",
+                            "application/javascript",
+                            "text/markdown",
+                            "application/json",
+                            "text/xml",
+                            "application/xml",
+                        ];
 
-            function saveCalendarToStorage() {
-                localStorage.setItem(
-                    "calendarEvents",
-                    JSON.stringify(calendarEvents),
-                );
-                localStorage.setItem("selectedDate", selectedDate);
-            }
+                        const allowedExtensions = [
+                            ".txt",
+                            ".md",
+                            ".js",
+                            ".html",
+                            ".css",
+                            ".json",
+                            ".xml",
+                            ".csv",
+                            ".log",
+                            ".yml",
+                            ".yaml",
+                            ".php",
+                            ".py",
+                            ".java",
+                            ".cpp",
+                            ".c",
+                            ".h",
+                            ".rb",
+                            ".go",
+                            ".rs",
+                            ".swift",
+                            ".kt",
+                            ".ts",
+                            ".jsx",
+                            ".tsx",
+                            ".vue",
+                            ".svelte",
+                            ".scss",
+                            ".sass",
+                            ".less",
+                        ];
 
-            function renderCalendar() {
-                const grid = document.getElementById("calendarGrid");
-                const monthYear = document.getElementById("currentMonth");
+                        const fileExtension =
+                            "." + file.name.split(".").pop().toLowerCase();
+                        const isAllowedType = allowedTypes.includes(file.type);
+                        const isAllowedExtension =
+                            allowedExtensions.includes(fileExtension);
 
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
-
-                monthYear.textContent = new Date(
-                    year,
-                    month,
-                ).toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
+                        if (
+                            isAllowedType ||
+                            isAllowedExtension ||
+                            file.type === ""
+                        ) {
+                            loadFileContent(file);
+                        } else {
+                            alert(
+                                "Unsupported file type. Please use text-based files like .txt, .md, .js, .html, .css, etc.",
+                            );
+                        }
+                    }
                 });
 
-                grid.innerHTML = "";
-
-                // Add day headers
-                const dayHeaders = [
-                    "Sun",
-                    "Mon",
-                    "Tue",
-                    "Wed",
-                    "Thu",
-                    "Fri",
-                    "Sat",
-                ];
-                dayHeaders.forEach((day) => {
-                    const dayHeader = document.createElement("div");
-                    dayHeader.className = "calendar-day day-header";
-                    dayHeader.textContent = day;
-                    grid.appendChild(dayHeader);
+                // Mobile button listeners
+                openBtn.addEventListener("click", async function () {
+                    await openFile();
+                });
+                saveBtn.addEventListener("click", async function () {
+                    await saveFile();
                 });
 
-                // Get first day of month and number of days
-                const firstDay = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-                // Add empty cells for days before month starts
-                for (let i = 0; i < firstDay; i++) {
-                    const emptyDay = document.createElement("div");
-                    emptyDay.className = "calendar-day";
-                    grid.appendChild(emptyDay);
-                }
-
-                // Add days of the month
-                const today = new Date();
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dayElement = document.createElement("div");
-                    dayElement.className = "calendar-day";
-                    dayElement.textContent = day;
-
-                    const dateKey = `${year}-${month + 1}-${day}`;
-
-                    // Check if it's today
+                // Mouse hover for shortcuts
+                document.addEventListener("mousemove", function (e) {
                     if (
-                        year === today.getFullYear() &&
-                        month === today.getMonth() &&
-                        day === today.getDate()
+                        e.clientX > window.innerWidth - 100 &&
+                        e.clientY < 100
                     ) {
-                        dayElement.classList.add("today");
-                    }
-
-                    // Check if it has events
-                    if (
-                        calendarEvents[dateKey] &&
-                        calendarEvents[dateKey].length > 0
-                    ) {
-                        dayElement.classList.add("has-events");
-                    }
-
-                    // Check if it's selected
-                    if (selectedDate === dateKey) {
-                        dayElement.classList.add("selected");
-                    }
-
-                    dayElement.onclick = () => selectDate(dateKey, dayElement);
-
-                    // Add hover events for tooltip
-                    dayElement.onmouseenter = (e) =>
-                        showEventTooltip(e, dateKey);
-                    dayElement.onmouseleave = () => hideEventTooltip();
-
-                    grid.appendChild(dayElement);
-                }
-            }
-
-            function selectDate(dateKey, element) {
-                // Remove previous selection
-                document
-                    .querySelectorAll(".calendar-day.selected")
-                    .forEach((el) => {
-                        el.classList.remove("selected");
-                    });
-
-                // Add selection to current day
-                element.classList.add("selected");
-                selectedDate = dateKey;
-
-                displayEventsForDate(dateKey);
-            }
-
-            function previousMonth() {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar();
-            }
-
-            function nextMonth() {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar();
-            }
-
-            function addEvent() {
-                if (!selectedDate) {
-                    alert("Please select a date first");
-                    return;
-                }
-
-                const eventText = document
-                    .getElementById("eventInput")
-                    .value.trim();
-                if (!eventText) return;
-
-                if (!calendarEvents[selectedDate]) {
-                    calendarEvents[selectedDate] = [];
-                }
-
-                calendarEvents[selectedDate].push(eventText);
-                document.getElementById("eventInput").value = "";
-
-                displayEventsForDate(selectedDate);
-                renderCalendar(); // Refresh to show event indicator
-                saveCalendarToStorage();
-            }
-
-            function displayEventsForDate(dateKey) {
-                const eventsList = document.getElementById("eventsList");
-                eventsList.innerHTML = "";
-
-                if (calendarEvents[dateKey]) {
-                    calendarEvents[dateKey].forEach((event, index) => {
-                        const eventItem = document.createElement("div");
-                        eventItem.className = "event-item";
-                        eventItem.innerHTML = `
-                        <span>${event}</span>
-                        <button class="delete-btn" onclick="deleteEvent('${dateKey}', ${index})">×</button>
-                    `;
-                        eventsList.appendChild(eventItem);
-                    });
-                }
-            }
-
-            function deleteEvent(dateKey, index) {
-                calendarEvents[dateKey].splice(index, 1);
-                if (calendarEvents[dateKey].length === 0) {
-                    delete calendarEvents[dateKey];
-                }
-                displayEventsForDate(dateKey);
-                renderCalendar();
-                saveCalendarToStorage();
-            }
-
-            function saveCalendar() {
-                let data = "";
-                Object.keys(calendarEvents)
-                    .sort()
-                    .forEach((dateKey) => {
-                        const [year, month, day] = dateKey.split("-");
-                        const date = new Date(year, month - 1, day);
-                        const dateStr = date.toLocaleDateString("en-US", {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                        });
-                        data += `${dateStr}:\n`;
-                        calendarEvents[dateKey].forEach((event) => {
-                            data += `  - ${event}\n`;
-                        });
-                        data += "\n";
-                    });
-
-                const blob = new Blob([data], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "calendar_events.txt";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-
-            function loadCalendar() {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = ".txt";
-                input.onchange = function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            try {
-                                calendarEvents = {};
-                                const lines = e.target.result.split("\n");
-                                let currentDate = null;
-
-                                lines.forEach((line) => {
-                                    line = line.trim();
-                                    if (line.endsWith(":")) {
-                                        // Parse date line
-                                        const dateStr = line.slice(0, -1);
-                                        const date = new Date(dateStr);
-                                        if (!isNaN(date.getTime())) {
-                                            currentDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-                                            calendarEvents[currentDate] = [];
-                                        }
-                                    } else if (
-                                        line.startsWith("- ") &&
-                                        currentDate
-                                    ) {
-                                        // Parse event line
-                                        const event = line.substring(2);
-                                        if (event) {
-                                            calendarEvents[currentDate].push(
-                                                event,
-                                            );
-                                        }
-                                    }
-                                });
-
-                                renderCalendar();
-                                if (selectedDate) {
-                                    displayEventsForDate(selectedDate);
-                                }
-                                saveCalendarToStorage();
-                            } catch (error) {
-                                alert("Error loading calendar file");
-                            }
-                        };
-                        reader.readAsText(file);
-                    }
-                };
-                input.click();
-            }
-
-            // Event tooltip functions
-            let eventTooltip = null;
-
-            function showEventTooltip(event, dateKey) {
-                if (
-                    !calendarEvents[dateKey] ||
-                    calendarEvents[dateKey].length === 0
-                ) {
-                    return;
-                }
-
-                hideEventTooltip(); // Remove any existing tooltip
-
-                const tooltip = document.createElement("div");
-                tooltip.className = "event-tooltip";
-
-                const events = calendarEvents[dateKey];
-                if (events.length === 1) {
-                    tooltip.textContent = events[0];
-                } else {
-                    tooltip.classList.add("multiple-events");
-                    tooltip.innerHTML = events
-                        .map((event) => `• ${event}`)
-                        .join("<br>");
-                }
-
-                document.body.appendChild(tooltip);
-                eventTooltip = tooltip;
-
-                // Position the tooltip
-                const rect = event.target.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-
-                let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-                let top = rect.top - tooltipRect.height - 10;
-
-                // Adjust if tooltip goes off screen
-                if (left < 10) left = 10;
-                if (left + tooltipRect.width > window.innerWidth - 10) {
-                    left = window.innerWidth - tooltipRect.width - 10;
-                }
-                if (top < 10) {
-                    top = rect.bottom + 10;
-                    // Move arrow to top
-                    tooltip.style.setProperty("--arrow-position", "top");
-                }
-
-                tooltip.style.left = left + "px";
-                tooltip.style.top = top + "px";
-
-                // Show tooltip with animation
-                setTimeout(() => {
-                    tooltip.classList.add("show");
-                }, 10);
-            }
-
-            function hideEventTooltip() {
-                if (eventTooltip) {
-                    eventTooltip.remove();
-                    eventTooltip = null;
-                }
-            }
-
-            // Todo List with localStorage
-            let todos = JSON.parse(localStorage.getItem("todos")) || [];
-
-            function saveTodosToStorage() {
-                localStorage.setItem("todos", JSON.stringify(todos));
-            }
-
-            function addTodo() {
-                const todoText = document
-                    .getElementById("todoInput")
-                    .value.trim();
-                if (!todoText) return;
-
-                todos.push({
-                    text: todoText,
-                    completed: false,
-                    id: Date.now(),
-                });
-
-                document.getElementById("todoInput").value = "";
-                renderTodos();
-                saveTodosToStorage();
-            }
-
-            function renderTodos() {
-                const todoList = document.getElementById("todoList");
-                todoList.innerHTML = "";
-
-                todos.forEach((todo) => {
-                    const todoItem = document.createElement("div");
-                    todoItem.className = `todo-item ${todo.completed ? "completed" : ""}`;
-                    todoItem.innerHTML = `
-                    <input type="checkbox" class="todo-checkbox" ${todo.completed ? "checked" : ""}
-                           onchange="toggleTodo(${todo.id})">
-                    <span class="todo-text">${todo.text}</span>
-                    <button class="delete-btn" onclick="deleteTodo(${todo.id})">×</button>
-                `;
-                    todoList.appendChild(todoItem);
-                });
-            }
-
-            function toggleTodo(id) {
-                const todo = todos.find((t) => t.id === id);
-                if (todo) {
-                    todo.completed = !todo.completed;
-                    renderTodos();
-                    saveTodosToStorage();
-                }
-            }
-
-            function deleteTodo(id) {
-                todos = todos.filter((t) => t.id !== id);
-                renderTodos();
-                saveTodosToStorage();
-            }
-
-            function clearCompleted() {
-                todos = todos.filter((t) => !t.completed);
-                renderTodos();
-                saveTodosToStorage();
-            }
-
-            function saveTodos() {
-                let data = "";
-                todos.forEach((todo) => {
-                    if (todo.completed) {
-                        data += `[DONE] ${todo.text}\n`;
+                        shortcuts.classList.add("show");
+                        hoverHint.classList.add("hide");
+                        clearTimeout(showTimeout);
                     } else {
-                        data += `[ ] ${todo.text}\n`;
+                        showTimeout = setTimeout(function () {
+                            shortcuts.classList.remove("show");
+                            hoverHint.classList.remove("hide");
+                        }, 1000);
                     }
                 });
 
-                const blob = new Blob([data], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "todos.txt";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
+                // Keyboard shortcuts
+                document.addEventListener("keydown", function (e) {
+                    const isModifierKey = e.ctrlKey || e.metaKey;
 
-            function loadTodos() {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = ".txt";
-                input.onchange = function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            const lines = e.target.result
-                                .split("\n")
-                                .filter((line) => line.trim());
-                            todos = [];
-                            lines.forEach((line) => {
-                                line = line.trim();
-                                let completed = false;
-                                let text = "";
-
-                                if (line.startsWith("[DONE]")) {
-                                    completed = true;
-                                    text = line.substring(6).trim();
-                                } else if (line.startsWith("[ ]")) {
-                                    completed = false;
-                                    text = line.substring(3).trim();
-                                } else if (
-                                    line.startsWith("[X]") ||
-                                    line.startsWith("[x]")
-                                ) {
-                                    completed = true;
-                                    text = line.substring(3).trim();
-                                } else if (line) {
-                                    // Plain text line, assume not completed
-                                    text = line;
-                                    completed = false;
-                                }
-
-                                if (text) {
-                                    todos.push({
-                                        text: text,
-                                        completed: completed,
-                                        id: Date.now() + Math.random(),
-                                    });
-                                }
-                            });
-                            renderTodos();
-                            saveTodosToStorage();
-                        };
-                        reader.readAsText(file);
+                    // Debug logging
+                    if (isModifierKey && e.key >= "1" && e.key <= "9") {
+                        console.log(
+                            "Buffer switch attempt:",
+                            e.key,
+                            "Active:",
+                            activeBufferIndex,
+                            "Total buffers:",
+                            buffers.length,
+                        );
                     }
-                };
-                input.click();
-            }
 
-            // Enter key event listeners
-            document
-                .getElementById("eventInput")
-                .addEventListener("keypress", function (e) {
-                    if (e.key === "Enter") {
-                        addEvent();
-                    }
-                });
+                    if (isModifierKey) {
+                        // Handle number keys for buffer switching
+                        if (e.key >= "1" && e.key <= "9") {
+                            e.preventDefault();
+                            const bufferIndex = parseInt(e.key) - 1;
+                            console.log(
+                                "Switching to buffer index:",
+                                bufferIndex,
+                            );
+                            switchToBuffer(bufferIndex);
+                            return;
+                        }
 
-            document
-                .getElementById("todoInput")
-                .addEventListener("keypress", function (e) {
-                    if (e.key === "Enter") {
-                        addTodo();
+                        // Handle arrow keys for buffer navigation
+                        if (e.key === "ArrowLeft") {
+                            e.preventDefault();
+                            const prevIndex =
+                                activeBufferIndex > 0
+                                    ? activeBufferIndex - 1
+                                    : buffers.length - 1;
+                            switchToBuffer(prevIndex);
+                            return;
+                        }
+
+                        if (e.key === "ArrowRight") {
+                            e.preventDefault();
+                            const nextIndex =
+                                activeBufferIndex < buffers.length - 1
+                                    ? activeBufferIndex + 1
+                                    : 0;
+                            switchToBuffer(nextIndex);
+                            return;
+                        }
+
+                        switch (e.key.toLowerCase()) {
+                            case "s":
+                                e.preventDefault();
+                                saveFile();
+                                break;
+                            case "d":
+                                e.preventDefault();
+                                toggleDarkMode();
+                                break;
+                            case "o":
+                                e.preventDefault();
+                                openFile();
+                                break;
+                            case "n":
+                                e.preventDefault();
+                                newTab();
+                                break;
+                            case "w":
+                                e.preventDefault();
+                                closeBuffer(activeBufferIndex);
+                                break;
+                        }
+                    } else if (e.key === "F11") {
+                        e.preventDefault();
+                        toggleFullscreen();
                     }
                 });
 
-            // Initialize the app
-            renderCalendar();
-            loadFileState();
-            renderTodos();
-
-            // Load selected date events if any
-            if (selectedDate) {
-                displayEventsForDate(selectedDate);
-            }
+                // Initialize everything
+                updateUrlWithTabId();
+                initializeBuffers();
+                loadDarkMode();
+                editor.focus();
+            });
         </script>
+        <!-- Cloudflare Pages Analytics -->
+        <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "4ff91f0f1de749c2a405a85ac2d12d29"}'
+        ></script>
+        <!-- Cloudflare Pages Analytics -->
     </body>
 </html>

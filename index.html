@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bPad</title>
+        <title>bEdit</title>
         <link
             rel="icon"
             href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
@@ -164,10 +164,10 @@
 
         <div id="shortcuts">
             <div>..................................</div>
-            <div>bPad : browser pad</div>
+            <div>bPad : browser Pad</div>
             <div>..................................</div>
-            <div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
-            <div id="wordCount">Words : 0 | Lines : 0</div>
+            <div id="currentBuffer">Buffer: 1/1 - bedit.txt</div>
+            <div id="wordCount">Words: 0 | Lines: 0</div>
             <div>..................................</div>
             <div>HELP</div>
             <div>Ctrl/Cmd + N : New tab</div>
@@ -183,7 +183,7 @@
             <div>Ctrl/Cmd + D : Dark/light mode</div>
             <div>F11 : Full screen</div>
             <div>..................................</div>
-            <div>Made by [Barney](www.barney.me).</div>
+            <div>Made by [Barney](www.barney.me)</div>
             <div>..................................</div>
         </div>
 
@@ -246,7 +246,7 @@
                     if (!buffer) return;
 
                     let urlPath;
-                    if (buffer.name === "bpad.txt") {
+                    if (buffer.name === "bedit.txt") {
                         // For default buffer, use random ID
                         urlPath = `/${tabId}`;
                     } else {
@@ -264,7 +264,7 @@
                 // Buffer class
                 class FileBuffer {
                     constructor(
-                        name = "bpad.txt",
+                        name = "bedit.txt",
                         content = "",
                         fileHandle = null,
                     ) {
@@ -287,9 +287,9 @@
                 // Initialize with first buffer
                 function initializeBuffers() {
                     const savedContent =
-                        localStorage.getItem(`bpad_${tabId}_editorContent`) ||
+                        localStorage.getItem(`bedit_${tabId}_editorContent`) ||
                         "";
-                    buffers = [new FileBuffer("bpad.txt", savedContent)];
+                    buffers = [new FileBuffer("bedit.txt", savedContent)];
                     buffers[0].originalContent = savedContent;
                     activeBufferIndex = 0;
                     updateBufferBar();
@@ -299,12 +299,12 @@
 
                 // Storage key helper
                 function getStorageKey(key) {
-                    return `bpad_${tabId}_${key}`;
+                    return `bedit_${tabId}_${key}`;
                 }
 
                 // Buffer management functions
                 function createNewBuffer(
-                    name = "bpad.txt",
+                    name = "bedit.txt",
                     content = "",
                     fileHandle = null,
                 ) {

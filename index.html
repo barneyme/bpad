@@ -155,6 +155,51 @@
                     height: 100vh;
                 }
             }
+
+            #contextMenu {
+                position: fixed;
+                display: none;
+                background: #f0f0f0;
+                border: 1px solid #ccc;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
+                border-radius: 4px;
+                padding: 5px 0;
+                z-index: 2000;
+                font-size: 14px;
+                color: #333;
+            }
+
+            .context-menu-item {
+                padding: 8px 15px;
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+
+            .context-menu-item:hover {
+                background: #007acc;
+                color: white;
+            }
+
+            .context-menu-divider {
+                border: none;
+                border-top: 1px solid #e0e0e0;
+                margin: 4px 0;
+            }
+
+            body.dark-mode #contextMenu {
+                background: #3a3a3a;
+                border-color: #555;
+                color: #e0e0e0;
+            }
+
+            body.dark-mode .context-menu-item:hover {
+                background: #4a9eff;
+                color: #1a1a1a;
+            }
+
+            body.dark-mode .context-menu-divider {
+                border-top-color: #555;
+            }
         </style>
     </head>
     <body>
@@ -183,9 +228,34 @@
             <div>Ctrl/Cmd + D : Dark/light mode</div>
             <div>Ctrl/Cmd + = : Lock/unlock note</div>
             <div>F11 : Full screen</div>
+            <div>Right-click : Menu</div>
             <div>..................................</div>
             <div>Made by [Barney](www.barney.me)</div>
             <div>..................................</div>
+        </div>
+
+        <div id="contextMenu">
+            <div class="context-menu-item" id="ctxNewTab">New Tab</div>
+            <div class="context-menu-item" id="ctxOpenFile">Open File...</div>
+            <div class="context-menu-item" id="ctxSaveFile">Save File</div>
+            <hr class="context-menu-divider" />
+            <div class="context-menu-item" id="ctxNextBuffer">Next Buffer</div>
+            <div class="context-menu-item" id="ctxPrevBuffer">
+                Previous Buffer
+            </div>
+            <div class="context-menu-item" id="ctxCloseBuffer">
+                Close Buffer
+            </div>
+            <hr class="context-menu-divider" />
+            <div class="context-menu-item" id="ctxToggleLock">
+                Lock/Unlock Note
+            </div>
+            <div class="context-menu-item" id="ctxToggleDark">
+                Toggle Dark Mode
+            </div>
+            <div class="context-menu-item" id="ctxToggleFullscreen">
+                Fullscreen
+            </div>
         </div>
 
         <div id="mobileControls">
@@ -211,6 +281,7 @@
                 const wordCount = document.getElementById("wordCount");
                 const currentBuffer = document.getElementById("currentBuffer");
                 const hoverHint = document.getElementById("hoverHint");
+                const contextMenu = document.getElementById("contextMenu");
 
                 // Crypto constants
                 const ENCRYPTION_ALGORITHM = "AES-GCM";
@@ -805,6 +876,17 @@
                     }
                 }
 
+                // --- Context Menu Logic ---
+                function showContextMenu(x, y) {
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.display = "block";
+                }
+
+                function hideContextMenu() {
+                    contextMenu.style.display = "none";
+                }
+
                 // Event Listeners
                 editor.addEventListener("input", function () {
                     const buffer = buffers[activeBufferIndex];
@@ -929,6 +1011,94 @@
                         toggleFullscreen();
                     }
                 });
+
+                // Context Menu Listeners
+                document.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    // Update menu item text based on current state
+                    const buffer = buffers[activeBufferIndex];
+                    document.getElementById("ctxToggleLock").textContent =
+                        buffer.isLocked ? "Unlock Note" : "Lock Note";
+                    document.getElementById("ctxToggleDark").textContent =
+                        document.body.classList.contains("dark-mode")
+                            ? "Light Mode"
+                            : "Dark Mode";
+                    document.getElementById("ctxToggleFullscreen").textContent =
+                        document.fullscreenElement
+                            ? "Exit Fullscreen"
+                            : "Fullscreen";
+
+                    showContextMenu(e.clientX, e.clientY);
+                });
+
+                window.addEventListener("click", () => {
+                    hideContextMenu();
+                });
+
+                document
+                    .getElementById("ctxNewTab")
+                    .addEventListener("click", () => {
+                        newTab();
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxOpenFile")
+                    .addEventListener("click", () => {
+                        openFile();
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxSaveFile")
+                    .addEventListener("click", () => {
+                        saveFile();
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxCloseBuffer")
+                    .addEventListener("click", () => {
+                        closeBuffer(activeBufferIndex);
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxToggleLock")
+                    .addEventListener("click", async () => {
+                        await toggleLock();
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxToggleDark")
+                    .addEventListener("click", () => {
+                        toggleDarkMode();
+                        hideContextMenu();
+                    });
+                document
+                    .getElementById("ctxToggleFullscreen")
+                    .addEventListener("click", () => {
+                        toggleFullscreen();
+                        hideContextMenu();
+                    });
+
+                document
+                    .getElementById("ctxNextBuffer")
+                    .addEventListener("click", () => {
+                        const nextIndex =
+                            activeBufferIndex < buffers.length - 1
+                                ? activeBufferIndex + 1
+                                : 0;
+                        switchToBuffer(nextIndex);
+                        hideContextMenu();
+                    });
+
+                document
+                    .getElementById("ctxPrevBuffer")
+                    .addEventListener("click", () => {
+                        const prevIndex =
+                            activeBufferIndex > 0
+                                ? activeBufferIndex - 1
+                                : buffers.length - 1;
+                        switchToBuffer(prevIndex);
+                        hideContextMenu();
+                    });
 
                 // UPDATED: Initialization Order
                 initializeTabAndUrl(); // This now runs first to set up the correct tabId

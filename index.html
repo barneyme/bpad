@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bPad</title>
+        <title>bEdit</title>
         <link
             rel="icon"
             href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
@@ -164,23 +164,24 @@
 
         <div id="shortcuts">
             <div>..................................</div>
-            <div>bPad : browser Pad</div>
+            <div>bEdit : browser Editor</div>
             <div>..................................</div>
             <div id="currentBuffer">Buffer: 1/1 - bedit.txt</div>
             <div id="wordCount">Words: 0 | Lines: 0</div>
             <div>..................................</div>
             <div>HELP</div>
             <div>Ctrl/Cmd + N : New tab</div>
-            <div>bpad.me/abc : New note named abc</div>
+            <div>bedit.org/abc : New note 'abc'</div>
             <div>Ctrl/Cmd + O : Open file</div>
-            <div>Drag/drop file in to bpad to open</div>
+            <div>Drag and drop to open file</div>
             <div>Opening file adds it to new buffer</div>
             <div>Ctrl/Cmd + 1~9 : Switch buffers</div>
-            <div>Ctrl/Cmd + ←/→ Move through buffers</div>
+            <div>Ctrl/Cmd + ←/→ : Switch buffers</div>
             <div>Ctrl/Cmd + S : Save file</div>
-            <div>Files saved automatically in browser</div>
+            <div>Files auto save in browser</div>
             <div>Ctrl/Cmd + W : Close buffer</div>
             <div>Ctrl/Cmd + D : Dark/light mode</div>
+            <div>Ctrl/Cmd + = : Lock/unlock note</div>
             <div>F11 : Full screen</div>
             <div>..................................</div>
             <div>Made by [Barney](www.barney.me)</div>
@@ -211,6 +212,12 @@
                 const currentBuffer = document.getElementById("currentBuffer");
                 const hoverHint = document.getElementById("hoverHint");
 
+                // Crypto constants
+                const ENCRYPTION_ALGORITHM = "AES-GCM";
+                const KEY_DERIVATION_ALGORITHM = "PBKDF2";
+                const HASH_ALGORITHM = "SHA-256";
+                const KEY_DERIVATION_ITERATIONS = 100000;
+
                 let showTimeout;
                 let tabId = generateTabId();
 
@@ -233,7 +240,6 @@
 
                 // Helper function to get filename without extension for URL
                 function getFileNameForUrl(fileName) {
-                    // Remove extension and sanitize for URL
                     const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
                     return nameWithoutExt
                         .toLowerCase()
@@ -247,15 +253,12 @@
 
                     let urlPath;
                     if (buffer.name === "bedit.txt") {
-                        // For default buffer, use random ID
                         urlPath = `/${tabId}`;
                     } else {
-                        // For opened files, use filename
                         const urlName = getFileNameForUrl(buffer.name);
                         urlPath = `/${urlName}`;
                     }
 
-                    // Only update if the path is different
                     if (window.location.pathname !== urlPath) {
                         window.history.replaceState({}, "", urlPath);
                     }
@@ -267,15 +270,24 @@
                         name = "bedit.txt",
                         content = "",
                         fileHandle = null,
+                        isLocked = false,
+                        encryptedContent = null,
+                        salt = null,
+                        iv = null,
                     ) {
                         this.name = name;
                         this.content = content;
                         this.originalContent = content;
                         this.fileHandle = fileHandle;
                         this.id = Math.random().toString(36).substr(2, 9);
+                        this.isLocked = isLocked;
+                        this.encryptedContent = encryptedContent;
+                        this.salt = salt;
+                        this.iv = iv;
                     }
 
                     get isModified() {
+                        if (this.isLocked) return false;
                         return this.content !== this.originalContent;
                     }
 
@@ -284,22 +296,164 @@
                     }
                 }
 
-                // Initialize with first buffer
+                // Crypto Helper Functions
+                async function deriveKey(password, salt) {
+                    const enc = new TextEncoder();
+                    const keyMaterial = await window.crypto.subtle.importKey(
+                        "raw",
+                        enc.encode(password),
+                        { name: KEY_DERIVATION_ALGORITHM },
+                        false,
+                        ["deriveKey"],
+                    );
+                    return window.crypto.subtle.deriveKey(
+                        {
+                            name: KEY_DERIVATION_ALGORITHM,
+                            salt: salt,
+                            iterations: KEY_DERIVATION_ITERATIONS,
+                            hash: HASH_ALGORITHM,
+                        },
+                        keyMaterial,
+                        { name: ENCRYPTION_ALGORITHM, length: 256 },
+                        true,
+                        ["encrypt", "decrypt"],
+                    );
+                }
+
+                async function encryptText(text, password) {
+                    const salt = window.crypto.getRandomValues(
+                        new Uint8Array(16),
+                    );
+                    const iv = window.crypto.getRandomValues(
+                        new Uint8Array(12),
+                    );
+                    const key = await deriveKey(password, salt);
+                    const enc = new TextEncoder();
+                    const encodedText = enc.encode(text);
+                    const encryptedContent = await window.crypto.subtle.encrypt(
+                        { name: ENCRYPTION_ALGORITHM, iv: iv },
+                        key,
+                        encodedText,
+                    );
+                    return {
+                        encryptedContent: btoa(
+                            String.fromCharCode.apply(
+                                null,
+                                new Uint8Array(encryptedContent),
+                            ),
+                        ),
+                        salt: btoa(String.fromCharCode.apply(null, salt)),
+                        iv: btoa(String.fromCharCode.apply(null, iv)),
+                    };
+                }
+
+                async function decryptText(
+                    encryptedContentB64,
+                    password,
+                    saltB64,
+                    ivB64,
+                ) {
+                    try {
+                        const salt = new Uint8Array(
+                            atob(saltB64)
+                                .split("")
+                                .map((c) => c.charCodeAt(0)),
+                        );
+                        const iv = new Uint8Array(
+                            atob(ivB64)
+                                .split("")
+                                .map((c) => c.charCodeAt(0)),
+                        );
+                        const encryptedContent = new Uint8Array(
+                            atob(encryptedContentB64)
+                                .split("")
+                                .map((c) => c.charCodeAt(0)),
+                        );
+
+                        const key = await deriveKey(password, salt);
+                        const decryptedContent =
+                            await window.crypto.subtle.decrypt(
+                                { name: ENCRYPTION_ALGORITHM, iv: iv },
+                                key,
+                                encryptedContent,
+                            );
+
+                        const dec = new TextDecoder();
+                        return dec.decode(decryptedContent);
+                    } catch (e) {
+                        console.error("Decryption failed:", e);
+                        return null;
+                    }
+                }
+
+                // Save/Load all buffers to/from localStorage
+                function saveBuffersToLocalStorage() {
+                    const buffersToSave = buffers.map((buffer) => ({
+                        name: buffer.name,
+                        content: buffer.isLocked ? "" : buffer.content,
+                        originalContent: buffer.originalContent,
+                        isLocked: buffer.isLocked,
+                        encryptedContent: buffer.encryptedContent,
+                        salt: buffer.salt,
+                        iv: buffer.iv,
+                    }));
+                    localStorage.setItem(
+                        `bedit_buffers_${tabId}`,
+                        JSON.stringify(buffersToSave),
+                    );
+                    localStorage.setItem(
+                        `bedit_active_buffer_index_${tabId}`,
+                        activeBufferIndex,
+                    );
+                }
+
                 function initializeBuffers() {
-                    const savedContent =
-                        localStorage.getItem(`bedit_${tabId}_editorContent`) ||
-                        "";
-                    buffers = [new FileBuffer("bedit.txt", savedContent)];
-                    buffers[0].originalContent = savedContent;
-                    activeBufferIndex = 0;
+                    const savedBuffersData = localStorage.getItem(
+                        `bedit_buffers_${tabId}`,
+                    );
+                    if (savedBuffersData) {
+                        const savedBuffers = JSON.parse(savedBuffersData);
+                        buffers = savedBuffers.map(
+                            (b) =>
+                                new FileBuffer(
+                                    b.name,
+                                    b.content,
+                                    null,
+                                    b.isLocked,
+                                    b.encryptedContent,
+                                    b.salt,
+                                    b.iv,
+                                ),
+                        );
+                        activeBufferIndex =
+                            parseInt(
+                                localStorage.getItem(
+                                    `bedit_active_buffer_index_${tabId}`,
+                                ),
+                                10,
+                            ) || 0;
+                        if (activeBufferIndex >= buffers.length)
+                            activeBufferIndex = 0;
+                    } else {
+                        const oldContentKey = `bedit_${tabId}_editorContent`;
+                        const savedContent =
+                            localStorage.getItem(oldContentKey) || "";
+                        buffers = [new FileBuffer("bedit.txt", savedContent)];
+                        activeBufferIndex = 0;
+                        if (localStorage.getItem(oldContentKey)) {
+                            saveBuffersToLocalStorage();
+                            localStorage.removeItem(oldContentKey);
+                        }
+                    }
+
+                    if (buffers.length === 0) {
+                        buffers = [new FileBuffer("bedit.txt", "")];
+                        activeBufferIndex = 0;
+                    }
+
                     updateBufferBar();
                     loadActiveBuffer();
                     updateUrlForCurrentBuffer();
-                }
-
-                // Storage key helper
-                function getStorageKey(key) {
-                    return `bedit_${tabId}_${key}`;
                 }
 
                 // Buffer management functions
@@ -313,29 +467,28 @@
                     activeBufferIndex = buffers.length - 1;
                     updateBufferBar();
                     loadActiveBuffer();
-                    updateUrlForCurrentBuffer(); // Update URL when new buffer is created
+                    updateUrlForCurrentBuffer();
+                    saveBuffersToLocalStorage();
                     return buffer;
                 }
 
                 function switchToBuffer(index) {
                     if (index < 0 || index >= buffers.length) return;
-
-                    // Save current buffer content
-                    if (buffers[activeBufferIndex]) {
-                        buffers[activeBufferIndex].content = editor.value;
+                    const currentBuf = buffers[activeBufferIndex];
+                    if (currentBuf && !currentBuf.isLocked) {
+                        currentBuf.content = editor.value;
                     }
-
                     activeBufferIndex = index;
                     loadActiveBuffer();
                     updateBufferBar();
-                    updateUrlForCurrentBuffer(); // Update URL when switching buffers
+                    updateUrlForCurrentBuffer();
+                    saveBuffersToLocalStorage();
                 }
 
                 function closeBuffer(index) {
-                    if (buffers.length === 1) return; // Don't close the last buffer
-
+                    if (buffers.length === 1) return;
                     const buffer = buffers[index];
-                    if (buffer.isModified) {
+                    if (buffer.isModified && !buffer.isLocked) {
                         if (
                             !confirm(
                                 `"${buffer.name}" has unsaved changes. Close anyway?`,
@@ -344,37 +497,51 @@
                             return;
                         }
                     }
-
                     buffers.splice(index, 1);
-
-                    // Adjust active buffer index
                     if (activeBufferIndex >= index && activeBufferIndex > 0) {
                         activeBufferIndex--;
                     } else if (activeBufferIndex >= buffers.length) {
                         activeBufferIndex = buffers.length - 1;
                     }
-
                     updateBufferBar();
                     loadActiveBuffer();
-                    updateUrlForCurrentBuffer(); // Update URL when buffer is closed
+                    updateUrlForCurrentBuffer();
+                    saveBuffersToLocalStorage();
                 }
 
                 function loadActiveBuffer() {
                     const buffer = buffers[activeBufferIndex];
                     if (buffer) {
-                        editor.value = buffer.content;
+                        if (buffer.isLocked) {
+                            editor.value = "";
+                            editor.placeholder =
+                                "🔒 This note is locked. Press Ctrl/Cmd + = to unlock.";
+                            editor.readOnly = true;
+                        } else {
+                            editor.value = buffer.content;
+                            editor.placeholder = "...";
+                            editor.readOnly = false;
+                        }
                         updateWordCount();
+                        updateBufferBar();
                         editor.focus();
                     }
                 }
 
                 function updateBufferBar() {
-                    // Update current buffer indicator in shortcuts
                     if (currentBuffer) {
                         const buffer = buffers[activeBufferIndex];
+                        if (!buffer) return;
                         const modifiedText =
-                            buffer && buffer.isModified ? " (modified)" : "";
-                        currentBuffer.textContent = `Buffer: ${activeBufferIndex + 1}/${buffers.length} - ${buffer ? buffer.name : "unknown"}${modifiedText}`;
+                            buffer.isModified && !buffer.isLocked
+                                ? " (modified)"
+                                : "";
+                        const lockedText = buffer.isLocked ? " 🔒" : "";
+                        currentBuffer.textContent = `Buffer: ${
+                            activeBufferIndex + 1
+                        }/${buffers.length} - ${
+                            buffer.name
+                        }${lockedText}${modifiedText}`;
                     }
                 }
 
@@ -405,7 +572,7 @@
                     wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
                 }
 
-                // Update URL with tab ID (now handles both random and file-based URLs)
+                // Update URL with tab ID
                 function updateUrlWithTabId() {
                     const currentPath = window.location.pathname;
                     const pathSegments = currentPath
@@ -413,7 +580,6 @@
                         .filter((segment) => segment !== "");
                     const lastSegment = pathSegments[pathSegments.length - 1];
 
-                    // If no specific path or it's index.html, generate random URL
                     if (
                         !lastSegment ||
                         lastSegment === "index.html" ||
@@ -434,75 +600,59 @@
                     const buffer = buffers[activeBufferIndex];
                     if (!buffer) return;
 
+                    if (buffer.isLocked) {
+                        showSaveIndicator("Cannot save a locked note!");
+                        return;
+                    }
+
                     const content = editor.value;
                     buffer.content = content;
 
-                    // Check if File System Access API is supported and we have a file handle
                     if ("showSaveFilePicker" in window && buffer.fileHandle) {
                         try {
-                            // Save directly to the existing file
                             const writable =
                                 await buffer.fileHandle.createWritable();
                             await writable.write(content);
                             await writable.close();
-
                             buffer.markSaved();
                             updateBufferBar();
                             showSaveIndicator("Saved!");
                             return;
                         } catch (err) {
-                            console.log(
-                                "Direct save failed, falling back to download:",
-                                err,
-                            );
+                            console.log("Direct save failed:", err);
                         }
                     }
 
-                    // Check if File System Access API is supported for new files
                     if ("showSaveFilePicker" in window && !buffer.fileHandle) {
                         try {
-                            const options = {
-                                suggestedName: buffer.name,
-                                types: [
-                                    {
-                                        description: "Text files",
-                                        accept: {
-                                            "text/plain": [".txt"],
-                                            "text/markdown": [".md"],
-                                            "text/javascript": [".js"],
-                                            "text/html": [".html"],
-                                            "text/css": [".css"],
-                                            "application/json": [".json"],
+                            buffer.fileHandle = await window.showSaveFilePicker(
+                                {
+                                    suggestedName: buffer.name,
+                                    types: [
+                                        {
+                                            description: "Text files",
+                                            accept: { "text/plain": [".txt"] },
                                         },
-                                    },
-                                ],
-                            };
-
-                            buffer.fileHandle =
-                                await window.showSaveFilePicker(options);
+                                    ],
+                                },
+                            );
                             const writable =
                                 await buffer.fileHandle.createWritable();
                             await writable.write(content);
                             await writable.close();
-
-                            // Update buffer name to match saved file
                             buffer.name = buffer.fileHandle.name;
                             buffer.markSaved();
                             updateBufferBar();
-                            updateUrlForCurrentBuffer(); // Update URL when file is saved with new name
+                            updateUrlForCurrentBuffer();
                             showSaveIndicator("Saved!");
                             return;
                         } catch (err) {
                             if (err.name !== "AbortError") {
-                                console.log(
-                                    "Save picker failed, falling back to download:",
-                                    err,
-                                );
+                                console.log("Save picker failed:", err);
                             }
                         }
                     }
 
-                    // Fallback: download method for unsupported browsers
                     const blob = new Blob([content], { type: "text/plain" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -522,26 +672,16 @@
                         indicator = document.createElement("div");
                         indicator.id = "saveIndicator";
                         indicator.style.cssText = `
-                            position: fixed;
-                            top: 20px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: rgba(0, 150, 0, 0.9);
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            font-size: 14px;
-                            z-index: 2000;
-                            opacity: 0;
-                            transition: opacity 0.3s;
-                            pointer-events: none;
+                            position: fixed; top: 20px; left: 50%;
+                            transform: translateX(-50%); background: rgba(0, 150, 0, 0.9);
+                            color: white; padding: 8px 16px; border-radius: 4px;
+                            font-size: 14px; z-index: 2000; opacity: 0;
+                            transition: opacity 0.3s; pointer-events: none;
                         `;
                         document.body.appendChild(indicator);
                     }
-
                     indicator.textContent = message;
                     indicator.style.opacity = "1";
-
                     setTimeout(() => {
                         indicator.style.opacity = "0";
                     }, 2000);
@@ -549,49 +689,73 @@
 
                 // Open file function
                 async function openFile() {
-                    // Check if File System Access API is supported
                     if ("showOpenFilePicker" in window) {
                         try {
                             const [handle] = await window.showOpenFilePicker({
-                                types: [
-                                    {
-                                        description: "Text files",
-                                        accept: {
-                                            "text/plain": [".txt"],
-                                            "text/markdown": [".md"],
-                                            "text/javascript": [".js"],
-                                            "text/html": [".html"],
-                                            "text/css": [".css"],
-                                            "application/json": [".json"],
-                                            "text/xml": [".xml"],
-                                            "text/csv": [".csv"],
-                                            "application/javascript": [".js"],
-                                            "text/typescript": [".ts"],
-                                            "text/jsx": [".jsx"],
-                                            "text/tsx": [".tsx"],
-                                        },
-                                    },
-                                ],
                                 multiple: false,
                             });
-
                             const file = await handle.getFile();
                             const content = await file.text();
-
                             createNewBuffer(file.name, content, handle);
                             return;
                         } catch (err) {
                             if (err.name !== "AbortError") {
-                                console.log(
-                                    "File picker failed, falling back to input:",
-                                    err,
-                                );
+                                console.log("File picker failed:", err);
                             }
                         }
+                    } else {
+                        fileInput.click();
+                    }
+                }
+
+                // Function to toggle lock state
+                async function toggleLock() {
+                    const buffer = buffers[activeBufferIndex];
+                    if (!buffer) return;
+
+                    if (buffer.isLocked) {
+                        const password = prompt("Enter password to unlock:");
+                        if (!password) return;
+                        const decryptedContent = await decryptText(
+                            buffer.encryptedContent,
+                            password,
+                            buffer.salt,
+                            buffer.iv,
+                        );
+                        if (decryptedContent !== null) {
+                            buffer.content = decryptedContent;
+                            buffer.isLocked = false;
+                            buffer.encryptedContent = null;
+                            buffer.salt = null;
+                            buffer.iv = null;
+                            showSaveIndicator("Note unlocked!");
+                        } else {
+                            alert("Decryption failed. Incorrect password.");
+                            return;
+                        }
+                    } else {
+                        const password = prompt("Enter password to lock note:");
+                        if (!password) {
+                            alert("Password cannot be empty.");
+                            return;
+                        }
+                        const passwordConfirm = prompt("Confirm password:");
+                        if (password !== passwordConfirm) {
+                            alert("Passwords do not match.");
+                            return;
+                        }
+                        const { encryptedContent, salt, iv } =
+                            await encryptText(editor.value, password);
+                        buffer.encryptedContent = encryptedContent;
+                        buffer.salt = salt;
+                        buffer.iv = iv;
+                        buffer.isLocked = true;
+                        buffer.content = "";
+                        showSaveIndicator("Note locked!");
                     }
 
-                    // Fallback to traditional file input
-                    fileInput.click();
+                    saveBuffersToLocalStorage();
+                    loadActiveBuffer();
                 }
 
                 // New tab function
@@ -604,149 +768,62 @@
                 // Toggle fullscreen
                 function toggleFullscreen() {
                     if (!document.fullscreenElement) {
-                        document.documentElement
-                            .requestFullscreen()
-                            .catch((err) => {
-                                console.log(
-                                    `Error attempting to enable fullscreen: ${err.message}`,
-                                );
-                            });
+                        document.documentElement.requestFullscreen();
                     } else {
                         document.exitFullscreen();
                     }
                 }
 
                 // Event Listeners
-
-                // Editor input listener
                 editor.addEventListener("input", function () {
                     const buffer = buffers[activeBufferIndex];
-                    if (buffer) {
+                    if (buffer && !buffer.isLocked) {
                         buffer.content = editor.value;
                         updateBufferBar();
+                        saveBuffersToLocalStorage();
                     }
-                    localStorage.setItem(
-                        getStorageKey("editorContent"),
-                        editor.value,
-                    );
                     updateWordCount();
                 });
 
-                // File input listener (fallback)
-                fileInput.addEventListener("change", function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        loadFileContent(file);
-                    }
+                fileInput.addEventListener("change", (e) => {
+                    if (e.target.files[0]) loadFileContent(e.target.files[0]);
                 });
 
-                // Function to load file content
                 function loadFileContent(file) {
                     const reader = new FileReader();
-                    reader.onload = function (e) {
+                    reader.onload = (e) =>
                         createNewBuffer(file.name, e.target.result, null);
-                    };
                     reader.readAsText(file);
                 }
 
-                // Drag and drop functionality
-                editor.addEventListener("dragover", function (e) {
+                // Drag and drop
+                editor.addEventListener("dragover", (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     editor.classList.add("drag-over");
                 });
-
-                editor.addEventListener("dragleave", function (e) {
+                editor.addEventListener("dragleave", (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (!editor.contains(e.relatedTarget)) {
                         editor.classList.remove("drag-over");
                     }
                 });
-
-                editor.addEventListener("drop", function (e) {
+                editor.addEventListener("drop", (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     editor.classList.remove("drag-over");
-
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0) {
-                        const file = files[0];
-                        const allowedTypes = [
-                            "text/plain",
-                            "text/html",
-                            "text/css",
-                            "text/javascript",
-                            "application/javascript",
-                            "text/markdown",
-                            "application/json",
-                            "text/xml",
-                            "application/xml",
-                        ];
-
-                        const allowedExtensions = [
-                            ".txt",
-                            ".md",
-                            ".js",
-                            ".html",
-                            ".css",
-                            ".json",
-                            ".xml",
-                            ".csv",
-                            ".log",
-                            ".yml",
-                            ".yaml",
-                            ".php",
-                            ".py",
-                            ".java",
-                            ".cpp",
-                            ".c",
-                            ".h",
-                            ".rb",
-                            ".go",
-                            ".rs",
-                            ".swift",
-                            ".kt",
-                            ".ts",
-                            ".jsx",
-                            ".tsx",
-                            ".vue",
-                            ".svelte",
-                            ".scss",
-                            ".sass",
-                            ".less",
-                        ];
-
-                        const fileExtension =
-                            "." + file.name.split(".").pop().toLowerCase();
-                        const isAllowedType = allowedTypes.includes(file.type);
-                        const isAllowedExtension =
-                            allowedExtensions.includes(fileExtension);
-
-                        if (
-                            isAllowedType ||
-                            isAllowedExtension ||
-                            file.type === ""
-                        ) {
-                            loadFileContent(file);
-                        } else {
-                            alert(
-                                "Unsupported file type. Please use text-based files like .txt, .md, .js, .html, .css, etc.",
-                            );
-                        }
+                    if (e.dataTransfer.files.length > 0) {
+                        loadFileContent(e.dataTransfer.files[0]);
                     }
                 });
 
-                // Mobile button listeners
-                openBtn.addEventListener("click", async function () {
-                    await openFile();
-                });
-                saveBtn.addEventListener("click", async function () {
-                    await saveFile();
-                });
+                // Mobile buttons
+                openBtn.addEventListener("click", openFile);
+                saveBtn.addEventListener("click", saveFile);
 
                 // Mouse hover for shortcuts
-                document.addEventListener("mousemove", function (e) {
+                document.addEventListener("mousemove", (e) => {
                     if (
                         e.clientX > window.innerWidth - 100 &&
                         e.clientY < 100
@@ -755,7 +832,7 @@
                         hoverHint.classList.add("hide");
                         clearTimeout(showTimeout);
                     } else {
-                        showTimeout = setTimeout(function () {
+                        showTimeout = setTimeout(() => {
                             shortcuts.classList.remove("show");
                             hoverHint.classList.remove("hide");
                         }, 1000);
@@ -763,35 +840,14 @@
                 });
 
                 // Keyboard shortcuts
-                document.addEventListener("keydown", function (e) {
+                document.addEventListener("keydown", async (e) => {
                     const isModifierKey = e.ctrlKey || e.metaKey;
-
-                    // Debug logging
-                    if (isModifierKey && e.key >= "1" && e.key <= "9") {
-                        console.log(
-                            "Buffer switch attempt:",
-                            e.key,
-                            "Active:",
-                            activeBufferIndex,
-                            "Total buffers:",
-                            buffers.length,
-                        );
-                    }
-
                     if (isModifierKey) {
-                        // Handle number keys for buffer switching
                         if (e.key >= "1" && e.key <= "9") {
                             e.preventDefault();
-                            const bufferIndex = parseInt(e.key) - 1;
-                            console.log(
-                                "Switching to buffer index:",
-                                bufferIndex,
-                            );
-                            switchToBuffer(bufferIndex);
+                            switchToBuffer(parseInt(e.key) - 1);
                             return;
                         }
-
-                        // Handle arrow keys for buffer navigation
                         if (e.key === "ArrowLeft") {
                             e.preventDefault();
                             const prevIndex =
@@ -801,7 +857,6 @@
                             switchToBuffer(prevIndex);
                             return;
                         }
-
                         if (e.key === "ArrowRight") {
                             e.preventDefault();
                             const nextIndex =
@@ -833,6 +888,10 @@
                                 e.preventDefault();
                                 closeBuffer(activeBufferIndex);
                                 break;
+                            case "=":
+                                e.preventDefault();
+                                await toggleLock();
+                                break;
                         }
                     } else if (e.key === "F11") {
                         e.preventDefault();
@@ -840,19 +899,17 @@
                     }
                 });
 
-                // Initialize everything
+                // Initialize
                 updateUrlWithTabId();
                 initializeBuffers();
                 loadDarkMode();
                 editor.focus();
             });
         </script>
-        <!-- Cloudflare Pages Analytics -->
         <script
             defer
             src="https://static.cloudflareinsights.com/beacon.min.js"
             data-cf-beacon='{"token": "4ff91f0f1de749c2a405a85ac2d12d29"}'
         ></script>
-        <!-- Cloudflare Pages Analytics -->
     </body>
 </html>

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bEdit</title>
+        <title>bPad</title>
         <link
             rel="icon"
             href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
@@ -164,14 +164,14 @@
 
         <div id="shortcuts">
             <div>..................................</div>
-            <div>bEdit : browser Editor</div>
+            <div>bPad : browser Pad</div>
             <div>..................................</div>
-            <div id="currentBuffer">Buffer: 1/1 - bedit.txt</div>
+            <div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
             <div id="wordCount">Words: 0 | Lines: 0</div>
             <div>..................................</div>
             <div>HELP</div>
             <div>Ctrl/Cmd + N : New tab</div>
-            <div>bedit.org/abc : New note 'abc'</div>
+            <div>bpad.me/abc : New note 'abc'</div>
             <div>Ctrl/Cmd + O : Open file</div>
             <div>Drag and drop to open file</div>
             <div>Opening file adds it to new buffer</div>
@@ -219,23 +219,63 @@
                 const KEY_DERIVATION_ITERATIONS = 100000;
 
                 let showTimeout;
-                let tabId = generateTabId();
-
-                // Buffer management
+                let tabId; // This will be set by initializeTabAndUrl
                 let buffers = [];
                 let activeBufferIndex = 0;
 
-                // Generate unique tab ID
-                function generateTabId() {
+                // NEW: This function handles Tab ID and URL logic on startup.
+                function initializeTabAndUrl() {
                     const path = window.location.pathname;
                     const pathSegments = path
                         .split("/")
-                        .filter((segment) => segment !== "");
-                    const tabFromPath = pathSegments[pathSegments.length - 1];
-                    if (tabFromPath && tabFromPath !== "index.html") {
-                        return tabFromPath;
+                        .filter(
+                            (segment) => segment && segment !== "index.html",
+                        );
+                    const lastSegment =
+                        pathSegments.length > 0
+                            ? pathSegments[pathSegments.length - 1]
+                            : null;
+
+                    // A simple check to see if the last segment could be our ID (i.e., it doesn't have a file extension)
+                    const hasIdInUrl =
+                        lastSegment && !lastSegment.includes(".");
+
+                    if (hasIdInUrl) {
+                        // Case 1: An ID exists in the URL. Use it.
+                        // This handles bookmarks, shared links, and tabs created with Ctrl+N.
+                        tabId = lastSegment;
+                        // Set this as the "main" tab ID for the next time the user visits the root URL.
+                        localStorage.setItem("bedit_main_tabId", tabId);
+                    } else {
+                        // Case 2: No valid ID in the URL. We are at the root (e.g., /repo/ or /repo/index.html).
+                        const storedMainId =
+                            localStorage.getItem("bedit_main_tabId");
+                        if (storedMainId) {
+                            // A main ID was saved from a previous session. Use it and update the URL to match.
+                            tabId = storedMainId;
+                            const basePath = path.endsWith("/")
+                                ? path
+                                : path.substring(0, path.lastIndexOf("/") + 1);
+                            window.history.replaceState(
+                                {},
+                                "",
+                                `${basePath}${tabId}`,
+                            );
+                        } else {
+                            // First visit ever, or local storage was cleared.
+                            // Generate a new ID, store it as the main ID, and update the URL.
+                            tabId = Math.random().toString(36).substr(2, 6);
+                            localStorage.setItem("bedit_main_tabId", tabId);
+                            const basePath = path.endsWith("/")
+                                ? path
+                                : path.substring(0, path.lastIndexOf("/") + 1);
+                            window.history.replaceState(
+                                {},
+                                "",
+                                `${basePath}${tabId}`,
+                            );
+                        }
                     }
-                    return Math.random().toString(36).substr(2, 6);
                 }
 
                 // Helper function to get filename without extension for URL
@@ -252,22 +292,30 @@
                     if (!buffer) return;
 
                     let urlPath;
-                    if (buffer.name === "bedit.txt") {
+                    if (buffer.name === "bpad.txt") {
                         urlPath = `/${tabId}`;
                     } else {
                         const urlName = getFileNameForUrl(buffer.name);
                         urlPath = `/${urlName}`;
                     }
 
-                    if (window.location.pathname !== urlPath) {
-                        window.history.replaceState({}, "", urlPath);
+                    // This logic needs to be aware of the base path for GitHub pages
+                    const currentPath = window.location.pathname;
+                    const basePath = currentPath.substring(
+                        0,
+                        currentPath.lastIndexOf("/") + 1,
+                    );
+                    const newPath = `${basePath}${urlPath.substring(1)}`;
+
+                    if (window.location.pathname !== newPath) {
+                        window.history.replaceState({}, "", newPath);
                     }
                 }
 
                 // Buffer class
                 class FileBuffer {
                     constructor(
-                        name = "bedit.txt",
+                        name = "bpad.txt",
                         content = "",
                         fileHandle = null,
                         isLocked = false,
@@ -438,7 +486,7 @@
                         const oldContentKey = `bedit_${tabId}_editorContent`;
                         const savedContent =
                             localStorage.getItem(oldContentKey) || "";
-                        buffers = [new FileBuffer("bedit.txt", savedContent)];
+                        buffers = [new FileBuffer("bpad.txt", savedContent)];
                         activeBufferIndex = 0;
                         if (localStorage.getItem(oldContentKey)) {
                             saveBuffersToLocalStorage();
@@ -447,18 +495,18 @@
                     }
 
                     if (buffers.length === 0) {
-                        buffers = [new FileBuffer("bedit.txt", "")];
+                        buffers = [new FileBuffer("bpad.txt", "")];
                         activeBufferIndex = 0;
                     }
 
                     updateBufferBar();
                     loadActiveBuffer();
-                    updateUrlForCurrentBuffer();
+                    // updateUrlForCurrentBuffer(); // This might be redundant now
                 }
 
                 // Buffer management functions
                 function createNewBuffer(
-                    name = "bedit.txt",
+                    name = "bpad.txt",
                     content = "",
                     fileHandle = null,
                 ) {
@@ -570,29 +618,6 @@
                             : text.trim().split(/\s+/).length;
                     const lines = text === "" ? 0 : text.split("\n").length;
                     wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
-                }
-
-                // Update URL with tab ID
-                function updateUrlWithTabId() {
-                    const currentPath = window.location.pathname;
-                    const pathSegments = currentPath
-                        .split("/")
-                        .filter((segment) => segment !== "");
-                    const lastSegment = pathSegments[pathSegments.length - 1];
-
-                    if (
-                        !lastSegment ||
-                        lastSegment === "index.html" ||
-                        lastSegment.includes(".")
-                    ) {
-                        const basePath = pathSegments
-                            .filter((segment) => !segment.includes("."))
-                            .join("/");
-                        const newPath = basePath
-                            ? `/${basePath}/${tabId}`
-                            : `/${tabId}`;
-                        window.history.replaceState({}, "", newPath);
-                    }
                 }
 
                 // Save file function
@@ -758,10 +783,16 @@
                     loadActiveBuffer();
                 }
 
-                // New tab function
+                // UPDATED: New tab function that is robust for subdirectories (like on GitHub Pages)
                 function newTab() {
                     const newId = Math.random().toString(36).substr(2, 6);
-                    const newUrl = `${window.location.origin}/${newId}`;
+                    const currentPath = window.location.pathname;
+                    // Find the base path by removing the current file/id from the end
+                    const basePath = currentPath.substring(
+                        0,
+                        currentPath.lastIndexOf("/") + 1,
+                    );
+                    const newUrl = `${window.location.origin}${basePath}${newId}`;
                     window.open(newUrl, "_blank");
                 }
 
@@ -899,9 +930,9 @@
                     }
                 });
 
-                // Initialize
-                updateUrlWithTabId();
-                initializeBuffers();
+                // UPDATED: Initialization Order
+                initializeTabAndUrl(); // This now runs first to set up the correct tabId
+                initializeBuffers(); // This uses the tabId to load the right content
                 loadDarkMode();
                 editor.focus();
             });

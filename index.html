@@ -429,6 +429,7 @@ Made by [Barney](www.barney.me)
                 let commandPaletteOpen = false;
                 let currentCommands = [];
 
+                // --- CHANGED FUNCTION ---
                 function initializeTabAndUrl() {
                     const path = window.location.pathname;
                     const pathSegments = path
@@ -444,33 +445,19 @@ Made by [Barney](www.barney.me)
                         lastSegment && !lastSegment.includes(".");
 
                     if (hasIdInUrl) {
+                        // If the URL already has a unique ID, use it.
                         tabId = lastSegment;
-                        localStorage.setItem("bedit_main_tabId", tabId);
                     } else {
-                        const storedMainId =
-                            localStorage.getItem("bedit_main_tabId");
-                        if (storedMainId) {
-                            tabId = storedMainId;
-                            const basePath = path.endsWith("/")
-                                ? path
-                                : path.substring(0, path.lastIndexOf("/") + 1);
-                            window.history.replaceState(
-                                {},
-                                "",
-                                `${basePath}${tabId}`,
-                            );
-                        } else {
-                            tabId = Math.random().toString(36).substr(2, 6);
-                            localStorage.setItem("bedit_main_tabId", tabId);
-                            const basePath = path.endsWith("/")
-                                ? path
-                                : path.substring(0, path.lastIndexOf("/") + 1);
-                            window.history.replaceState(
-                                {},
-                                "",
-                                `${basePath}${tabId}`,
-                            );
-                        }
+                        // If not, generate a new unique ID and update the URL.
+                        tabId = Math.random().toString(36).substr(2, 6);
+                        const basePath = path.endsWith("/")
+                            ? path
+                            : path.substring(0, path.lastIndexOf("/") + 1);
+                        window.history.replaceState(
+                            {},
+                            "",
+                            `${basePath}${tabId}`,
+                        );
                     }
                 }
 
@@ -1360,10 +1347,5 @@ Made by [Barney](www.barney.me)
                 editor.focus();
             });
         </script>
-        <script
-            defer
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon='{"token": "4ff91f0f1de749c2a405a85ac2d12d29"}'
-        ></script>
     </body>
 </html>

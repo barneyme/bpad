@@ -66,46 +66,6 @@
                 display: none;
             }
 
-            #shortcuts {
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                opacity: 0;
-                transition: opacity 0.3s;
-                pointer-events: none;
-                z-index: 1000;
-            }
-
-            #shortcuts.show {
-                opacity: 1;
-            }
-
-            #hoverHint {
-                position: fixed;
-                top: 15px;
-                right: 15px;
-                width: 8px;
-                height: 8px;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 50%;
-                transition: opacity 0.3s;
-                pointer-events: none;
-                z-index: 999;
-            }
-
-            body.dark-mode #hoverHint {
-                background: rgba(255, 255, 255, 0.3);
-            }
-
-            #hoverHint.hide {
-                opacity: 0;
-            }
-
             #fileInput {
                 display: none;
             }
@@ -145,10 +105,6 @@
             @media (max-width: 768px) {
                 #mobileControls {
                     display: flex;
-                }
-
-                #shortcuts {
-                    display: none;
                 }
 
                 #editor {
@@ -200,41 +156,216 @@
             body.dark-mode .context-menu-divider {
                 border-top-color: #555;
             }
+
+            /* Command Palette Styles */
+            #commandPalette {
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 500px;
+                background: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+                z-index: 3000;
+                overflow: hidden;
+            }
+
+            body.dark-mode #commandPalette {
+                background: #2d2d2d;
+                border-color: #555;
+            }
+
+            #commandInput {
+                width: 100%;
+                padding: 12px 15px;
+                border: none;
+                outline: none;
+                font-family: "Courier New", monospace;
+                font-size: 16px;
+                background: #fff;
+                color: #333;
+                border-bottom: 1px solid #ccc;
+            }
+
+            body.dark-mode #commandInput {
+                background: #3a3a3a;
+                color: #e0e0e0;
+                border-bottom-color: #555;
+            }
+
+            #commandList {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .command-item {
+                padding: 10px 15px;
+                cursor: pointer;
+                font-size: 14px;
+                color: #333;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            body.dark-mode .command-item {
+                color: #e0e0e0;
+            }
+
+            .command-item:hover,
+            .command-item.selected {
+                background-color: #007acc;
+                color: white;
+            }
+
+            body.dark-mode .command-item:hover,
+            body.dark-mode .command-item.selected {
+                background-color: #4a9eff;
+                color: #1a1a1a;
+            }
+
+            .command-item .shortcut {
+                font-size: 12px;
+                opacity: 0.7;
+            }
+
+            /* Help Modal */
+            #helpModal {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 600px;
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                z-index: 4000;
+                padding: 20px;
+                border: 1px solid #ccc;
+            }
+
+            #helpModal .help-content {
+                position: relative;
+            }
+
+            #closeHelpBtn {
+                position: absolute;
+                top: -10px;
+                right: -5px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #888;
+            }
+
+            #helpModal h3 {
+                margin-bottom: 15px;
+                text-align: center;
+                color: #333;
+            }
+
+            #helpModal pre {
+                background: #f8f8f8;
+                padding: 15px;
+                border-radius: 4px;
+                white-space: pre-wrap;
+                font-family: "Courier New", monospace;
+                font-size: 13px;
+                color: #333;
+                line-height: 1.6;
+            }
+
+            body.dark-mode #helpModal {
+                background: #2d2d2d;
+                border-color: #555;
+            }
+            body.dark-mode #helpModal h3,
+            body.dark-mode #closeHelpBtn {
+                color: #e0e0e0;
+            }
+            body.dark-mode #helpModal pre {
+                background: #1a1a1a;
+                color: #e0e0e0;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .modal-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 2999;
+            }
         </style>
     </head>
     <body>
-        <textarea id="editor" placeholder="..."></textarea>
+        <textarea
+            id="editor"
+            placeholder="Start typing or press Ctrl\Cmd + K for menu."
+        ></textarea>
 
-        <div id="hoverHint"></div>
+        <div id="commandPalette" class="hidden">
+            <div class="palette-container">
+                <input
+                    type="text"
+                    id="commandInput"
+                    placeholder="Search commands or files..."
+                    autocomplete="off"
+                />
+                <div id="commandList"></div>
+            </div>
+        </div>
 
-        <div id="shortcuts">
-            <div>..................................</div>
-            <div>bPad : browser Pad</div>
-            <div>..................................</div>
-            <div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
-            <div id="wordCount">Words: 0 | Lines: 0</div>
-            <div>..................................</div>
-            <div>HELP</div>
-            <div>Ctrl/Cmd + N : New tab</div>
-            <div>bpad.me/abc : New note 'abc'</div>
-            <div>Ctrl/Cmd + O : Open file</div>
-            <div>Drag and drop to open file</div>
-            <div>Opening file adds it to new buffer</div>
-            <div>Ctrl/Cmd + 1~9 : Switch buffers</div>
-            <div>Ctrl/Cmd + ←/→ : Switch buffers</div>
-            <div>Ctrl/Cmd + S : Save file</div>
-            <div>Files auto save in browser</div>
-            <div>Ctrl/Cmd + W : Close buffer</div>
-            <div>Ctrl/Cmd + D : Dark/light mode</div>
-            <div>Ctrl/Cmd + = : Lock/unlock note</div>
-            <div>F11 : Full screen</div>
-            <div>Right-click : Menu</div>
-            <div>..................................</div>
-            <div>Made by [Barney](www.barney.me)</div>
-            <div>..................................</div>
+        <div id="helpModal" class="hidden">
+            <div class="help-content">
+                <button id="closeHelpBtn">&times;</button>
+                <h3>bPad Help & Shortcuts</h3>
+                <pre id="helpText">
+..................................
+bPad : browser Pad
+..................................
+<div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
+<div id="wordCount">Words: 0 | Lines: 0</div>
+..................................
+HELP
+..................................
+Ctrl/Cmd + K : Open command palette
+Ctrl/Cmd + N : New tab
+bpad.me/abc  : New note 'abc'
+Ctrl/Cmd + O : Open file
+Drag & drop  : Open file
+Ctrl/Cmd + S : Save file
+Ctrl/Cmd + W : Close buffer
+Ctrl/Cmd + D : Dark/light mode
+Ctrl/Cmd + = : Lock/unlock note
+Ctrl/Cmd + 1~9 : Switch buffers
+Ctrl/Cmd + ←/→ : Switch buffers
+F11          : Full screen
+Right-click  : Context Menu
+..................................
+Files auto-save in browser.
+Opening a file adds it to a new buffer.
+Made by [Barney](www.barney.me)
+..................................
+                </pre>
+            </div>
         </div>
 
         <div id="contextMenu">
+            <div class="context-menu-item" id="ctxCommandPalette">
+                Command Palette...
+            </div>
+            <hr class="context-menu-divider" />
             <div class="context-menu-item" id="ctxNewTab">New Tab</div>
             <div class="context-menu-item" id="ctxOpenFile">Open File...</div>
             <div class="context-menu-item" id="ctxSaveFile">Save File</div>
@@ -270,18 +401,21 @@
         <input type="file" id="fileInput" accept=".txt,.md,.js,.html,.css" />
 
         <script>
-            // Wait for DOM to be fully loaded
             document.addEventListener("DOMContentLoaded", function () {
                 // Get DOM elements
                 const editor = document.getElementById("editor");
-                const shortcuts = document.getElementById("shortcuts");
                 const fileInput = document.getElementById("fileInput");
                 const openBtn = document.getElementById("openBtn");
                 const saveBtn = document.getElementById("saveBtn");
                 const wordCount = document.getElementById("wordCount");
                 const currentBuffer = document.getElementById("currentBuffer");
-                const hoverHint = document.getElementById("hoverHint");
                 const contextMenu = document.getElementById("contextMenu");
+                const commandPalette =
+                    document.getElementById("commandPalette");
+                const commandInput = document.getElementById("commandInput");
+                const commandList = document.getElementById("commandList");
+                const helpModal = document.getElementById("helpModal");
+                const closeHelpBtn = document.getElementById("closeHelpBtn");
 
                 // Crypto constants
                 const ENCRYPTION_ALGORITHM = "AES-GCM";
@@ -289,12 +423,12 @@
                 const HASH_ALGORITHM = "SHA-256";
                 const KEY_DERIVATION_ITERATIONS = 100000;
 
-                let showTimeout;
-                let tabId; // This will be set by initializeTabAndUrl
+                let tabId;
                 let buffers = [];
                 let activeBufferIndex = 0;
+                let commandPaletteOpen = false;
+                let currentCommands = [];
 
-                // NEW: This function handles Tab ID and URL logic on startup.
                 function initializeTabAndUrl() {
                     const path = window.location.pathname;
                     const pathSegments = path
@@ -306,23 +440,16 @@
                         pathSegments.length > 0
                             ? pathSegments[pathSegments.length - 1]
                             : null;
-
-                    // A simple check to see if the last segment could be our ID (i.e., it doesn't have a file extension)
                     const hasIdInUrl =
                         lastSegment && !lastSegment.includes(".");
 
                     if (hasIdInUrl) {
-                        // Case 1: An ID exists in the URL. Use it.
-                        // This handles bookmarks, shared links, and tabs created with Ctrl+N.
                         tabId = lastSegment;
-                        // Set this as the "main" tab ID for the next time the user visits the root URL.
                         localStorage.setItem("bedit_main_tabId", tabId);
                     } else {
-                        // Case 2: No valid ID in the URL. We are at the root (e.g., /repo/ or /repo/index.html).
                         const storedMainId =
                             localStorage.getItem("bedit_main_tabId");
                         if (storedMainId) {
-                            // A main ID was saved from a previous session. Use it and update the URL to match.
                             tabId = storedMainId;
                             const basePath = path.endsWith("/")
                                 ? path
@@ -333,8 +460,6 @@
                                 `${basePath}${tabId}`,
                             );
                         } else {
-                            // First visit ever, or local storage was cleared.
-                            // Generate a new ID, store it as the main ID, and update the URL.
                             tabId = Math.random().toString(36).substr(2, 6);
                             localStorage.setItem("bedit_main_tabId", tabId);
                             const basePath = path.endsWith("/")
@@ -349,7 +474,6 @@
                     }
                 }
 
-                // Helper function to get filename without extension for URL
                 function getFileNameForUrl(fileName) {
                     const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
                     return nameWithoutExt
@@ -357,7 +481,6 @@
                         .replace(/[^a-z0-9]/g, "");
                 }
 
-                // Update URL based on current buffer
                 function updateUrlForCurrentBuffer() {
                     const buffer = buffers[activeBufferIndex];
                     if (!buffer) return;
@@ -369,8 +492,6 @@
                         const urlName = getFileNameForUrl(buffer.name);
                         urlPath = `/${urlName}`;
                     }
-
-                    // This logic needs to be aware of the base path for GitHub pages
                     const currentPath = window.location.pathname;
                     const basePath = currentPath.substring(
                         0,
@@ -383,7 +504,6 @@
                     }
                 }
 
-                // Buffer class
                 class FileBuffer {
                     constructor(
                         name = "bpad.txt",
@@ -404,18 +524,15 @@
                         this.salt = salt;
                         this.iv = iv;
                     }
-
                     get isModified() {
                         if (this.isLocked) return false;
                         return this.content !== this.originalContent;
                     }
-
                     markSaved() {
                         this.originalContent = this.content;
                     }
                 }
 
-                // Crypto Helper Functions
                 async function deriveKey(password, salt) {
                     const enc = new TextEncoder();
                     const keyMaterial = await window.crypto.subtle.importKey(
@@ -488,7 +605,6 @@
                                 .split("")
                                 .map((c) => c.charCodeAt(0)),
                         );
-
                         const key = await deriveKey(password, salt);
                         const decryptedContent =
                             await window.crypto.subtle.decrypt(
@@ -496,7 +612,6 @@
                                 key,
                                 encryptedContent,
                             );
-
                         const dec = new TextDecoder();
                         return dec.decode(decryptedContent);
                     } catch (e) {
@@ -505,7 +620,6 @@
                     }
                 }
 
-                // Save/Load all buffers to/from localStorage
                 function saveBuffersToLocalStorage() {
                     const buffersToSave = buffers.map((buffer) => ({
                         name: buffer.name,
@@ -564,18 +678,14 @@
                             localStorage.removeItem(oldContentKey);
                         }
                     }
-
                     if (buffers.length === 0) {
                         buffers = [new FileBuffer("bpad.txt", "")];
                         activeBufferIndex = 0;
                     }
-
                     updateBufferBar();
                     loadActiveBuffer();
-                    // updateUrlForCurrentBuffer(); // This might be redundant now
                 }
 
-                // Buffer management functions
                 function createNewBuffer(
                     name = "bpad.txt",
                     content = "",
@@ -638,7 +748,8 @@
                             editor.readOnly = true;
                         } else {
                             editor.value = buffer.content;
-                            editor.placeholder = "...";
+                            editor.placeholder =
+                                "Start typing or press Ctrl\\Cmd + K for menu.";
                             editor.readOnly = false;
                         }
                         updateWordCount();
@@ -658,29 +769,24 @@
                         const lockedText = buffer.isLocked ? " 🔒" : "";
                         currentBuffer.textContent = `Buffer: ${
                             activeBufferIndex + 1
-                        }/${buffers.length} - ${
-                            buffer.name
-                        }${lockedText}${modifiedText}`;
+                        }/${buffers.length} - ${buffer.name}${lockedText}${modifiedText}`;
                     }
                 }
 
-                // Dark mode functions
                 function loadDarkMode() {
                     const isDarkMode =
                         localStorage.getItem("darkMode") === "true";
-                    if (isDarkMode) {
-                        document.body.classList.add("dark-mode");
-                    }
+                    if (isDarkMode) document.body.classList.add("dark-mode");
                 }
 
                 function toggleDarkMode() {
                     document.body.classList.toggle("dark-mode");
-                    const isDarkMode =
-                        document.body.classList.contains("dark-mode");
-                    localStorage.setItem("darkMode", isDarkMode);
+                    localStorage.setItem(
+                        "darkMode",
+                        document.body.classList.contains("dark-mode"),
+                    );
                 }
 
-                // Update word count
                 function updateWordCount() {
                     const text = editor.value;
                     const words =
@@ -691,19 +797,15 @@
                     wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
                 }
 
-                // Save file function
                 async function saveFile() {
                     const buffer = buffers[activeBufferIndex];
                     if (!buffer) return;
-
                     if (buffer.isLocked) {
                         showSaveIndicator("Cannot save a locked note!");
                         return;
                     }
-
                     const content = editor.value;
                     buffer.content = content;
-
                     if ("showSaveFilePicker" in window && buffer.fileHandle) {
                         try {
                             const writable =
@@ -718,7 +820,6 @@
                             console.log("Direct save failed:", err);
                         }
                     }
-
                     if ("showSaveFilePicker" in window && !buffer.fileHandle) {
                         try {
                             buffer.fileHandle = await window.showSaveFilePicker(
@@ -748,7 +849,6 @@
                             }
                         }
                     }
-
                     const blob = new Blob([content], { type: "text/plain" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -761,19 +861,12 @@
                     showSaveIndicator("Downloaded!");
                 }
 
-                // Show save success indicator
                 function showSaveIndicator(message) {
                     let indicator = document.getElementById("saveIndicator");
                     if (!indicator) {
                         indicator = document.createElement("div");
                         indicator.id = "saveIndicator";
-                        indicator.style.cssText = `
-                            position: fixed; top: 20px; left: 50%;
-                            transform: translateX(-50%); background: rgba(0, 150, 0, 0.9);
-                            color: white; padding: 8px 16px; border-radius: 4px;
-                            font-size: 14px; z-index: 2000; opacity: 0;
-                            transition: opacity 0.3s; pointer-events: none;
-                        `;
+                        indicator.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 150, 0, 0.9); color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none;`;
                         document.body.appendChild(indicator);
                     }
                     indicator.textContent = message;
@@ -783,7 +876,6 @@
                     }, 2000);
                 }
 
-                // Open file function
                 async function openFile() {
                     if ("showOpenFilePicker" in window) {
                         try {
@@ -793,7 +885,6 @@
                             const file = await handle.getFile();
                             const content = await file.text();
                             createNewBuffer(file.name, content, handle);
-                            return;
                         } catch (err) {
                             if (err.name !== "AbortError") {
                                 console.log("File picker failed:", err);
@@ -804,11 +895,9 @@
                     }
                 }
 
-                // Function to toggle lock state
                 async function toggleLock() {
                     const buffer = buffers[activeBufferIndex];
                     if (!buffer) return;
-
                     if (buffer.isLocked) {
                         const password = prompt("Enter password to unlock:");
                         if (!password) return;
@@ -849,16 +938,13 @@
                         buffer.content = "";
                         showSaveIndicator("Note locked!");
                     }
-
                     saveBuffersToLocalStorage();
                     loadActiveBuffer();
                 }
 
-                // UPDATED: New tab function that is robust for subdirectories (like on GitHub Pages)
                 function newTab() {
                     const newId = Math.random().toString(36).substr(2, 6);
                     const currentPath = window.location.pathname;
-                    // Find the base path by removing the current file/id from the end
                     const basePath = currentPath.substring(
                         0,
                         currentPath.lastIndexOf("/") + 1,
@@ -867,7 +953,6 @@
                     window.open(newUrl, "_blank");
                 }
 
-                // Toggle fullscreen
                 function toggleFullscreen() {
                     if (!document.fullscreenElement) {
                         document.documentElement.requestFullscreen();
@@ -876,7 +961,6 @@
                     }
                 }
 
-                // --- Context Menu Logic ---
                 function showContextMenu(x, y) {
                     contextMenu.style.left = `${x}px`;
                     contextMenu.style.top = `${y}px`;
@@ -886,6 +970,128 @@
                 function hideContextMenu() {
                     contextMenu.style.display = "none";
                 }
+
+                // --- Command Palette Logic ---
+                function openCommandPalette() {
+                    populateCommands();
+                    renderCommands(currentCommands);
+                    commandPalette.classList.remove("hidden");
+                    document.body.insertAdjacentHTML(
+                        "beforeend",
+                        '<div id="modalBackdrop" class="modal-backdrop"></div>',
+                    );
+                    commandInput.value = "";
+                    commandInput.focus();
+                    commandPaletteOpen = true;
+
+                    document
+                        .getElementById("modalBackdrop")
+                        .addEventListener("click", closeCommandPalette);
+                }
+
+                function closeCommandPalette() {
+                    commandPalette.classList.add("hidden");
+                    const backdrop = document.getElementById("modalBackdrop");
+                    if (backdrop) backdrop.remove();
+                    commandPaletteOpen = false;
+                    editor.focus();
+                }
+
+                function showHelp() {
+                    helpModal.classList.remove("hidden");
+                    if (!document.getElementById("modalBackdrop")) {
+                        document.body.insertAdjacentHTML(
+                            "beforeend",
+                            '<div id="modalBackdrop" class="modal-backdrop"></div>',
+                        );
+                        document
+                            .getElementById("modalBackdrop")
+                            .addEventListener("click", closeHelpModal);
+                    }
+                }
+
+                function closeHelpModal() {
+                    helpModal.classList.add("hidden");
+                    const backdrop = document.getElementById("modalBackdrop");
+                    if (backdrop) backdrop.remove();
+                    editor.focus();
+                }
+
+                const staticCommands = [
+                    { name: "Show Help", action: showHelp, shortcut: "?" },
+                    { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
+                    {
+                        name: "Open File...",
+                        action: openFile,
+                        shortcut: "Ctrl+O",
+                    },
+                    { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
+                    {
+                        name: "Toggle Dark/Light Mode",
+                        action: toggleDarkMode,
+                        shortcut: "Ctrl+D",
+                    },
+                    {
+                        name: "Lock/Unlock Note",
+                        action: toggleLock,
+                        shortcut: "Ctrl+=",
+                    },
+                    {
+                        name: "Close Current Buffer",
+                        action: () => closeBuffer(activeBufferIndex),
+                        shortcut: "Ctrl+W",
+                    },
+                    {
+                        name: "Toggle Fullscreen",
+                        action: toggleFullscreen,
+                        shortcut: "F11",
+                    },
+                ];
+
+                function populateCommands() {
+                    const bufferCommands = buffers.map((buf, index) => ({
+                        name: `Switch to: ${buf.name}`,
+                        action: () => switchToBuffer(index),
+                        shortcut: `Buffer ${index + 1}`,
+                    }));
+                    currentCommands = [...staticCommands, ...bufferCommands];
+                }
+
+                function renderCommands(commandsToRender) {
+                    commandList.innerHTML = "";
+                    commandsToRender.forEach((cmd, index) => {
+                        const item = document.createElement("div");
+                        item.className = "command-item";
+                        item.dataset.index = index;
+
+                        const nameSpan = document.createElement("span");
+                        nameSpan.textContent = cmd.name;
+
+                        const shortcutSpan = document.createElement("span");
+                        shortcutSpan.className = "shortcut";
+                        shortcutSpan.textContent = cmd.shortcut;
+
+                        item.appendChild(nameSpan);
+                        item.appendChild(shortcutSpan);
+
+                        item.addEventListener("click", () => {
+                            cmd.action();
+                            closeCommandPalette();
+                        });
+                        commandList.appendChild(item);
+                    });
+                    if (commandList.firstChild) {
+                        commandList.firstChild.classList.add("selected");
+                    }
+                }
+
+                commandInput.addEventListener("input", () => {
+                    const searchTerm = commandInput.value.toLowerCase();
+                    const filteredCommands = currentCommands.filter((cmd) =>
+                        cmd.name.toLowerCase().includes(searchTerm),
+                    );
+                    renderCommands(filteredCommands);
+                });
 
                 // Event Listeners
                 editor.addEventListener("input", function () {
@@ -934,26 +1140,60 @@
                 // Mobile buttons
                 openBtn.addEventListener("click", openFile);
                 saveBtn.addEventListener("click", saveFile);
-
-                // Mouse hover for shortcuts
-                document.addEventListener("mousemove", (e) => {
-                    if (
-                        e.clientX > window.innerWidth - 100 &&
-                        e.clientY < 100
-                    ) {
-                        shortcuts.classList.add("show");
-                        hoverHint.classList.add("hide");
-                        clearTimeout(showTimeout);
-                    } else {
-                        showTimeout = setTimeout(() => {
-                            shortcuts.classList.remove("show");
-                            hoverHint.classList.remove("hide");
-                        }, 1000);
-                    }
-                });
+                closeHelpBtn.addEventListener("click", closeHelpModal);
 
                 // Keyboard shortcuts
                 document.addEventListener("keydown", async (e) => {
+                    if (commandPaletteOpen) {
+                        const items =
+                            commandList.querySelectorAll(".command-item");
+                        let selected = commandList.querySelector(".selected");
+
+                        if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            if (selected && selected.nextElementSibling) {
+                                selected.classList.remove("selected");
+                                selected.nextElementSibling.classList.add(
+                                    "selected",
+                                );
+                                selected.nextElementSibling.scrollIntoView({
+                                    block: "nearest",
+                                });
+                            }
+                        } else if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            if (selected && selected.previousElementSibling) {
+                                selected.classList.remove("selected");
+                                selected.previousElementSibling.classList.add(
+                                    "selected",
+                                );
+                                selected.previousElementSibling.scrollIntoView({
+                                    block: "nearest",
+                                });
+                            }
+                        } else if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (selected) selected.click();
+                        } else if (e.key === "Tab") {
+                            e.preventDefault();
+                            if (selected) {
+                                const commandName =
+                                    selected.querySelector(
+                                        "span:first-child",
+                                    ).textContent;
+                                commandInput.value = commandName.startsWith(
+                                    "Switch to: ",
+                                )
+                                    ? commandName.substring(11)
+                                    : commandName;
+                                commandInput.dispatchEvent(new Event("input")); // Trigger filtering
+                            }
+                        } else if (e.key === "Escape") {
+                            closeCommandPalette();
+                        }
+                        return;
+                    }
+
                     const isModifierKey = e.ctrlKey || e.metaKey;
                     if (isModifierKey) {
                         if (e.key >= "1" && e.key <= "9") {
@@ -1005,17 +1245,27 @@
                                 e.preventDefault();
                                 await toggleLock();
                                 break;
+                            case "k":
+                                e.preventDefault();
+                                openCommandPalette();
+                                break;
                         }
                     } else if (e.key === "F11") {
                         e.preventDefault();
                         toggleFullscreen();
+                    } else if (e.key === "Escape") {
+                        if (
+                            helpModal &&
+                            !helpModal.classList.contains("hidden")
+                        ) {
+                            closeHelpModal();
+                        }
                     }
                 });
 
                 // Context Menu Listeners
                 document.addEventListener("contextmenu", (e) => {
                     e.preventDefault();
-                    // Update menu item text based on current state
                     const buffer = buffers[activeBufferIndex];
                     document.getElementById("ctxToggleLock").textContent =
                         buffer.isLocked ? "Unlock Note" : "Lock Note";
@@ -1027,7 +1277,6 @@
                         document.fullscreenElement
                             ? "Exit Fullscreen"
                             : "Fullscreen";
-
                     showContextMenu(e.clientX, e.clientY);
                 });
 
@@ -1035,6 +1284,12 @@
                     hideContextMenu();
                 });
 
+                document
+                    .getElementById("ctxCommandPalette")
+                    .addEventListener("click", () => {
+                        openCommandPalette();
+                        hideContextMenu();
+                    });
                 document
                     .getElementById("ctxNewTab")
                     .addEventListener("click", () => {
@@ -1077,7 +1332,6 @@
                         toggleFullscreen();
                         hideContextMenu();
                     });
-
                 document
                     .getElementById("ctxNextBuffer")
                     .addEventListener("click", () => {
@@ -1088,7 +1342,6 @@
                         switchToBuffer(nextIndex);
                         hideContextMenu();
                     });
-
                 document
                     .getElementById("ctxPrevBuffer")
                     .addEventListener("click", () => {
@@ -1100,9 +1353,9 @@
                         hideContextMenu();
                     });
 
-                // UPDATED: Initialization Order
-                initializeTabAndUrl(); // This now runs first to set up the correct tabId
-                initializeBuffers(); // This uses the tabId to load the right content
+                // Initialization
+                initializeTabAndUrl();
+                initializeBuffers();
                 loadDarkMode();
                 editor.focus();
             });

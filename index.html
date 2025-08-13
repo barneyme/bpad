@@ -4,12 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>bPad</title>
-        <link
-            rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
-        />
         <style>
-            /* --- Fluxbox Theme Start --- */
             * {
                 margin: 0;
                 padding: 0;
@@ -17,1347 +12,807 @@
             }
 
             body {
-                font-family: monospace, "Courier New";
-                background: #808080;
-                height: 100vh;
-                position: relative;
-                transition: background 0.3s ease;
-            }
-
-            body.dark-mode {
-                background: #3a3a3a;
-            }
-
-            #editor {
-                width: 100%;
-                height: 100vh;
-                border: none;
-                outline: none;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: snow;
+                min-height: 100vh;
                 padding: 20px;
-                font-family: monospace, "Courier New";
-                font-size: 14px;
-                line-height: 1.5;
-                background: #f0f0f0;
-                color: #000;
-                resize: none;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                transition:
-                    background 0.3s ease,
-                    color 0.3s ease;
+                position: relative;
+                overflow-x: hidden;
             }
 
-            #editor.drag-over {
-                border: 3px dashed #0078d7;
-                background: rgba(0, 120, 215, 0.1);
-            }
-
-            body.dark-mode #editor {
-                background: #222222;
-                color: #e0e0e0;
-                border: 1px solid #555;
-            }
-
-            body.dark-mode #editor.drag-over {
-                border: 3px dashed #0078d7;
-                background: rgba(0, 120, 215, 0.2);
-            }
-
-            #bufferBar {
-                display: none;
-            }
-
-            #fileInput {
-                display: none;
-            }
-
-            #mobileControls {
+            .snowflake {
                 position: fixed;
-                top: 10px;
-                right: 10px;
-                display: none;
-                gap: 8px;
-                z-index: 1000;
+                top: -10px;
+                color: #ddd;
+                user-select: none;
+                pointer-events: none;
+                z-index: -1;
+                animation: fall linear infinite;
             }
 
-            .mobile-btn {
-                width: 40px;
-                height: 40px;
-                background: #555555;
-                color: white;
-                border: 1px outset #777;
-                border-radius: 0;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 16px;
-                transition: background 0.2s;
-            }
-
-            .mobile-btn:hover {
-                background: #666666;
-            }
-
-            .mobile-btn:active {
-                border-style: inset;
-                transform: scale(0.98);
-            }
-
-            @media (max-width: 768px) {
-                #mobileControls {
-                    display: flex;
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
                 }
             }
 
-            #contextMenu {
-                position: fixed;
-                display: none;
-                background: #f0f0f0;
-                border: 1px solid #ccc;
-                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
-                border-radius: 4px;
-                padding: 2px;
-                z-index: 2000;
-                font-size: 14px;
-                color: #333;
-            }
-
-            .context-menu-item {
-                padding: 6px 15px;
-                cursor: pointer;
-                transition: background 0.1s ease;
-            }
-
-            .context-menu-item:hover {
-                background: #0078d7;
-                color: white;
-            }
-
-            .context-menu-divider {
-                border: none;
-                border-top: 1px solid #ccc;
-                margin: 4px 0;
-            }
-
-            body.dark-mode #contextMenu {
-                background: linear-gradient(to bottom, #6a707c, #4a505a);
-                border: 2px outset #888888;
-                color: #ffffff;
-                border-radius: 0;
-                box-shadow: none;
-                padding: 2px;
-            }
-
-            body.dark-mode .context-menu-item {
-                color: #ffffff;
-            }
-
-            body.dark-mode .context-menu-item:hover {
-                background: linear-gradient(to bottom, #0078d7, #005a9e);
-                color: #ffffff;
-            }
-
-            body.dark-mode .context-menu-divider {
-                height: 2px;
-                border-top: 1px solid #333;
-                border-bottom: 1px solid #777;
-                margin: 2px 0;
-            }
-
-            #commandPalette {
-                position: fixed;
-                top: 20%;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 90%;
-                max-width: 500px;
-                background: #f0f0f0;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-                z-index: 3000;
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
                 overflow: hidden;
+                display: flex;
+                height: 600px;
             }
 
-            body.dark-mode #commandPalette {
-                background: linear-gradient(to bottom, #6a707c, #4a505a);
-                border: 2px outset #888888;
-                border-radius: 0;
-                box-shadow: none;
+            .sidebar {
+                width: 280px;
+                background: #2c3e50;
+                color: white;
+                display: flex;
+                flex-direction: column;
             }
 
-            #commandInput {
-                width: 100%;
-                padding: 8px 10px;
+            .sidebar-header {
+                padding: 20px;
+                border-bottom: 1px solid #34495e;
+            }
+
+            .sidebar-header h1 {
+                font-size: 1.3em;
+                font-weight: 300;
+                margin-bottom: 15px;
+            }
+
+            .new-note-btn {
+                background: #3498db;
+                color: white;
                 border: none;
-                outline: none;
-                font-family: monospace, "Courier New";
-                font-size: 16px;
-                background: #fff;
-                color: #333;
-                border-bottom: 1px solid #ccc;
-            }
-
-            body.dark-mode #commandInput {
-                background: #222222;
-                color: #e0e0e0;
-                border: 1px inset #888;
-                border-radius: 0;
-                margin: 2px;
-                width: calc(100% - 4px);
-            }
-
-            #commandList {
-                max-height: 300px;
-                overflow-y: auto;
-                padding: 2px;
-            }
-
-            .command-item {
-                padding: 8px 15px;
+                padding: 10px 15px;
+                border-radius: 5px;
                 cursor: pointer;
                 font-size: 14px;
-                color: #333;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+            .new-note-btn:hover {
+                background: #2980b9;
+                transform: translateY(-1px);
+            }
+
+            .notes-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px 0;
+            }
+
+            .note-item {
+                padding: 12px 20px;
+                cursor: pointer;
+                border-bottom: 1px solid #34495e;
+                transition: all 0.2s ease;
+                position: relative;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
             }
 
-            body.dark-mode .command-item {
-                color: #e0e0e0;
+            .note-item:hover {
+                background: #34495e;
             }
 
-            .command-item:hover,
-            .command-item.selected {
-                background-color: #0078d7;
+            .note-item.active {
+                background: #3498db;
+                border-left: 4px solid #2980b9;
+            }
+
+            .note-title {
+                font-size: 14px;
+                font-weight: 500;
+                margin-bottom: 4px;
+                flex: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .note-preview {
+                font-size: 12px;
+                color: #bdc3c7;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .note-actions {
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                display: flex;
+                gap: 5px;
+            }
+
+            .note-item:hover .note-actions {
+                opacity: 1;
+            }
+
+            .note-action-btn {
+                background: none;
+                border: none;
+                color: #bdc3c7;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 3px;
+                font-size: 12px;
+                transition: all 0.2s ease;
+            }
+
+            .note-action-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
                 color: white;
             }
 
-            body.dark-mode .command-item:hover,
-            body.dark-mode .command-item.selected {
-                background: linear-gradient(to bottom, #0078d7, #005a9e);
-                color: #ffffff;
+            .main-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
             }
 
-            .command-item .shortcut {
-                font-size: 12px;
-                opacity: 0.8;
-            }
-
-            #helpModal {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 90%;
-                max-width: 600px;
-                background: #fff;
-                border-radius: 8px;
-                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-                z-index: 4000;
+            .header {
+                background: #ecf0f1;
                 padding: 20px;
-                border: 1px solid #ccc;
+                border-bottom: 1px solid #bdc3c7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
             }
 
-            #closeHelpBtn {
-                position: absolute;
-                top: 5px;
-                right: 10px;
-                background: none;
+            .note-title-input {
+                font-size: 1.2em;
+                font-weight: 500;
                 border: none;
-                font-size: 24px;
+                background: none;
+                color: #2c3e50;
+                outline: none;
+                padding: 5px;
+                border-radius: 3px;
+                transition: background 0.2s ease;
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .note-title-input:focus {
+                background: white;
+                box-shadow: 0 0 0 2px #3498db;
+            }
+
+            .controls {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 5px;
                 cursor: pointer;
-                color: #555;
+                font-size: 14px;
+                transition: all 0.3s ease;
             }
 
-            #helpModal h3 {
-                margin-bottom: 15px;
-                text-align: center;
-                color: #333;
+            .btn:hover {
+                background: #2980b9;
+                transform: translateY(-1px);
             }
 
-            #helpModal pre {
-                background: #f8f8f8;
-                padding: 15px;
-                border-radius: 4px;
-                white-space: pre-wrap;
-                font-family: monospace, "Courier New";
-                font-size: 13px;
-                color: #333;
-                line-height: 1.6;
+            .btn.secondary {
+                background: #95a5a6;
             }
 
-            body.dark-mode #helpModal {
-                background: linear-gradient(to bottom, #6a707c, #4a505a);
-                border: 2px outset #888888;
-                border-radius: 0;
-                box-shadow: none;
-                color: #ffffff;
-            }
-            body.dark-mode #helpModal h3,
-            body.dark-mode #closeHelpBtn {
-                color: #ffffff;
-            }
-            body.dark-mode #helpModal pre {
-                background: #222222;
-                color: #e0e0e0;
-                border: 1px inset #888;
-                border-radius: 0;
+            .btn.secondary:hover {
+                background: #7f8c8d;
             }
 
-            .hidden {
-                display: none !important;
+            .btn.danger {
+                background: #e74c3c;
             }
 
-            .modal-backdrop {
-                position: fixed;
-                top: 0;
-                left: 0;
+            .btn.danger:hover {
+                background: #c0392b;
+            }
+
+            .editor-container {
+                flex: 1;
+                position: relative;
+            }
+
+            #notepad {
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 2999;
+                border: none;
+                outline: none;
+                padding: 25px;
+                font-family: "Courier New", monospace;
+                font-size: 14px;
+                line-height: 1.6;
+                resize: none;
+                background: #fafafa;
+                color: #333;
             }
-            /* --- Fluxbox Theme End --- */
+
+            .status-bar {
+                background: #ecf0f1;
+                padding: 10px 20px;
+                font-size: 12px;
+                color: #7f8c8d;
+                border-top: 1px solid #bdc3c7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .file-input {
+                display: none;
+            }
+
+            .word-count {
+                font-weight: 500;
+            }
+
+            .empty-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #7f8c8d;
+                text-align: center;
+                padding: 40px;
+            }
+
+            .empty-state h2 {
+                margin-bottom: 10px;
+                color: #95a5a6;
+            }
+
+            .toggle-sidebar {
+                display: none;
+                background: #2c3e50;
+                color: white;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1000;
+                border-radius: 5px;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    height: calc(100vh - 40px);
+                    flex-direction: column;
+                }
+
+                .sidebar {
+                    width: 100%;
+                    height: 200px;
+                    position: relative;
+                    transform: translateY(-100%);
+                    transition: transform 0.3s ease;
+                }
+
+                .sidebar.open {
+                    transform: translateY(0);
+                }
+
+                .toggle-sidebar {
+                    display: block;
+                }
+
+                .main-content {
+                    flex: 1;
+                }
+
+                .header {
+                    padding: 15px;
+                }
+
+                .note-title-input {
+                    font-size: 1em;
+                    min-width: 150px;
+                }
+
+                #notepad {
+                    padding: 15px;
+                    font-size: 16px;
+                }
+            }
         </style>
     </head>
     <body>
-        <textarea
-            id="editor"
-            placeholder="Start typing or press Ctrl\Cmd + K for menu."
-        ></textarea>
+        <button class="toggle-sidebar" onclick="toggleSidebar()">
+            ☰ Notes
+        </button>
 
-        <div id="commandPalette" class="hidden">
-            <div class="palette-container">
-                <input
-                    type="text"
-                    id="commandInput"
-                    placeholder="Search commands or files..."
-                    autocomplete="off"
-                />
-                <div id="commandList"></div>
+        <div class="container">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h1>📝 bPad</h1>
+                    <button class="new-note-btn" onclick="createNewNote()">
+                        + New Note
+                    </button>
+                </div>
+                <div class="notes-list" id="notesList"></div>
+            </div>
+
+            <div class="main-content">
+                <div class="header">
+                    <input
+                        type="text"
+                        class="note-title-input"
+                        id="noteTitleInput"
+                        placeholder="Untitled Note"
+                        onchange="updateNoteTitle()"
+                    />
+                    <div class="controls">
+                        <button
+                            class="btn"
+                            onclick="document.getElementById('fileInput').click()"
+                        >
+                            Import
+                        </button>
+                        <button class="btn" onclick="exportNote()">
+                            Export
+                        </button>
+                        <button class="btn secondary" onclick="duplicateNote()">
+                            Duplicate
+                        </button>
+                        <button
+                            class="btn danger"
+                            onclick="deleteCurrentNote()"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <div class="empty-state" id="emptyState">
+                        <h2>Welcome to bPad</h2>
+                        <p>Create your first note to get started!</p>
+                    </div>
+                    <textarea
+                        id="notepad"
+                        placeholder="Start typing your notes here..."
+                        style="display: none"
+                    ></textarea>
+                </div>
+
+                <div class="status-bar">
+                    <div id="statusText">Ready</div>
+                    <div class="word-count" id="wordCount">
+                        Words: 0 | Characters: 0
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="helpModal" class="hidden">
-            <div class="help-content">
-                <button id="closeHelpBtn">&times;</button>
-                <h3>bPad Help & Shortcuts</h3>
-                <pre id="helpText">
-..................................
-bPad : browser Pad
-..................................
-<div id="currentBuffer">Buffer: 1/1 - bpad.txt</div>
-<div id="wordCount">Words: 0 | Lines: 0</div>
-..................................
-HELP
-..................................
-Ctrl/Cmd + K : Open command palette
-Ctrl/Cmd + N : New tab
-bpad.me/abc  : New note 'abc'
-Ctrl/Cmd + O : Open file
-Drag & drop  : Open file
-Ctrl/Cmd + S : Save file
-Ctrl/Cmd + W : Close buffer
-Ctrl/Cmd + D : Dark/light mode
-Ctrl/Cmd + = : Lock/unlock note
-Ctrl/Cmd + 1~9 : Switch buffers
-Ctrl/Cmd + ←/→ : Switch buffers
-F11          : Full screen
-Right-click  : Context Menu
-..................................
-Files auto-save in browser.
-Opening a file adds it to a new buffer.
-Made by [Barney](www.barney.me)
-..................................
-                </pre>
-            </div>
-        </div>
-
-        <div id="contextMenu">
-            <div class="context-menu-item" id="ctxCommandPalette">
-                Command Palette...
-            </div>
-            <hr class="context-menu-divider" />
-            <div class="context-menu-item" id="ctxNewTab">New Tab</div>
-            <div class="context-menu-item" id="ctxOpenFile">Open File...</div>
-            <div class="context-menu-item" id="ctxSaveFile">Save File</div>
-            <hr class="context-menu-divider" />
-            <div class="context-menu-item" id="ctxNextBuffer">Next Buffer</div>
-            <div class="context-menu-item" id="ctxPrevBuffer">
-                Previous Buffer
-            </div>
-            <div class="context-menu-item" id="ctxCloseBuffer">
-                Close Buffer
-            </div>
-            <hr class="context-menu-divider" />
-            <div class="context-menu-item" id="ctxToggleLock">
-                Lock/Unlock Note
-            </div>
-            <div class="context-menu-item" id="ctxToggleDark">
-                Toggle Dark Mode
-            </div>
-            <div class="context-menu-item" id="ctxToggleFullscreen">
-                Fullscreen
-            </div>
-        </div>
-
-        <div id="mobileControls">
-            <button class="mobile-btn" id="openBtn" title="Open file">
-                📁
-            </button>
-            <button class="mobile-btn" id="saveBtn" title="Save file">
-                💾
-            </button>
-        </div>
-
-        <input type="file" id="fileInput" accept=".txt,.md,.js,.html,.css" />
+        <input
+            type="file"
+            id="fileInput"
+            class="file-input"
+            accept=".txt"
+            onchange="importNote(event)"
+        />
 
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Get DOM elements
-                const editor = document.getElementById("editor");
-                const fileInput = document.getElementById("fileInput");
-                const openBtn = document.getElementById("openBtn");
-                const saveBtn = document.getElementById("saveBtn");
-                const wordCount = document.getElementById("wordCount");
-                const currentBuffer = document.getElementById("currentBuffer");
-                const contextMenu = document.getElementById("contextMenu");
-                const commandPalette =
-                    document.getElementById("commandPalette");
-                const commandInput = document.getElementById("commandInput");
-                const commandList = document.getElementById("commandList");
-                const helpModal = document.getElementById("helpModal");
-                const closeHelpBtn = document.getElementById("closeHelpBtn");
+            let notes = {};
+            let currentNoteId = null;
+            let noteCounter = 1;
 
-                // Crypto constants
-                const ENCRYPTION_ALGORITHM = "AES-GCM";
-                const KEY_DERIVATION_ALGORITHM = "PBKDF2";
-                const HASH_ALGORITHM = "SHA-256";
-                const KEY_DERIVATION_ITERATIONS = 100000;
+            const notepad = document.getElementById("notepad");
+            const noteTitleInput = document.getElementById("noteTitleInput");
+            const wordCount = document.getElementById("wordCount");
+            const statusText = document.getElementById("statusText");
+            const notesList = document.getElementById("notesList");
+            const emptyState = document.getElementById("emptyState");
 
-                let tabId;
-                let buffers = [];
-                let activeBufferIndex = 0;
-                let commandPaletteOpen = false;
-                let currentCommands = [];
+            // Load notes from localStorage
+            function loadNotes() {
+                const savedNotes = localStorage.getItem("multi-notepad-notes");
+                const savedCounter = localStorage.getItem(
+                    "multi-notepad-counter",
+                );
 
-                function initializeTabAndUrl() {
-                    const path = window.location.pathname;
-                    const pathSegments = path
-                        .split("/")
-                        .filter(
-                            (segment) => segment && segment !== "index.html",
-                        );
-                    const lastSegment =
-                        pathSegments.length > 0
-                            ? pathSegments[pathSegments.length - 1]
-                            : null;
-                    const hasIdInUrl =
-                        lastSegment && !lastSegment.includes(".");
+                if (savedNotes) {
+                    notes = JSON.parse(savedNotes);
+                    noteCounter = parseInt(savedCounter) || 1;
+                    renderNotesList();
 
-                    if (hasIdInUrl) {
-                        // If the URL already has a unique ID, use it.
-                        tabId = lastSegment;
+                    // Load the first note or last active note
+                    const savedActiveNote = localStorage.getItem(
+                        "multi-notepad-active",
+                    );
+                    if (savedActiveNote && notes[savedActiveNote]) {
+                        selectNote(savedActiveNote);
                     } else {
-                        // If not, generate a new unique ID and update the URL.
-                        tabId = Math.random().toString(36).substr(2, 6);
-                        const basePath = path.endsWith("/")
-                            ? path
-                            : path.substring(0, path.lastIndexOf("/") + 1);
-                        window.history.replaceState(
-                            {},
-                            "",
-                            `${basePath}${tabId}`,
-                        );
-                    }
-                }
-
-                function getFileNameForUrl(fileName) {
-                    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-                    return nameWithoutExt
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]/g, "");
-                }
-
-                function updateUrlForCurrentBuffer() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (!buffer) return;
-
-                    let urlPath;
-                    if (buffer.name === "bpad.txt") {
-                        urlPath = `/${tabId}`;
-                    } else {
-                        const urlName = getFileNameForUrl(buffer.name);
-                        urlPath = `/${urlName}`;
-                    }
-                    const currentPath = window.location.pathname;
-                    const basePath = currentPath.substring(
-                        0,
-                        currentPath.lastIndexOf("/") + 1,
-                    );
-                    const newPath = `${basePath}${urlPath.substring(1)}`;
-
-                    if (window.location.pathname !== newPath) {
-                        window.history.replaceState({}, "", newPath);
-                    }
-                }
-
-                class FileBuffer {
-                    constructor(
-                        name = "bpad.txt",
-                        content = "",
-                        fileHandle = null,
-                        isLocked = false,
-                        encryptedContent = null,
-                        salt = null,
-                        iv = null,
-                    ) {
-                        this.name = name;
-                        this.content = content;
-                        this.originalContent = content;
-                        this.fileHandle = fileHandle;
-                        this.id = Math.random().toString(36).substr(2, 9);
-                        this.isLocked = isLocked;
-                        this.encryptedContent = encryptedContent;
-                        this.salt = salt;
-                        this.iv = iv;
-                    }
-                    get isModified() {
-                        if (this.isLocked) return false;
-                        return this.content !== this.originalContent;
-                    }
-                    markSaved() {
-                        this.originalContent = this.content;
-                    }
-                }
-
-                async function deriveKey(password, salt) {
-                    const enc = new TextEncoder();
-                    const keyMaterial = await window.crypto.subtle.importKey(
-                        "raw",
-                        enc.encode(password),
-                        { name: KEY_DERIVATION_ALGORITHM },
-                        false,
-                        ["deriveKey"],
-                    );
-                    return window.crypto.subtle.deriveKey(
-                        {
-                            name: KEY_DERIVATION_ALGORITHM,
-                            salt: salt,
-                            iterations: KEY_DERIVATION_ITERATIONS,
-                            hash: HASH_ALGORITHM,
-                        },
-                        keyMaterial,
-                        { name: ENCRYPTION_ALGORITHM, length: 256 },
-                        true,
-                        ["encrypt", "decrypt"],
-                    );
-                }
-
-                async function encryptText(text, password) {
-                    const salt = window.crypto.getRandomValues(
-                        new Uint8Array(16),
-                    );
-                    const iv = window.crypto.getRandomValues(
-                        new Uint8Array(12),
-                    );
-                    const key = await deriveKey(password, salt);
-                    const enc = new TextEncoder();
-                    const encodedText = enc.encode(text);
-                    const encryptedContent = await window.crypto.subtle.encrypt(
-                        { name: ENCRYPTION_ALGORITHM, iv: iv },
-                        key,
-                        encodedText,
-                    );
-                    return {
-                        encryptedContent: btoa(
-                            String.fromCharCode.apply(
-                                null,
-                                new Uint8Array(encryptedContent),
-                            ),
-                        ),
-                        salt: btoa(String.fromCharCode.apply(null, salt)),
-                        iv: btoa(String.fromCharCode.apply(null, iv)),
-                    };
-                }
-
-                async function decryptText(
-                    encryptedContentB64,
-                    password,
-                    saltB64,
-                    ivB64,
-                ) {
-                    try {
-                        const salt = new Uint8Array(
-                            atob(saltB64)
-                                .split("")
-                                .map((c) => c.charCodeAt(0)),
-                        );
-                        const iv = new Uint8Array(
-                            atob(ivB64)
-                                .split("")
-                                .map((c) => c.charCodeAt(0)),
-                        );
-                        const encryptedContent = new Uint8Array(
-                            atob(encryptedContentB64)
-                                .split("")
-                                .map((c) => c.charCodeAt(0)),
-                        );
-                        const key = await deriveKey(password, salt);
-                        const decryptedContent =
-                            await window.crypto.subtle.decrypt(
-                                { name: ENCRYPTION_ALGORITHM, iv: iv },
-                                key,
-                                encryptedContent,
-                            );
-                        const dec = new TextDecoder();
-                        return dec.decode(decryptedContent);
-                    } catch (e) {
-                        console.error("Decryption failed:", e);
-                        return null;
-                    }
-                }
-
-                function saveBuffersToLocalStorage() {
-                    const buffersToSave = buffers.map((buffer) => ({
-                        name: buffer.name,
-                        content: buffer.isLocked ? "" : buffer.content,
-                        originalContent: buffer.originalContent,
-                        isLocked: buffer.isLocked,
-                        encryptedContent: buffer.encryptedContent,
-                        salt: buffer.salt,
-                        iv: buffer.iv,
-                    }));
-                    localStorage.setItem(
-                        `bedit_buffers_${tabId}`,
-                        JSON.stringify(buffersToSave),
-                    );
-                    localStorage.setItem(
-                        `bedit_active_buffer_index_${tabId}`,
-                        activeBufferIndex,
-                    );
-                }
-
-                function initializeBuffers() {
-                    const savedBuffersData = localStorage.getItem(
-                        `bedit_buffers_${tabId}`,
-                    );
-                    if (savedBuffersData) {
-                        const savedBuffers = JSON.parse(savedBuffersData);
-                        buffers = savedBuffers.map(
-                            (b) =>
-                                new FileBuffer(
-                                    b.name,
-                                    b.content,
-                                    null,
-                                    b.isLocked,
-                                    b.encryptedContent,
-                                    b.salt,
-                                    b.iv,
-                                ),
-                        );
-                        activeBufferIndex =
-                            parseInt(
-                                localStorage.getItem(
-                                    `bedit_active_buffer_index_${tabId}`,
-                                ),
-                                10,
-                            ) || 0;
-                        if (activeBufferIndex >= buffers.length)
-                            activeBufferIndex = 0;
-                    } else {
-                        const oldContentKey = `bedit_${tabId}_editorContent`;
-                        const savedContent =
-                            localStorage.getItem(oldContentKey) || "";
-                        buffers = [new FileBuffer("bpad.txt", savedContent)];
-                        activeBufferIndex = 0;
-                        if (localStorage.getItem(oldContentKey)) {
-                            saveBuffersToLocalStorage();
-                            localStorage.removeItem(oldContentKey);
+                        const noteIds = Object.keys(notes);
+                        if (noteIds.length > 0) {
+                            selectNote(noteIds[0]);
                         }
                     }
-                    if (buffers.length === 0) {
-                        buffers = [new FileBuffer("bpad.txt", "")];
-                        activeBufferIndex = 0;
-                    }
-                    updateBufferBar();
-                    loadActiveBuffer();
+                }
+            }
+
+            // Save notes to localStorage
+            function saveNotes() {
+                localStorage.setItem(
+                    "multi-notepad-notes",
+                    JSON.stringify(notes),
+                );
+                localStorage.setItem(
+                    "multi-notepad-counter",
+                    noteCounter.toString(),
+                );
+                if (currentNoteId) {
+                    localStorage.setItem("multi-notepad-active", currentNoteId);
+                }
+            }
+
+            // Create a new note
+            function createNewNote() {
+                const noteId = "note_" + Date.now();
+                const title = "Note " + noteCounter++;
+
+                notes[noteId] = {
+                    id: noteId,
+                    title: title,
+                    content: "",
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString(),
+                };
+
+                saveNotes();
+                renderNotesList();
+                selectNote(noteId);
+                statusText.textContent = "New note created";
+            }
+
+            // Select and display a note
+            function selectNote(noteId) {
+                if (currentNoteId && notes[currentNoteId]) {
+                    // Save current note content
+                    notes[currentNoteId].content = notepad.value;
+                    notes[currentNoteId].modified = new Date().toISOString();
                 }
 
-                function createNewBuffer(
-                    name = "bpad.txt",
-                    content = "",
-                    fileHandle = null,
-                ) {
-                    const buffer = new FileBuffer(name, content, fileHandle);
-                    buffers.push(buffer);
-                    activeBufferIndex = buffers.length - 1;
-                    updateBufferBar();
-                    loadActiveBuffer();
-                    updateUrlForCurrentBuffer();
-                    saveBuffersToLocalStorage();
-                    return buffer;
-                }
+                currentNoteId = noteId;
+                const note = notes[noteId];
 
-                function switchToBuffer(index) {
-                    if (index < 0 || index >= buffers.length) return;
-                    const currentBuf = buffers[activeBufferIndex];
-                    if (currentBuf && !currentBuf.isLocked) {
-                        currentBuf.content = editor.value;
-                    }
-                    activeBufferIndex = index;
-                    loadActiveBuffer();
-                    updateBufferBar();
-                    updateUrlForCurrentBuffer();
-                    saveBuffersToLocalStorage();
-                }
-
-                function closeBuffer(index) {
-                    if (buffers.length === 1) return;
-                    const buffer = buffers[index];
-                    if (buffer.isModified && !buffer.isLocked) {
-                        if (
-                            !confirm(
-                                `"${buffer.name}" has unsaved changes. Close anyway?`,
-                            )
-                        ) {
-                            return;
-                        }
-                    }
-                    buffers.splice(index, 1);
-                    if (activeBufferIndex >= index && activeBufferIndex > 0) {
-                        activeBufferIndex--;
-                    } else if (activeBufferIndex >= buffers.length) {
-                        activeBufferIndex = buffers.length - 1;
-                    }
-                    updateBufferBar();
-                    loadActiveBuffer();
-                    updateUrlForCurrentBuffer();
-                    saveBuffersToLocalStorage();
-                }
-
-                function loadActiveBuffer() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (buffer) {
-                        if (buffer.isLocked) {
-                            editor.value = "";
-                            editor.placeholder =
-                                "🔒 This note is locked. Press Ctrl/Cmd + = to unlock.";
-                            editor.readOnly = true;
-                        } else {
-                            editor.value = buffer.content;
-                            editor.placeholder =
-                                "Right click or Ctrl\\Cmd + K for menu.";
-                            editor.readOnly = false;
-                        }
-                        updateWordCount();
-                        updateBufferBar();
-                        editor.focus();
-                    }
-                }
-
-                function updateBufferBar() {
-                    if (currentBuffer) {
-                        const buffer = buffers[activeBufferIndex];
-                        if (!buffer) return;
-                        const modifiedText =
-                            buffer.isModified && !buffer.isLocked
-                                ? " (modified)"
-                                : "";
-                        const lockedText = buffer.isLocked ? " 🔒" : "";
-                        currentBuffer.textContent = `Buffer: ${
-                            activeBufferIndex + 1
-                        }/${buffers.length} - ${buffer.name}${lockedText}${modifiedText}`;
-                    }
-                }
-
-                function loadDarkMode() {
-                    const isDarkMode =
-                        localStorage.getItem("darkMode") === "true";
-                    if (isDarkMode) document.body.classList.add("dark-mode");
-                }
-
-                function toggleDarkMode() {
-                    document.body.classList.toggle("dark-mode");
-                    localStorage.setItem(
-                        "darkMode",
-                        document.body.classList.contains("dark-mode"),
-                    );
-                }
-
-                function updateWordCount() {
-                    const text = editor.value;
-                    const words =
-                        text.trim() === ""
-                            ? 0
-                            : text.trim().split(/\s+/).length;
-                    const lines = text === "" ? 0 : text.split("\n").length;
-                    wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
-                }
-
-                async function saveFile() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (!buffer) return;
-                    if (buffer.isLocked) {
-                        showSaveIndicator("Cannot save a locked note!");
-                        return;
-                    }
-                    const content = editor.value;
-                    buffer.content = content;
-                    if ("showSaveFilePicker" in window && buffer.fileHandle) {
-                        try {
-                            const writable =
-                                await buffer.fileHandle.createWritable();
-                            await writable.write(content);
-                            await writable.close();
-                            buffer.markSaved();
-                            updateBufferBar();
-                            showSaveIndicator("Saved!");
-                            return;
-                        } catch (err) {
-                            console.log("Direct save failed:", err);
-                        }
-                    }
-                    if ("showSaveFilePicker" in window && !buffer.fileHandle) {
-                        try {
-                            buffer.fileHandle = await window.showSaveFilePicker(
-                                {
-                                    suggestedName: buffer.name,
-                                    types: [
-                                        {
-                                            description: "Text files",
-                                            accept: { "text/plain": [".txt"] },
-                                        },
-                                    ],
-                                },
-                            );
-                            const writable =
-                                await buffer.fileHandle.createWritable();
-                            await writable.write(content);
-                            await writable.close();
-                            buffer.name = buffer.fileHandle.name;
-                            buffer.markSaved();
-                            updateBufferBar();
-                            updateUrlForCurrentBuffer();
-                            showSaveIndicator("Saved!");
-                            return;
-                        } catch (err) {
-                            if (err.name !== "AbortError") {
-                                console.log("Save picker failed:", err);
-                            }
-                        }
-                    }
-                    const blob = new Blob([content], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = buffer.name;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    buffer.markSaved();
-                    updateBufferBar();
-                    showSaveIndicator("Downloaded!");
-                }
-
-                function showSaveIndicator(message) {
-                    let indicator = document.getElementById("saveIndicator");
-                    if (!indicator) {
-                        indicator = document.createElement("div");
-                        indicator.id = "saveIndicator";
-                        indicator.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 150, 0, 0.9); color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none;`;
-                        document.body.appendChild(indicator);
-                    }
-                    indicator.textContent = message;
-                    indicator.style.opacity = "1";
-                    setTimeout(() => {
-                        indicator.style.opacity = "0";
-                    }, 2000);
-                }
-
-                async function openFile() {
-                    if ("showOpenFilePicker" in window) {
-                        try {
-                            const [handle] = await window.showOpenFilePicker({
-                                multiple: false,
-                            });
-                            const file = await handle.getFile();
-                            const content = await file.text();
-                            createNewBuffer(file.name, content, handle);
-                        } catch (err) {
-                            if (err.name !== "AbortError") {
-                                console.log("File picker failed:", err);
-                            }
-                        }
-                    } else {
-                        fileInput.click();
-                    }
-                }
-
-                async function toggleLock() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (!buffer) return;
-                    if (buffer.isLocked) {
-                        const password = prompt("Enter password to unlock:");
-                        if (!password) return;
-                        const decryptedContent = await decryptText(
-                            buffer.encryptedContent,
-                            password,
-                            buffer.salt,
-                            buffer.iv,
-                        );
-                        if (decryptedContent !== null) {
-                            buffer.content = decryptedContent;
-                            buffer.isLocked = false;
-                            buffer.encryptedContent = null;
-                            buffer.salt = null;
-                            buffer.iv = null;
-                            showSaveIndicator("Note unlocked!");
-                        } else {
-                            alert("Decryption failed. Incorrect password.");
-                            return;
-                        }
-                    } else {
-                        const password = prompt("Enter password to lock note:");
-                        if (!password) {
-                            alert("Password cannot be empty.");
-                            return;
-                        }
-                        const passwordConfirm = prompt("Confirm password:");
-                        if (password !== passwordConfirm) {
-                            alert("Passwords do not match.");
-                            return;
-                        }
-                        const { encryptedContent, salt, iv } =
-                            await encryptText(editor.value, password);
-                        buffer.encryptedContent = encryptedContent;
-                        buffer.salt = salt;
-                        buffer.iv = iv;
-                        buffer.isLocked = true;
-                        buffer.content = "";
-                        showSaveIndicator("Note locked!");
-                    }
-                    saveBuffersToLocalStorage();
-                    loadActiveBuffer();
-                }
-
-                function newTab() {
-                    const newId = Math.random().toString(36).substr(2, 6);
-                    const currentPath = window.location.pathname;
-                    const basePath = currentPath.substring(
-                        0,
-                        currentPath.lastIndexOf("/") + 1,
-                    );
-                    const newUrl = `${window.location.origin}${basePath}${newId}`;
-                    window.open(newUrl, "_blank");
-                }
-
-                function toggleFullscreen() {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
-                    } else {
-                        document.exitFullscreen();
-                    }
-                }
-
-                function showContextMenu(x, y) {
-                    contextMenu.style.left = `${x}px`;
-                    contextMenu.style.top = `${y}px`;
-                    contextMenu.style.display = "block";
-                }
-
-                function hideContextMenu() {
-                    contextMenu.style.display = "none";
-                }
-
-                // --- Command Palette Logic ---
-                function openCommandPalette() {
-                    populateCommands();
-                    renderCommands(currentCommands);
-                    commandPalette.classList.remove("hidden");
-                    document.body.insertAdjacentHTML(
-                        "beforeend",
-                        '<div id="modalBackdrop" class="modal-backdrop"></div>',
-                    );
-                    commandInput.value = "";
-                    commandInput.focus();
-                    commandPaletteOpen = true;
-
-                    document
-                        .getElementById("modalBackdrop")
-                        .addEventListener("click", closeCommandPalette);
-                }
-
-                function closeCommandPalette() {
-                    commandPalette.classList.add("hidden");
-                    const backdrop = document.getElementById("modalBackdrop");
-                    if (backdrop) backdrop.remove();
-                    commandPaletteOpen = false;
-                    editor.focus();
-                }
-
-                function showHelp() {
-                    helpModal.classList.remove("hidden");
-                    if (!document.getElementById("modalBackdrop")) {
-                        document.body.insertAdjacentHTML(
-                            "beforeend",
-                            '<div id="modalBackdrop" class="modal-backdrop"></div>',
-                        );
-                        document
-                            .getElementById("modalBackdrop")
-                            .addEventListener("click", closeHelpModal);
-                    }
-                }
-
-                function closeHelpModal() {
-                    helpModal.classList.add("hidden");
-                    const backdrop = document.getElementById("modalBackdrop");
-                    if (backdrop) backdrop.remove();
-                    editor.focus();
-                }
-
-                const staticCommands = [
-                    { name: "Show Help", action: showHelp, shortcut: "?" },
-                    { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
-                    {
-                        name: "Open File...",
-                        action: openFile,
-                        shortcut: "Ctrl+O",
-                    },
-                    { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
-                    {
-                        name: "Toggle Dark/Light Mode",
-                        action: toggleDarkMode,
-                        shortcut: "Ctrl+D",
-                    },
-                    {
-                        name: "Lock/Unlock Note",
-                        action: toggleLock,
-                        shortcut: "Ctrl+=",
-                    },
-                    {
-                        name: "Close Current Buffer",
-                        action: () => closeBuffer(activeBufferIndex),
-                        shortcut: "Ctrl+W",
-                    },
-                    {
-                        name: "Toggle Fullscreen",
-                        action: toggleFullscreen,
-                        shortcut: "F11",
-                    },
-                ];
-
-                function populateCommands() {
-                    const bufferCommands = buffers.map((buf, index) => ({
-                        name: `Switch to: ${buf.name}`,
-                        action: () => switchToBuffer(index),
-                        shortcut: `Buffer ${index + 1}`,
-                    }));
-                    currentCommands = [...staticCommands, ...bufferCommands];
-                }
-
-                function renderCommands(commandsToRender) {
-                    commandList.innerHTML = "";
-                    commandsToRender.forEach((cmd, index) => {
-                        const item = document.createElement("div");
-                        item.className = "command-item";
-                        item.dataset.index = index;
-
-                        const nameSpan = document.createElement("span");
-                        nameSpan.textContent = cmd.name;
-
-                        const shortcutSpan = document.createElement("span");
-                        shortcutSpan.className = "shortcut";
-                        shortcutSpan.textContent = cmd.shortcut;
-
-                        item.appendChild(nameSpan);
-                        item.appendChild(shortcutSpan);
-
-                        item.addEventListener("click", () => {
-                            cmd.action();
-                            closeCommandPalette();
-                        });
-                        commandList.appendChild(item);
-                    });
-                    if (commandList.firstChild) {
-                        commandList.firstChild.classList.add("selected");
-                    }
-                }
-
-                commandInput.addEventListener("input", () => {
-                    const searchTerm = commandInput.value.toLowerCase();
-                    const filteredCommands = currentCommands.filter((cmd) =>
-                        cmd.name.toLowerCase().includes(searchTerm),
-                    );
-                    renderCommands(filteredCommands);
-                });
-
-                // Event Listeners
-                editor.addEventListener("input", function () {
-                    const buffer = buffers[activeBufferIndex];
-                    if (buffer && !buffer.isLocked) {
-                        buffer.content = editor.value;
-                        updateBufferBar();
-                        saveBuffersToLocalStorage();
-                    }
+                if (note) {
+                    noteTitleInput.value = note.title;
+                    notepad.value = note.content;
+                    notepad.style.display = "block";
+                    emptyState.style.display = "none";
                     updateWordCount();
-                });
+                    renderNotesList(); // Update active state
+                    statusText.textContent = `Opened "${note.title}"`;
+                }
+            }
 
-                fileInput.addEventListener("change", (e) => {
-                    if (e.target.files[0]) loadFileContent(e.target.files[0]);
-                });
+            // Update note title
+            function updateNoteTitle() {
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].title =
+                        noteTitleInput.value || "Untitled Note";
+                    notes[currentNoteId].modified = new Date().toISOString();
+                    saveNotes();
+                    renderNotesList();
+                }
+            }
 
-                function loadFileContent(file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) =>
-                        createNewBuffer(file.name, e.target.result, null);
-                    reader.readAsText(file);
+            // Delete current note
+            function deleteCurrentNote() {
+                if (!currentNoteId) return;
+
+                if (
+                    !confirm(
+                        `Are you sure you want to delete "${notes[currentNoteId].title}"?`,
+                    )
+                ) {
+                    return;
                 }
 
-                // Drag and drop
-                editor.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    editor.classList.add("drag-over");
+                delete notes[currentNoteId];
+
+                const remainingNotes = Object.keys(notes);
+                if (remainingNotes.length > 0) {
+                    selectNote(remainingNotes[0]);
+                } else {
+                    currentNoteId = null;
+                    noteTitleInput.value = "";
+                    notepad.value = "";
+                    notepad.style.display = "none";
+                    emptyState.style.display = "flex";
+                    updateWordCount();
+                }
+
+                saveNotes();
+                renderNotesList();
+                statusText.textContent = "Note deleted";
+            }
+
+            // Duplicate current note
+            function duplicateNote() {
+                if (!currentNoteId) return;
+
+                const originalNote = notes[currentNoteId];
+                const noteId = "note_" + Date.now();
+
+                notes[noteId] = {
+                    id: noteId,
+                    title: originalNote.title + " (Copy)",
+                    content: originalNote.content,
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString(),
+                };
+
+                saveNotes();
+                renderNotesList();
+                selectNote(noteId);
+                statusText.textContent = "Note duplicated";
+            }
+
+            // Export current note
+            function exportNote() {
+                if (!currentNoteId) return;
+
+                const note = notes[currentNoteId];
+                const blob = new Blob([note.content], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = (note.title || "Untitled Note") + ".txt";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                statusText.textContent = "Note exported";
+            }
+
+            // Import note from file
+            function importNote(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.type !== "text/plain") {
+                    alert("Please select a text file (.txt)");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const noteId = "note_" + Date.now();
+                    const fileName = file.name.replace(/\.txt$/i, "");
+
+                    notes[noteId] = {
+                        id: noteId,
+                        title: fileName,
+                        content: e.target.result,
+                        created: new Date().toISOString(),
+                        modified: new Date().toISOString(),
+                    };
+
+                    saveNotes();
+                    renderNotesList();
+                    selectNote(noteId);
+                    statusText.textContent = "Note imported successfully";
+                };
+                reader.readAsText(file);
+
+                // Reset file input
+                event.target.value = "";
+            }
+
+            // Render the notes list
+            function renderNotesList() {
+                notesList.innerHTML = "";
+
+                const sortedNotes = Object.values(notes).sort(
+                    (a, b) => new Date(b.modified) - new Date(a.modified),
+                );
+
+                sortedNotes.forEach((note) => {
+                    const noteItem = document.createElement("div");
+                    noteItem.className = `note-item ${note.id === currentNoteId ? "active" : ""}`;
+                    noteItem.onclick = () => selectNote(note.id);
+
+                    const preview =
+                        note.content.substring(0, 50).replace(/\n/g, " ") ||
+                        "No content";
+
+                    noteItem.innerHTML = `
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-preview">${preview}</div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="note-action-btn" onclick="event.stopPropagation(); renameNote('${note.id}')" title="Rename">✏️</button>
+                        <button class="note-action-btn" onclick="event.stopPropagation(); deleteNote('${note.id}')" title="Delete">🗑️</button>
+                    </div>
+                `;
+
+                    notesList.appendChild(noteItem);
                 });
-                editor.addEventListener("dragleave", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!editor.contains(e.relatedTarget)) {
-                        editor.classList.remove("drag-over");
+            }
+
+            // Rename note
+            function renameNote(noteId) {
+                const newTitle = prompt(
+                    "Enter new title:",
+                    notes[noteId].title,
+                );
+                if (newTitle && newTitle.trim()) {
+                    notes[noteId].title = newTitle.trim();
+                    notes[noteId].modified = new Date().toISOString();
+
+                    if (noteId === currentNoteId) {
+                        noteTitleInput.value = newTitle.trim();
                     }
-                });
-                editor.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    editor.classList.remove("drag-over");
-                    if (e.dataTransfer.files.length > 0) {
-                        loadFileContent(e.dataTransfer.files[0]);
+
+                    saveNotes();
+                    renderNotesList();
+                }
+            }
+
+            // Delete specific note
+            function deleteNote(noteId) {
+                if (
+                    !confirm(
+                        `Are you sure you want to delete "${notes[noteId].title}"?`,
+                    )
+                ) {
+                    return;
+                }
+
+                delete notes[noteId];
+
+                if (noteId === currentNoteId) {
+                    const remainingNotes = Object.keys(notes);
+                    if (remainingNotes.length > 0) {
+                        selectNote(remainingNotes[0]);
+                    } else {
+                        currentNoteId = null;
+                        noteTitleInput.value = "";
+                        notepad.value = "";
+                        notepad.style.display = "none";
+                        emptyState.style.display = "flex";
+                        updateWordCount();
                     }
-                });
+                }
 
-                // Mobile buttons
-                openBtn.addEventListener("click", openFile);
-                saveBtn.addEventListener("click", saveFile);
-                closeHelpBtn.addEventListener("click", closeHelpModal);
+                saveNotes();
+                renderNotesList();
+            }
 
-                // Keyboard shortcuts
-                document.addEventListener("keydown", async (e) => {
-                    if (commandPaletteOpen) {
-                        const items =
-                            commandList.querySelectorAll(".command-item");
-                        let selected = commandList.querySelector(".selected");
+            // Update word count
+            function updateWordCount() {
+                const text = notepad.value;
+                const words =
+                    text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+                const characters = text.length;
+                wordCount.textContent = `Words: ${words} | Characters: ${characters}`;
+            }
 
-                        if (e.key === "ArrowDown") {
+            // Toggle sidebar on mobile
+            function toggleSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                sidebar.classList.toggle("open");
+            }
+
+            // Auto-save current note every 2 seconds
+            setInterval(() => {
+                if (
+                    currentNoteId &&
+                    notes[currentNoteId] &&
+                    notepad.value !== notes[currentNoteId].content
+                ) {
+                    notes[currentNoteId].content = notepad.value;
+                    notes[currentNoteId].modified = new Date().toISOString();
+                    saveNotes();
+                    renderNotesList();
+                }
+            }, 2000);
+
+            // Event listeners
+            notepad.addEventListener("input", () => {
+                updateWordCount();
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].modified = new Date().toISOString();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener("keydown", (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case "n":
                             e.preventDefault();
-                            if (selected && selected.nextElementSibling) {
-                                selected.classList.remove("selected");
-                                selected.nextElementSibling.classList.add(
-                                    "selected",
-                                );
-                                selected.nextElementSibling.scrollIntoView({
-                                    block: "nearest",
-                                });
+                            createNewNote();
+                            break;
+                        case "s":
+                            e.preventDefault();
+                            if (currentNoteId) {
+                                exportNote();
                             }
-                        } else if (e.key === "ArrowUp") {
+                            break;
+                        case "o":
                             e.preventDefault();
-                            if (selected && selected.previousElementSibling) {
-                                selected.classList.remove("selected");
-                                selected.previousElementSibling.classList.add(
-                                    "selected",
-                                );
-                                selected.previousElementSibling.scrollIntoView({
-                                    block: "nearest",
-                                });
+                            document.getElementById("fileInput").click();
+                            break;
+                        case "d":
+                            e.preventDefault();
+                            if (currentNoteId) {
+                                duplicateNote();
                             }
-                        } else if (e.key === "Enter") {
-                            e.preventDefault();
-                            if (selected) selected.click();
-                        } else if (e.key === "Tab") {
-                            e.preventDefault();
-                            if (selected) {
-                                const commandName =
-                                    selected.querySelector(
-                                        "span:first-child",
-                                    ).textContent;
-                                commandInput.value = commandName.startsWith(
-                                    "Switch to: ",
-                                )
-                                    ? commandName.substring(11)
-                                    : commandName;
-                                commandInput.dispatchEvent(new Event("input")); // Trigger filtering
-                            }
-                        } else if (e.key === "Escape") {
-                            closeCommandPalette();
-                        }
-                        return;
+                            break;
                     }
+                }
+            });
 
-                    const isModifierKey = e.ctrlKey || e.metaKey;
-                    if (isModifierKey) {
-                        if (e.key >= "1" && e.key <= "9") {
-                            e.preventDefault();
-                            switchToBuffer(parseInt(e.key) - 1);
-                            return;
-                        }
-                        if (e.key === "ArrowLeft") {
-                            e.preventDefault();
-                            const prevIndex =
-                                activeBufferIndex > 0
-                                    ? activeBufferIndex - 1
-                                    : buffers.length - 1;
-                            switchToBuffer(prevIndex);
-                            return;
-                        }
-                        if (e.key === "ArrowRight") {
-                            e.preventDefault();
-                            const nextIndex =
-                                activeBufferIndex < buffers.length - 1
-                                    ? activeBufferIndex + 1
-                                    : 0;
-                            switchToBuffer(nextIndex);
-                            return;
-                        }
+            // Initialize the app
+            window.addEventListener("load", () => {
+                loadNotes();
+                if (Object.keys(notes).length === 0) {
+                    emptyState.style.display = "flex";
+                    notepad.style.display = "none";
+                }
+                updateWordCount();
+                createSnowflakes();
+            });
 
-                        switch (e.key.toLowerCase()) {
-                            case "s":
-                                e.preventDefault();
-                                saveFile();
-                                break;
-                            case "d":
-                                e.preventDefault();
-                                toggleDarkMode();
-                                break;
-                            case "o":
-                                e.preventDefault();
-                                openFile();
-                                break;
-                            case "n":
-                                e.preventDefault();
-                                newTab();
-                                break;
-                            case "w":
-                                e.preventDefault();
-                                closeBuffer(activeBufferIndex);
-                                break;
-                            case "=":
-                                e.preventDefault();
-                                await toggleLock();
-                                break;
-                            case "k":
-                                e.preventDefault();
-                                openCommandPalette();
-                                break;
-                        }
-                    } else if (e.key === "F11") {
-                        e.preventDefault();
-                        toggleFullscreen();
-                    } else if (e.key === "Escape") {
-                        if (
-                            helpModal &&
-                            !helpModal.classList.contains("hidden")
-                        ) {
-                            closeHelpModal();
-                        }
-                    }
-                });
+            // Create animated snowflakes
+            function createSnowflakes() {
+                const snowflakeChars = ["❄", "❅", "❆", "✻", "✼", "❋"];
+                const numberOfSnowflakes = 50;
 
-                // Context Menu Listeners
-                document.addEventListener("contextmenu", (e) => {
-                    e.preventDefault();
-                    const buffer = buffers[activeBufferIndex];
-                    document.getElementById("ctxToggleLock").textContent =
-                        buffer.isLocked ? "Unlock Note" : "Lock Note";
-                    document.getElementById("ctxToggleDark").textContent =
-                        document.body.classList.contains("dark-mode")
-                            ? "Light Mode"
-                            : "Dark Mode";
-                    document.getElementById("ctxToggleFullscreen").textContent =
-                        document.fullscreenElement
-                            ? "Exit Fullscreen"
-                            : "Fullscreen";
-                    showContextMenu(e.clientX, e.clientY);
-                });
+                for (let i = 0; i < numberOfSnowflakes; i++) {
+                    const snowflake = document.createElement("div");
+                    snowflake.className = "snowflake";
+                    snowflake.innerHTML =
+                        snowflakeChars[
+                            Math.floor(Math.random() * snowflakeChars.length)
+                        ];
 
-                window.addEventListener("click", () => {
-                    hideContextMenu();
-                });
+                    // Random positioning and animation properties
+                    snowflake.style.left = Math.random() * 100 + "vw";
+                    snowflake.style.fontSize = Math.random() * 10 + 10 + "px";
+                    snowflake.style.animationDuration =
+                        Math.random() * 5 + 5 + "s";
+                    snowflake.style.animationDelay = Math.random() * 5 + "s";
+                    snowflake.style.opacity = Math.random() * 0.6 + 0.4;
 
-                document
-                    .getElementById("ctxCommandPalette")
-                    .addEventListener("click", () => {
-                        openCommandPalette();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxNewTab")
-                    .addEventListener("click", () => {
-                        newTab();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxOpenFile")
-                    .addEventListener("click", () => {
-                        openFile();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxSaveFile")
-                    .addEventListener("click", () => {
-                        saveFile();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxCloseBuffer")
-                    .addEventListener("click", () => {
-                        closeBuffer(activeBufferIndex);
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxToggleLock")
-                    .addEventListener("click", async () => {
-                        await toggleLock();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxToggleDark")
-                    .addEventListener("click", () => {
-                        toggleDarkMode();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxToggleFullscreen")
-                    .addEventListener("click", () => {
-                        toggleFullscreen();
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxNextBuffer")
-                    .addEventListener("click", () => {
-                        const nextIndex =
-                            activeBufferIndex < buffers.length - 1
-                                ? activeBufferIndex + 1
-                                : 0;
-                        switchToBuffer(nextIndex);
-                        hideContextMenu();
-                    });
-                document
-                    .getElementById("ctxPrevBuffer")
-                    .addEventListener("click", () => {
-                        const prevIndex =
-                            activeBufferIndex > 0
-                                ? activeBufferIndex - 1
-                                : buffers.length - 1;
-                        switchToBuffer(prevIndex);
-                        hideContextMenu();
-                    });
+                    document.body.appendChild(snowflake);
+                }
+            }
 
-                // Initialization
-                initializeTabAndUrl();
-                initializeBuffers();
-                loadDarkMode();
-                editor.focus();
+            // Save before page unload
+            window.addEventListener("beforeunload", () => {
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].content = notepad.value;
+                    saveNotes();
+                }
             });
         </script>
     </body>

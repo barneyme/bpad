@@ -437,16 +437,16 @@
                 <div class="sidebar-header">
                     <h1>📝 bPad</h1>
                     <div class="theme-controls">
-                        <label for="theme-select">Weather Theme</label>
+                        <label for="theme-select">Weather</label>
                         <select
                             id="theme-select"
                             onchange="changeTheme(this.value)"
                         >
+                            <option value="none">Plain</option>
                             <option value="snow">Snow</option>
                             <option value="sun">Sun</option>
                             <option value="cloud">Cloud</option>
                             <option value="rain">Rain</option>
-                            <option value="none">Plain</option>
                         </select>
                     </div>
                     <button class="new-note-btn" onclick="createNewNote()">
@@ -978,7 +978,7 @@
                 updateWordCount();
 
                 // Load and apply saved theme
-                const savedTheme = localStorage.getItem("bpad-theme") || "snow";
+                const savedTheme = localStorage.getItem("bpad-theme") || "none";
                 document.getElementById("theme-select").value = savedTheme;
                 changeTheme(savedTheme);
             });

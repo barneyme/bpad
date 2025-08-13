@@ -9,6 +9,7 @@
             href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
         />
         <style>
+            /* --- Fluxbox Theme Start --- */
             * {
                 margin: 0;
                 padding: 0;
@@ -16,15 +17,15 @@
             }
 
             body {
-                font-family: "Courier New", monospace;
-                background: #f8f8f8;
+                font-family: monospace, "Courier New";
+                background: #808080;
                 height: 100vh;
                 position: relative;
                 transition: background 0.3s ease;
             }
 
             body.dark-mode {
-                background: #1a1a1a;
+                background: #3a3a3a;
             }
 
             #editor {
@@ -33,33 +34,33 @@
                 border: none;
                 outline: none;
                 padding: 20px;
-                font-family: "Courier New", monospace;
+                font-family: monospace, "Courier New";
                 font-size: 14px;
                 line-height: 1.5;
-                background: white;
-                color: #333;
+                background: #f0f0f0;
+                color: #000;
                 resize: none;
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 transition:
                     background 0.3s ease,
-                    color 0.3s ease,
-                    border 0.2s ease;
+                    color 0.3s ease;
             }
 
             #editor.drag-over {
-                border: 3px dashed #007acc;
-                background: rgba(0, 122, 204, 0.1);
+                border: 3px dashed #0078d7;
+                background: rgba(0, 120, 215, 0.1);
             }
 
             body.dark-mode #editor {
-                background: #2d2d2d;
+                background: #222222;
                 color: #e0e0e0;
+                border: 1px solid #555;
             }
 
             body.dark-mode #editor.drag-over {
-                border: 3px dashed #4a9eff;
-                background: rgba(74, 158, 255, 0.1);
+                border: 3px dashed #0078d7;
+                background: rgba(0, 120, 215, 0.2);
             }
 
             #bufferBar {
@@ -82,10 +83,10 @@
             .mobile-btn {
                 width: 40px;
                 height: 40px;
-                background: rgba(0, 0, 0, 0.8);
+                background: #555555;
                 color: white;
-                border: none;
-                border-radius: 4px;
+                border: 1px outset #777;
+                border-radius: 0;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
@@ -95,20 +96,17 @@
             }
 
             .mobile-btn:hover {
-                background: rgba(0, 0, 0, 0.9);
+                background: #666666;
             }
 
             .mobile-btn:active {
-                transform: scale(0.95);
+                border-style: inset;
+                transform: scale(0.98);
             }
 
             @media (max-width: 768px) {
                 #mobileControls {
                     display: flex;
-                }
-
-                #editor {
-                    height: 100vh;
                 }
             }
 
@@ -119,45 +117,54 @@
                 border: 1px solid #ccc;
                 box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
                 border-radius: 4px;
-                padding: 5px 0;
+                padding: 2px;
                 z-index: 2000;
                 font-size: 14px;
                 color: #333;
             }
 
             .context-menu-item {
-                padding: 8px 15px;
+                padding: 6px 15px;
                 cursor: pointer;
-                transition: background 0.2s ease;
+                transition: background 0.1s ease;
             }
 
             .context-menu-item:hover {
-                background: #007acc;
+                background: #0078d7;
                 color: white;
             }
 
             .context-menu-divider {
                 border: none;
-                border-top: 1px solid #e0e0e0;
+                border-top: 1px solid #ccc;
                 margin: 4px 0;
             }
 
             body.dark-mode #contextMenu {
-                background: #3a3a3a;
-                border-color: #555;
-                color: #e0e0e0;
+                background: linear-gradient(to bottom, #6a707c, #4a505a);
+                border: 2px outset #888888;
+                color: #ffffff;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 2px;
+            }
+
+            body.dark-mode .context-menu-item {
+                color: #ffffff;
             }
 
             body.dark-mode .context-menu-item:hover {
-                background: #4a9eff;
-                color: #1a1a1a;
+                background: linear-gradient(to bottom, #0078d7, #005a9e);
+                color: #ffffff;
             }
 
             body.dark-mode .context-menu-divider {
-                border-top-color: #555;
+                height: 2px;
+                border-top: 1px solid #333;
+                border-bottom: 1px solid #777;
+                margin: 2px 0;
             }
 
-            /* Command Palette Styles */
             #commandPalette {
                 position: fixed;
                 top: 20%;
@@ -167,23 +174,25 @@
                 max-width: 500px;
                 background: #f0f0f0;
                 border: 1px solid #ccc;
-                border-radius: 8px;
+                border-radius: 4px;
                 box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
                 z-index: 3000;
                 overflow: hidden;
             }
 
             body.dark-mode #commandPalette {
-                background: #2d2d2d;
-                border-color: #555;
+                background: linear-gradient(to bottom, #6a707c, #4a505a);
+                border: 2px outset #888888;
+                border-radius: 0;
+                box-shadow: none;
             }
 
             #commandInput {
                 width: 100%;
-                padding: 12px 15px;
+                padding: 8px 10px;
                 border: none;
                 outline: none;
-                font-family: "Courier New", monospace;
+                font-family: monospace, "Courier New";
                 font-size: 16px;
                 background: #fff;
                 color: #333;
@@ -191,18 +200,22 @@
             }
 
             body.dark-mode #commandInput {
-                background: #3a3a3a;
+                background: #222222;
                 color: #e0e0e0;
-                border-bottom-color: #555;
+                border: 1px inset #888;
+                border-radius: 0;
+                margin: 2px;
+                width: calc(100% - 4px);
             }
 
             #commandList {
                 max-height: 300px;
                 overflow-y: auto;
+                padding: 2px;
             }
 
             .command-item {
-                padding: 10px 15px;
+                padding: 8px 15px;
                 cursor: pointer;
                 font-size: 14px;
                 color: #333;
@@ -217,22 +230,21 @@
 
             .command-item:hover,
             .command-item.selected {
-                background-color: #007acc;
+                background-color: #0078d7;
                 color: white;
             }
 
             body.dark-mode .command-item:hover,
             body.dark-mode .command-item.selected {
-                background-color: #4a9eff;
-                color: #1a1a1a;
+                background: linear-gradient(to bottom, #0078d7, #005a9e);
+                color: #ffffff;
             }
 
             .command-item .shortcut {
                 font-size: 12px;
-                opacity: 0.7;
+                opacity: 0.8;
             }
 
-            /* Help Modal */
             #helpModal {
                 position: fixed;
                 top: 50%;
@@ -248,19 +260,15 @@
                 border: 1px solid #ccc;
             }
 
-            #helpModal .help-content {
-                position: relative;
-            }
-
             #closeHelpBtn {
                 position: absolute;
-                top: -10px;
-                right: -5px;
+                top: 5px;
+                right: 10px;
                 background: none;
                 border: none;
                 font-size: 24px;
                 cursor: pointer;
-                color: #888;
+                color: #555;
             }
 
             #helpModal h3 {
@@ -274,23 +282,28 @@
                 padding: 15px;
                 border-radius: 4px;
                 white-space: pre-wrap;
-                font-family: "Courier New", monospace;
+                font-family: monospace, "Courier New";
                 font-size: 13px;
                 color: #333;
                 line-height: 1.6;
             }
 
             body.dark-mode #helpModal {
-                background: #2d2d2d;
-                border-color: #555;
+                background: linear-gradient(to bottom, #6a707c, #4a505a);
+                border: 2px outset #888888;
+                border-radius: 0;
+                box-shadow: none;
+                color: #ffffff;
             }
             body.dark-mode #helpModal h3,
             body.dark-mode #closeHelpBtn {
-                color: #e0e0e0;
+                color: #ffffff;
             }
             body.dark-mode #helpModal pre {
-                background: #1a1a1a;
+                background: #222222;
                 color: #e0e0e0;
+                border: 1px inset #888;
+                border-radius: 0;
             }
 
             .hidden {
@@ -306,6 +319,7 @@
                 background: rgba(0, 0, 0, 0.5);
                 z-index: 2999;
             }
+            /* --- Fluxbox Theme End --- */
         </style>
     </head>
     <body>
@@ -429,7 +443,6 @@ Made by [Barney](www.barney.me)
                 let commandPaletteOpen = false;
                 let currentCommands = [];
 
-                // --- CHANGED FUNCTION ---
                 function initializeTabAndUrl() {
                     const path = window.location.pathname;
                     const pathSegments = path
@@ -736,7 +749,7 @@ Made by [Barney](www.barney.me)
                         } else {
                             editor.value = buffer.content;
                             editor.placeholder =
-                                "Start typing or press Ctrl\\Cmd + K for menu.";
+                                "Right click or Ctrl\\Cmd + K for menu.";
                             editor.readOnly = false;
                         }
                         updateWordCount();

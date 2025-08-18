@@ -3,592 +3,992 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>FluxText</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <title>bPad</title>
         <style>
-            /* Using Inter font from Tailwind's default config */
-            body,
-            html {
+            * {
                 margin: 0;
                 padding: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-                font-family: "Inter", sans-serif;
-                background-color: #282a36; /* Dracula background */
-            }
-
-            #editor {
-                width: 100%;
-                height: 100%;
-                padding: 2rem;
-                border: none;
-                outline: none;
-                resize: none;
-                background-color: transparent;
-                color: #f8f8f2; /* Dracula foreground */
-                font-family: "Fira Code", "Courier New", monospace;
-                font-size: 16px;
-                line-height: 1.6;
                 box-sizing: border-box;
             }
 
-            #editor::placeholder {
-                color: #6272a4; /* Dracula comment */
-                opacity: 1;
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: snow;
+                min-height: 100vh;
+                padding: 20px;
+                position: relative;
+                overflow-x: hidden;
+                transition: background 0.5s linear;
             }
 
-            #menu-trigger {
+            /* --- Weather Theme Backgrounds --- */
+            body.theme-snow {
+                background: snow;
+            }
+            body.theme-sun {
+                background: linear-gradient(to bottom, #87ceeb, #f9d71c);
+            }
+            body.theme-cloud {
+                background: #bdc3c7;
+            }
+            body.theme-rain {
+                background: #34495e;
+            }
+            body.theme-none {
+                background: #f0f2f5;
+            }
+
+            /* --- Animated Weather Effects --- */
+            .weather-effect {
                 position: fixed;
-                bottom: 8px;
-                left: 8px;
-                width: 24px;
-                height: 24px;
-                cursor: pointer;
-                z-index: 1001;
+                top: -20px;
+                user-select: none;
+                pointer-events: none;
+                z-index: -1;
+            }
+
+            .snowflake {
+                color: #ddd;
+                animation: fall linear infinite;
+            }
+
+            @keyframes fall {
+                to {
+                    transform: translateY(105vh) rotate(360deg);
+                }
+            }
+
+            .sun-flare {
+                color: rgba(255, 255, 0, 0.5);
+                animation: pulse linear infinite;
+            }
+
+            @keyframes pulse {
+                0%,
+                100% {
+                    transform: scale(1);
+                    opacity: 0.5;
+                }
+                50% {
+                    transform: scale(1.5);
+                    opacity: 1;
+                }
+            }
+
+            .cloud {
+                color: #ecf0f1;
+                font-size: 50px;
+                opacity: 0.7;
+                animation: drift linear infinite;
+            }
+
+            @keyframes drift {
+                from {
+                    transform: translateX(-10vw);
+                }
+                to {
+                    transform: translateX(110vw);
+                }
+            }
+
+            .raindrop {
+                color: #7f8c8d;
+                animation: drizzle linear infinite;
+            }
+
+            @keyframes drizzle {
+                to {
+                    transform: translateY(105vh);
+                }
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
                 display: flex;
-                align-items: center;
-                justify-content: center;
+                height: 600px;
+            }
+
+            .sidebar {
+                width: 280px;
+                background: #2c3e50;
+                color: white;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                border-bottom: 1px solid #34495e;
+            }
+
+            .sidebar-header h1 {
+                font-size: 1.3em;
+                font-weight: 300;
+                margin-bottom: 10px;
+            }
+
+            .theme-controls {
+                margin-bottom: 15px;
+            }
+            .theme-controls label {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 0.9em;
+                font-weight: 500;
+            }
+            .theme-controls select {
+                width: 100%;
+                padding: 8px;
+                background: #34495e;
+                color: white;
+                border: 1px solid #7f8c8d;
                 border-radius: 4px;
-                transition: background-color 0.2s;
-            }
-
-            #menu-trigger:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-            }
-
-            #context-menu {
-                position: fixed;
-                display: none;
-                z-index: 1000;
-                background-color: #44475a; /* Dracula selection */
-                border: 1px solid #6272a4; /* Dracula comment */
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                min-width: 180px;
-                padding: 8px 0;
-            }
-
-            .menu-item {
-                padding: 10px 20px;
                 cursor: pointer;
-                color: #f8f8f2;
+            }
+            .theme-controls select:focus {
+                outline: none;
+                border-color: #3498db;
+            }
+
+            .new-note-btn {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+            .new-note-btn:hover {
+                background: #2980b9;
+                transform: translateY(-1px);
+            }
+
+            .notes-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px 0;
+            }
+
+            .note-item {
+                padding: 12px 20px;
+                cursor: pointer;
+                border-bottom: 1px solid #34495e;
+                transition: all 0.2s ease;
+                position: relative;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+            }
+
+            .note-item:hover {
+                background: #34495e;
+            }
+
+            .note-item.active {
+                background: #3498db;
+                border-left: 4px solid #2980b9;
+            }
+
+            .note-title {
                 font-size: 14px;
+                font-weight: 500;
+                margin-bottom: 4px;
+                flex: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .menu-item:hover {
-                background-color: #6272a4; /* Dracula comment */
-            }
-
-            .menu-item .shortcut {
-                color: #bd93f9; /* Dracula purple */
+            .note-preview {
                 font-size: 12px;
+                color: #bdc3c7;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .menu-separator {
-                height: 1px;
-                background-color: #6272a4;
-                margin: 8px 0;
-            }
-
-            #stats-display {
-                position: fixed;
-                top: 16px;
-                right: 24px;
-                color: #6272a4; /* Dracula comment */
-                font-family: "Fira Code", "Courier New", monospace;
-                font-size: 14px;
-                display: flex;
-                gap: 16px;
-                background-color: rgba(
-                    68,
-                    71,
-                    90,
-                    0.5
-                ); /* Semi-transparent selection */
-                padding: 4px 12px;
-                border-radius: 6px;
-                z-index: 999;
-                transition: opacity 0.3s;
-            }
-
-            .hidden {
+            .note-actions {
                 opacity: 0;
-                pointer-events: none;
+                transition: opacity 0.2s ease;
+                display: flex;
+                gap: 5px;
             }
 
-            #find-bar {
-                position: fixed;
-                bottom: 16px;
-                right: 16px;
-                background-color: #44475a;
-                border: 1px solid #6272a4;
-                border-radius: 8px;
-                padding: 8px;
-                display: none; /* Initially hidden */
-                align-items: center;
-                gap: 8px;
-                z-index: 1001;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            .note-item:hover .note-actions {
+                opacity: 1;
             }
 
-            #find-input {
-                background-color: #282a36;
-                border: 1px solid #6272a4;
-                color: #f8f8f2;
-                border-radius: 4px;
-                padding: 4px 8px;
-                outline: none;
-                width: 200px;
-            }
-
-            #find-input:focus {
-                border-color: #bd93f9;
-            }
-
-            .find-btn {
-                background-color: transparent;
+            .note-action-btn {
+                background: none;
                 border: none;
-                color: #f8f8f2;
+                color: #bdc3c7;
                 cursor: pointer;
                 padding: 4px;
-                border-radius: 4px;
+                border-radius: 3px;
+                font-size: 12px;
+                transition: all 0.2s ease;
             }
-            .find-btn:hover {
-                background-color: #6272a4;
+
+            .note-action-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+
+            .main-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header {
+                background: #ecf0f1;
+                padding: 20px;
+                border-bottom: 1px solid #bdc3c7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .note-title-input {
+                font-size: 1.2em;
+                font-weight: 500;
+                border: none;
+                background: none;
+                color: #2c3e50;
+                outline: none;
+                padding: 5px;
+                border-radius: 3px;
+                transition: background 0.2s ease;
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .note-title-input:focus {
+                background: white;
+                box-shadow: 0 0 0 2px #3498db;
+            }
+
+            .controls {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }
+
+            .btn:hover {
+                background: #2980b9;
+                transform: translateY(-1px);
+            }
+
+            .btn.secondary {
+                background: #95a5a6;
+            }
+
+            .btn.secondary:hover {
+                background: #7f8c8d;
+            }
+
+            .btn.danger {
+                background: #e74c3c;
+            }
+
+            .btn.danger:hover {
+                background: #c0392b;
+            }
+
+            .editor-container {
+                flex: 1;
+                position: relative;
+            }
+
+            #notepad {
+                width: 100%;
+                height: 100%;
+                border: none;
+                outline: none;
+                padding: 25px;
+                font-family: "Courier New", monospace;
+                font-size: 14px;
+                line-height: 1.6;
+                resize: none;
+                background: #fafafa;
+                color: #333;
+            }
+
+            .status-bar {
+                background: #ecf0f1;
+                padding: 10px 20px;
+                font-size: 12px;
+                color: #7f8c8d;
+                border-top: 1px solid #bdc3c7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .file-input {
+                display: none;
+            }
+
+            .word-count {
+                font-weight: 500;
+            }
+
+            .empty-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #7f8c8d;
+                text-align: center;
+                padding: 40px;
+            }
+
+            .empty-state h2 {
+                margin-bottom: 10px;
+                color: #95a5a6;
+            }
+
+            .toggle-sidebar {
+                display: none;
+                background: #2c3e50;
+                color: white;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1000;
+                border-radius: 5px;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    height: calc(100vh - 40px);
+                    flex-direction: column;
+                }
+
+                .sidebar {
+                    width: 100%;
+                    height: auto;
+                    position: relative;
+                    transform: translateY(-100%);
+                    transition: transform 0.3s ease;
+                }
+
+                .sidebar.open {
+                    transform: translateY(0);
+                }
+
+                .toggle-sidebar {
+                    display: block;
+                }
+
+                .main-content {
+                    flex: 1;
+                }
+
+                .header {
+                    padding: 15px;
+                }
+
+                .note-title-input {
+                    font-size: 1em;
+                    min-width: 150px;
+                }
+
+                #notepad {
+                    padding: 15px;
+                    font-size: 16px;
+                }
             }
         </style>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap"
-            rel="stylesheet"
-        />
     </head>
     <body>
-        <!-- Main text editor area -->
-        <textarea
-            id="editor"
-            spellcheck="false"
-            placeholder="Right-click or click ☰ for menu"
-        ></textarea>
+        <button class="toggle-sidebar" onclick="toggleSidebar()">
+            ☰ Notes
+        </button>
 
-        <!-- Stats display -->
-        <div id="stats-display">
-            <span id="stats-line">↓ 1</span>
-            <span id="stats-char">→ 1</span>
-            <span id="stats-words">= 0</span>
+        <div class="container">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h1>📝 bPad</h1>
+                    <div class="theme-controls">
+                        <label for="theme-select">Weather</label>
+                        <select
+                            id="theme-select"
+                            onchange="changeTheme(this.value)"
+                        >
+                            <option value="none">Plain</option>
+                            <option value="snow">Snow</option>
+                            <option value="sun">Sun</option>
+                            <option value="cloud">Cloud</option>
+                            <option value="rain">Rain</option>
+                        </select>
+                    </div>
+                    <button class="new-note-btn" onclick="createNewNote()">
+                        + New Note
+                    </button>
+                </div>
+                <div class="notes-list" id="notesList"></div>
+            </div>
+
+            <div class="main-content">
+                <div class="header">
+                    <input
+                        type="text"
+                        class="note-title-input"
+                        id="noteTitleInput"
+                        placeholder="Untitled Note"
+                        onchange="updateNoteTitle()"
+                    />
+                    <div class="controls">
+                        <button
+                            class="btn"
+                            onclick="document.getElementById('fileInput').click()"
+                        >
+                            Import
+                        </button>
+                        <button class="btn" onclick="exportNote()">
+                            Export
+                        </button>
+                        <button class="btn secondary" onclick="duplicateNote()">
+                            Duplicate
+                        </button>
+                        <button
+                            class="btn danger"
+                            onclick="deleteCurrentNote()"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <div class="empty-state" id="emptyState">
+                        <h2>Welcome to bPad</h2>
+                        <p>Create your first note to get started!</p>
+                    </div>
+                    <textarea
+                        id="notepad"
+                        placeholder="Start typing your notes here..."
+                        style="display: none"
+                    ></textarea>
+                </div>
+
+                <div class="status-bar">
+                    <div id="statusText">Ready</div>
+                    <div class="word-count" id="wordCount">
+                        Words: 0 | Characters: 0
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Subtle icon to trigger the context menu -->
-        <div id="menu-trigger" title="Menu">
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="#f8f8f2"
-                viewBox="0 0 256 256"
-            >
-                <path
-                    d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
-                ></path>
-            </svg>
-        </div>
-
-        <!-- Custom context menu -->
-        <div id="context-menu">
-            <div class="menu-item" id="menu-new">
-                <span>New</span>
-                <span class="shortcut">Ctrl+N</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-open">
-                <span>Open...</span>
-                <span class="shortcut">Ctrl+O</span>
-            </div>
-            <div class="menu-item" id="menu-save">
-                <span>Save</span>
-                <span class="shortcut">Ctrl+S</span>
-            </div>
-            <div class="menu-item" id="menu-save-as">
-                <span>Save As...</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-find">
-                <span>Find</span>
-                <span class="shortcut">Ctrl+F</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-toggle-stats">
-                <span>Toggle Stats</span>
-            </div>
-        </div>
-
-        <!-- Find bar -->
-        <div id="find-bar">
-            <input type="text" id="find-input" placeholder="Find..." />
-            <button
-                id="find-prev"
-                class="find-btn"
-                title="Previous (Shift+Enter)"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-next" class="find-btn" title="Next (Enter)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-close" class="find-btn" title="Close (Esc)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
-                    ></path>
-                </svg>
-            </button>
-        </div>
+        <input
+            type="file"
+            id="fileInput"
+            class="file-input"
+            accept=".txt"
+            onchange="importNote(event)"
+        />
 
         <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                // --- HELPER FUNCTION for short IDs ---
-                const generateShortId = (length = 8) => {
-                    const chars =
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                    let result = "";
-                    for (let i = 0; i < length; i++) {
-                        result += chars.charAt(
-                            Math.floor(Math.random() * chars.length),
-                        );
-                    }
-                    return result;
-                };
+            let notes = {};
+            let currentNoteId = null;
+            let noteCounter = 1;
 
-                // --- SESSION MANAGEMENT ---
-                // Use the URL hash for session IDs
-                let sessionId = window.location.hash.substring(1);
+            const notepad = document.getElementById("notepad");
+            const noteTitleInput = document.getElementById("noteTitleInput");
+            const wordCount = document.getElementById("wordCount");
+            const statusText = document.getElementById("statusText");
+            const notesList = document.getElementById("notesList");
+            const emptyState = document.getElementById("emptyState");
 
-                // If no session ID in the hash, create one and update the URL
-                if (!sessionId) {
-                    sessionId = generateShortId();
-                    history.replaceState(null, "", `#${sessionId}`);
-                }
+            // Load notes from localStorage
+            function loadNotes() {
+                const savedNotes = localStorage.getItem("multi-notepad-notes");
+                const savedCounter = localStorage.getItem(
+                    "multi-notepad-counter",
+                );
 
-                // Create session-specific keys for localStorage
-                const contentStorageKey = `fluxTextContent-${sessionId}`;
-                const statsStorageKey = `fluxStatsHidden-${sessionId}`;
+                if (savedNotes) {
+                    notes = JSON.parse(savedNotes);
+                    noteCounter = parseInt(savedCounter) || 1;
+                    renderNotesList();
 
-                // Existing elements
-                const editor = document.getElementById("editor");
-                const contextMenu = document.getElementById("context-menu");
-                const menuTrigger = document.getElementById("menu-trigger");
-                const statsDisplay = document.getElementById("stats-display");
-                const statsLine = document.getElementById("stats-line");
-                const statsChar = document.getElementById("stats-char");
-                const statsWords = document.getElementById("stats-words");
-
-                // New Find elements
-                const findBar = document.getElementById("find-bar");
-                const findInput = document.getElementById("find-input");
-                const findPrev = document.getElementById("find-prev");
-                const findNext = document.getElementById("find-next");
-                const findClose = document.getElementById("find-close");
-
-                let currentFileHandle = null;
-
-                // Find feature state
-                let lastSearchTerm = "";
-                let searchResults = [];
-                let currentResultIndex = -1;
-
-                // --- LOCAL STORAGE PERSISTENCE ---
-                const savedContent = localStorage.getItem(contentStorageKey);
-                if (savedContent) {
-                    editor.value = savedContent;
-                }
-                editor.addEventListener("input", () => {
-                    localStorage.setItem(contentStorageKey, editor.value);
-                    updateStats();
-                });
-
-                // --- STATS LOGIC ---
-                const updateStats = () => {
-                    const text = editor.value;
-                    const cursorPos = editor.selectionStart;
-                    const words =
-                        text.trim() === "" ? [] : text.trim().split(/\s+/);
-                    statsWords.textContent = `= ${words.length}`;
-                    const textUpToCursor = text.substring(0, cursorPos);
-                    const lines = textUpToCursor.split("\n");
-                    const currentLineNumber = lines.length;
-                    const currentCharNumber =
-                        lines[lines.length - 1].length + 1;
-                    statsLine.textContent = `↓ ${currentLineNumber}`;
-                    statsChar.textContent = `→ ${currentCharNumber}`;
-                };
-                editor.addEventListener("keyup", updateStats);
-                editor.addEventListener("click", updateStats);
-                updateStats();
-
-                const toggleStats = () => {
-                    const isHidden = statsDisplay.classList.toggle("hidden");
-                    localStorage.setItem(statsStorageKey, isHidden);
-                    hideMenu();
-                };
-                document
-                    .getElementById("menu-toggle-stats")
-                    .addEventListener("click", toggleStats);
-                if (localStorage.getItem(statsStorageKey) === "true") {
-                    statsDisplay.classList.add("hidden");
-                }
-
-                // --- CONTEXT MENU LOGIC ---
-                const showMenu = (x, y) => {
-                    contextMenu.style.left = `${x}px`;
-                    contextMenu.style.top = `${y}px`;
-                    contextMenu.style.display = "block";
-                };
-                const hideMenu = () => (contextMenu.style.display = "none");
-                document.addEventListener("contextmenu", (e) => {
-                    e.preventDefault();
-                    showMenu(e.clientX, e.clientY);
-                });
-                menuTrigger.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const rect = menuTrigger.getBoundingClientRect();
-                    contextMenu.style.visibility = "hidden";
-                    contextMenu.style.display = "block";
-                    const menuHeight = contextMenu.offsetHeight;
-                    const x = rect.left;
-                    const y = rect.top - menuHeight;
-                    contextMenu.style.left = `${x}px`;
-                    contextMenu.style.top = `${y}px`;
-                    contextMenu.style.visibility = "visible";
-                });
-                document.addEventListener("click", () => hideMenu());
-
-                // --- FIND FEATURE LOGIC ---
-                const showFindBar = () => {
-                    hideMenu();
-                    findBar.style.display = "flex";
-                    findInput.focus();
-                    findInput.select();
-                };
-                const hideFindBar = () => {
-                    findBar.style.display = "none";
-                };
-
-                const selectResult = () => {
-                    if (currentResultIndex === -1 || searchResults.length === 0)
-                        return;
-                    const foundPos = searchResults[currentResultIndex];
-                    editor.focus();
-                    editor.setSelectionRange(
-                        foundPos,
-                        foundPos + lastSearchTerm.length,
+                    // Load the first note or last active note
+                    const savedActiveNote = localStorage.getItem(
+                        "multi-notepad-active",
                     );
-                    const totalLines = editor.value.split("\n").length;
-                    const currentLine = editor.value
-                        .substring(0, foundPos)
-                        .split("\n").length;
-                    editor.scrollTop =
-                        (currentLine / totalLines) * editor.scrollHeight -
-                        editor.clientHeight / 2;
-                };
-
-                const findNextMatch = () => {
-                    const searchTerm = findInput.value;
-                    if (!searchTerm) return;
-
-                    if (searchTerm !== lastSearchTerm) {
-                        lastSearchTerm = searchTerm;
-                        searchResults = [];
-                        const text = editor.value;
-                        const regex = new RegExp(searchTerm, "gi");
-                        let match;
-                        while ((match = regex.exec(text)) !== null) {
-                            searchResults.push(match.index);
-                        }
-                        currentResultIndex = -1;
-                    }
-
-                    if (searchResults.length === 0) return;
-
-                    currentResultIndex++;
-                    if (currentResultIndex >= searchResults.length)
-                        currentResultIndex = 0;
-                    selectResult();
-                };
-
-                const findPrevMatch = () => {
-                    const searchTerm = findInput.value;
-                    if (!searchTerm) return;
-
-                    if (searchTerm !== lastSearchTerm) {
-                        findNextMatch();
-                        return;
-                    }
-
-                    if (searchResults.length === 0) return;
-
-                    currentResultIndex--;
-                    if (currentResultIndex < 0)
-                        currentResultIndex = searchResults.length - 1;
-                    selectResult();
-                };
-
-                document
-                    .getElementById("menu-find")
-                    .addEventListener("click", showFindBar);
-                findClose.addEventListener("click", hideFindBar);
-                findNext.addEventListener("click", findNextMatch);
-                findPrev.addEventListener("click", findPrevMatch);
-                findInput.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        e.shiftKey ? findPrevMatch() : findNextMatch();
-                    }
-                    if (e.key === "Escape") hideFindBar();
-                });
-
-                // --- FILE SYSTEM API FUNCTIONS ---
-                const newFile = () => {
-                    const newSessionId = generateShortId();
-                    // Get the base URL (everything before any existing hash)
-                    const baseUrl = window.location.href.split("#")[0];
-                    window.open(`${baseUrl}#${newSessionId}`, "_blank");
-                    hideMenu();
-                };
-                const openFile = async () => {
-                    hideMenu();
-                    try {
-                        const [fileHandle] = await window.showOpenFilePicker({
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                            ],
-                        });
-                        currentFileHandle = fileHandle;
-                        const file = await fileHandle.getFile();
-                        const content = await file.text();
-                        editor.value = content;
-                        localStorage.setItem(contentStorageKey, content);
-                        updateStats();
-                    } catch (err) {
-                        if (err.name !== "AbortError")
-                            console.error("Error opening file:", err);
-                    }
-                };
-                const saveFile = async () => {
-                    hideMenu();
-                    if (currentFileHandle) {
-                        try {
-                            const writable =
-                                await currentFileHandle.createWritable();
-                            await writable.write(editor.value);
-                            await writable.close();
-                        } catch (err) {
-                            console.error("Error saving file:", err);
-                        }
+                    if (savedActiveNote && notes[savedActiveNote]) {
+                        selectNote(savedActiveNote);
                     } else {
-                        saveFileAs();
-                    }
-                };
-                const saveFileAs = async () => {
-                    hideMenu();
-                    try {
-                        const newFileHandle = await window.showSaveFilePicker({
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                            ],
-                        });
-                        currentFileHandle = newFileHandle;
-                        const writable = await newFileHandle.createWritable();
-                        await writable.write(editor.value);
-                        await writable.close();
-                    } catch (err) {
-                        if (err.name !== "AbortError")
-                            console.error("Error saving file as:", err);
-                    }
-                };
-
-                // --- MENU ITEM EVENT LISTENERS ---
-                document
-                    .getElementById("menu-new")
-                    .addEventListener("click", newFile);
-                document
-                    .getElementById("menu-open")
-                    .addEventListener("click", openFile);
-                document
-                    .getElementById("menu-save")
-                    .addEventListener("click", saveFile);
-                document
-                    .getElementById("menu-save-as")
-                    .addEventListener("click", saveFileAs);
-
-                // --- KEYBOARD SHORTCUTS ---
-                document.addEventListener("keydown", (e) => {
-                    if (
-                        findBar.style.display === "flex" &&
-                        e.target === findInput
-                    )
-                        return;
-
-                    if (e.ctrlKey || e.metaKey) {
-                        switch (e.key.toLowerCase()) {
-                            case "n":
-                                e.preventDefault();
-                                newFile();
-                                break;
-                            case "o":
-                                e.preventDefault();
-                                openFile();
-                                break;
-                            case "s":
-                                e.preventDefault();
-                                saveFile();
-                                break;
-                            case "f":
-                                e.preventDefault();
-                                showFindBar();
-                                break;
+                        const noteIds = Object.keys(notes);
+                        if (noteIds.length > 0) {
+                            selectNote(noteIds[0]);
                         }
                     }
-                    if (e.key === "Escape") {
-                        hideFindBar();
-                    }
+                }
+            }
+
+            // Save notes to localStorage
+            function saveNotes() {
+                localStorage.setItem(
+                    "multi-notepad-notes",
+                    JSON.stringify(notes),
+                );
+                localStorage.setItem(
+                    "multi-notepad-counter",
+                    noteCounter.toString(),
+                );
+                if (currentNoteId) {
+                    localStorage.setItem("multi-notepad-active", currentNoteId);
+                }
+            }
+
+            // Create a new note
+            function createNewNote() {
+                const noteId = "note_" + Date.now();
+                const title = "Note " + noteCounter++;
+
+                notes[noteId] = {
+                    id: noteId,
+                    title: title,
+                    content: "",
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString(),
+                };
+
+                saveNotes();
+                renderNotesList();
+                selectNote(noteId);
+                statusText.textContent = "New note created";
+            }
+
+            // Select and display a note
+            function selectNote(noteId) {
+                if (currentNoteId && notes[currentNoteId]) {
+                    // Save current note content
+                    notes[currentNoteId].content = notepad.value;
+                    notes[currentNoteId].modified = new Date().toISOString();
+                }
+
+                currentNoteId = noteId;
+                const note = notes[noteId];
+
+                if (note) {
+                    noteTitleInput.value = note.title;
+                    notepad.value = note.content;
+                    notepad.style.display = "block";
+                    emptyState.style.display = "none";
+                    updateWordCount();
+                    renderNotesList(); // Update active state
+                    statusText.textContent = `Opened "${note.title}"`;
+                }
+            }
+
+            // Update note title
+            function updateNoteTitle() {
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].title =
+                        noteTitleInput.value || "Untitled Note";
+                    notes[currentNoteId].modified = new Date().toISOString();
+                    saveNotes();
+                    renderNotesList();
+                }
+            }
+
+            // Delete current note
+            function deleteCurrentNote() {
+                if (!currentNoteId) return;
+
+                if (
+                    !confirm(
+                        `Are you sure you want to delete "${notes[currentNoteId].title}"?`,
+                    )
+                ) {
+                    return;
+                }
+
+                delete notes[currentNoteId];
+
+                const remainingNotes = Object.keys(notes);
+                if (remainingNotes.length > 0) {
+                    selectNote(remainingNotes[0]);
+                } else {
+                    currentNoteId = null;
+                    noteTitleInput.value = "";
+                    notepad.value = "";
+                    notepad.style.display = "none";
+                    emptyState.style.display = "flex";
+                    updateWordCount();
+                }
+
+                saveNotes();
+                renderNotesList();
+                statusText.textContent = "Note deleted";
+            }
+
+            // Duplicate current note
+            function duplicateNote() {
+                if (!currentNoteId) return;
+
+                const originalNote = notes[currentNoteId];
+                const noteId = "note_" + Date.now();
+
+                notes[noteId] = {
+                    id: noteId,
+                    title: originalNote.title + " (Copy)",
+                    content: originalNote.content,
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString(),
+                };
+
+                saveNotes();
+                renderNotesList();
+                selectNote(noteId);
+                statusText.textContent = "Note duplicated";
+            }
+
+            // Export current note
+            function exportNote() {
+                if (!currentNoteId) return;
+
+                const note = notes[currentNoteId];
+                const blob = new Blob([note.content], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = (note.title || "Untitled Note") + ".txt";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                statusText.textContent = "Note exported";
+            }
+
+            // Import note from file
+            function importNote(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.type !== "text/plain") {
+                    alert("Please select a text file (.txt)");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const noteId = "note_" + Date.now();
+                    const fileName = file.name.replace(/\.txt$/i, "");
+
+                    notes[noteId] = {
+                        id: noteId,
+                        title: fileName,
+                        content: e.target.result,
+                        created: new Date().toISOString(),
+                        modified: new Date().toISOString(),
+                    };
+
+                    saveNotes();
+                    renderNotesList();
+                    selectNote(noteId);
+                    statusText.textContent = "Note imported successfully";
+                };
+                reader.readAsText(file);
+
+                // Reset file input
+                event.target.value = "";
+            }
+
+            // Render the notes list
+            function renderNotesList() {
+                notesList.innerHTML = "";
+
+                const sortedNotes = Object.values(notes).sort(
+                    (a, b) => new Date(b.modified) - new Date(a.modified),
+                );
+
+                sortedNotes.forEach((note) => {
+                    const noteItem = document.createElement("div");
+                    noteItem.className = `note-item ${note.id === currentNoteId ? "active" : ""}`;
+                    noteItem.onclick = () => selectNote(note.id);
+
+                    const preview =
+                        note.content.substring(0, 50).replace(/\n/g, " ") ||
+                        "No content";
+
+                    noteItem.innerHTML = `
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-preview">${preview}</div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="note-action-btn" onclick="event.stopPropagation(); renameNote('${note.id}')" title="Rename">✏️</button>
+                        <button class="note-action-btn" onclick="event.stopPropagation(); deleteNote('${note.id}')" title="Delete">🗑️</button>
+                    </div>
+                `;
+
+                    notesList.appendChild(noteItem);
                 });
+            }
+
+            // Rename note
+            function renameNote(noteId) {
+                const newTitle = prompt(
+                    "Enter new title:",
+                    notes[noteId].title,
+                );
+                if (newTitle && newTitle.trim()) {
+                    notes[noteId].title = newTitle.trim();
+                    notes[noteId].modified = new Date().toISOString();
+
+                    if (noteId === currentNoteId) {
+                        noteTitleInput.value = newTitle.trim();
+                    }
+
+                    saveNotes();
+                    renderNotesList();
+                }
+            }
+
+            // Delete specific note
+            function deleteNote(noteId) {
+                if (
+                    !confirm(
+                        `Are you sure you want to delete "${notes[noteId].title}"?`,
+                    )
+                ) {
+                    return;
+                }
+
+                delete notes[noteId];
+
+                if (noteId === currentNoteId) {
+                    const remainingNotes = Object.keys(notes);
+                    if (remainingNotes.length > 0) {
+                        selectNote(remainingNotes[0]);
+                    } else {
+                        currentNoteId = null;
+                        noteTitleInput.value = "";
+                        notepad.value = "";
+                        notepad.style.display = "none";
+                        emptyState.style.display = "flex";
+                        updateWordCount();
+                    }
+                }
+
+                saveNotes();
+                renderNotesList();
+            }
+
+            // Update word count
+            function updateWordCount() {
+                const text = notepad.value;
+                const words =
+                    text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+                const characters = text.length;
+                wordCount.textContent = `Words: ${words} | Characters: ${characters}`;
+            }
+
+            // Toggle sidebar on mobile
+            function toggleSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                sidebar.classList.toggle("open");
+            }
+
+            // Auto-save current note every 2 seconds
+            setInterval(() => {
+                if (
+                    currentNoteId &&
+                    notes[currentNoteId] &&
+                    notepad.value !== notes[currentNoteId].content
+                ) {
+                    notes[currentNoteId].content = notepad.value;
+                    notes[currentNoteId].modified = new Date().toISOString();
+                    saveNotes();
+                    renderNotesList();
+                }
+            }, 2000);
+
+            // Event listeners
+            notepad.addEventListener("input", () => {
+                updateWordCount();
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].modified = new Date().toISOString();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener("keydown", (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case "n":
+                            e.preventDefault();
+                            createNewNote();
+                            break;
+                        case "s":
+                            e.preventDefault();
+                            if (currentNoteId) {
+                                exportNote();
+                            }
+                            break;
+                        case "o":
+                            e.preventDefault();
+                            document.getElementById("fileInput").click();
+                            break;
+                        case "d":
+                            e.preventDefault();
+                            if (currentNoteId) {
+                                duplicateNote();
+                            }
+                            break;
+                    }
+                }
+            });
+
+            // --- Weather Theme Functions ---
+
+            function changeTheme(theme) {
+                clearThemeElements();
+                document.body.className = `theme-${theme}`;
+
+                switch (theme) {
+                    case "snow":
+                        createSnowflakes();
+                        break;
+                    case "sun":
+                        createSunFlares();
+                        break;
+                    case "cloud":
+                        createClouds();
+                        break;
+                    case "rain":
+                        createRaindrops();
+                        break;
+                }
+                localStorage.setItem("bpad-theme", theme);
+            }
+
+            function clearThemeElements() {
+                const elements = document.querySelectorAll(".weather-effect");
+                elements.forEach((el) => el.remove());
+            }
+
+            function createSnowflakes() {
+                const snowflakeChars = ["❄", "❅", "❆"];
+                const numberOfSnowflakes = 50;
+                for (let i = 0; i < numberOfSnowflakes; i++) {
+                    const snowflake = document.createElement("div");
+                    snowflake.className = "snowflake weather-effect";
+                    snowflake.innerHTML =
+                        snowflakeChars[
+                            Math.floor(Math.random() * snowflakeChars.length)
+                        ];
+                    snowflake.style.left = Math.random() * 100 + "vw";
+                    snowflake.style.fontSize = Math.random() * 10 + 10 + "px";
+                    snowflake.style.animationDuration =
+                        Math.random() * 5 + 5 + "s";
+                    snowflake.style.animationDelay = Math.random() * 5 + "s";
+                    snowflake.style.opacity = Math.random() * 0.6 + 0.4;
+                    document.body.appendChild(snowflake);
+                }
+            }
+
+            function createSunFlares() {
+                const numberOfFlares = 20;
+                for (let i = 0; i < numberOfFlares; i++) {
+                    const flare = document.createElement("div");
+                    flare.className = "sun-flare weather-effect";
+                    flare.innerHTML = "☀️";
+                    flare.style.left = Math.random() * 100 + "vw";
+                    flare.style.top = Math.random() * 100 + "vh";
+                    flare.style.fontSize = Math.random() * 20 + 10 + "px";
+                    flare.style.animationDuration = Math.random() * 4 + 2 + "s";
+                    flare.style.animationDelay = Math.random() * 4 + "s";
+                    document.body.appendChild(flare);
+                }
+            }
+
+            function createClouds() {
+                const numberOfClouds = 15;
+                for (let i = 0; i < numberOfClouds; i++) {
+                    const cloud = document.createElement("div");
+                    cloud.className = "cloud weather-effect";
+                    cloud.innerHTML = "☁️";
+                    cloud.style.top = Math.random() * 60 + "vh";
+                    cloud.style.transform = `scale(${Math.random() * 0.5 + 0.8})`;
+                    cloud.style.animationDuration =
+                        Math.random() * 30 + 20 + "s";
+                    cloud.style.animationDelay = Math.random() * 20 + "s";
+                    document.body.appendChild(cloud);
+                }
+            }
+
+            function createRaindrops() {
+                const numberOfDrops = 100;
+                for (let i = 0; i < numberOfDrops; i++) {
+                    const drop = document.createElement("div");
+                    drop.className = "raindrop weather-effect";
+                    drop.style.left = Math.random() * 100 + "vw";
+                    drop.style.height = Math.random() * 20 + 10 + "px";
+                    drop.style.width = "1px";
+                    drop.style.backgroundColor = "#7f8c8d";
+                    drop.style.animationDuration =
+                        Math.random() * 0.5 + 0.5 + "s";
+                    drop.style.animationDelay = Math.random() * 2 + "s";
+                    drop.style.opacity = Math.random() * 0.5 + 0.3;
+                    document.body.appendChild(drop);
+                }
+            }
+
+            // Initialize the app
+            window.addEventListener("load", () => {
+                loadNotes();
+                if (Object.keys(notes).length === 0) {
+                    emptyState.style.display = "flex";
+                    notepad.style.display = "none";
+                }
+                updateWordCount();
+
+                // Load and apply saved theme
+                const savedTheme = localStorage.getItem("bpad-theme") || "none";
+                document.getElementById("theme-select").value = savedTheme;
+                changeTheme(savedTheme);
+            });
+
+            // Save before page unload
+            window.addEventListener("beforeunload", () => {
+                if (currentNoteId && notes[currentNoteId]) {
+                    notes[currentNoteId].content = notepad.value;
+                    saveNotes();
+                }
             });
         </script>
     </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editbox</title>
+    <title>FluxText</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Using Inter font from Tailwind's default config */
@@ -222,6 +222,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- SESSION MANAGEMENT ---
+            const urlParams = new URLSearchParams(window.location.search);
+            let sessionId = urlParams.get('session');
+
+            // If no session ID, create one and update the URL without reloading
+            if (!sessionId) {
+                sessionId = crypto.randomUUID();
+                // This updates the URL in the address bar so bookmarks and reloads work correctly
+                history.replaceState(null, '', `${window.location.pathname}?session=${sessionId}`);
+            }
+
+            // Create session-specific keys for localStorage
+            const contentStorageKey = `fluxTextContent-${sessionId}`;
+            const statsStorageKey = `fluxStatsHidden-${sessionId}`;
+
             // Existing elements
             const editor = document.getElementById('editor');
             const contextMenu = document.getElementById('context-menu');
@@ -247,12 +262,12 @@
 
 
             // --- LOCAL STORAGE PERSISTENCE ---
-            const savedContent = localStorage.getItem('fluxTextContent');
+            const savedContent = localStorage.getItem(contentStorageKey);
             if (savedContent) {
                 editor.value = savedContent;
             }
             editor.addEventListener('input', () => {
-                localStorage.setItem('fluxTextContent', editor.value);
+                localStorage.setItem(contentStorageKey, editor.value);
                 updateStats(); 
             });
 
@@ -275,11 +290,11 @@
 
             const toggleStats = () => {
                 const isHidden = statsDisplay.classList.toggle('hidden');
-                localStorage.setItem('fluxStatsHidden', isHidden);
+                localStorage.setItem(statsStorageKey, isHidden);
                 hideMenu();
             };
             document.getElementById('menu-toggle-stats').addEventListener('click', toggleStats);
-            if (localStorage.getItem('fluxStatsHidden') === 'true') {
+            if (localStorage.getItem(statsStorageKey) === 'true') {
                 statsDisplay.classList.add('hidden');
             }
 
@@ -297,18 +312,11 @@
             menuTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const rect = menuTrigger.getBoundingClientRect();
-                
-                // To correctly calculate the position, we need the menu's height.
-                // We show it but make it invisible to measure, then position it.
                 contextMenu.style.visibility = 'hidden';
                 contextMenu.style.display = 'block';
                 const menuHeight = contextMenu.offsetHeight;
-
-                // Calculate position to be above the icon
                 const x = rect.left;
                 const y = rect.top - menuHeight;
-
-                // Now apply the correct position and make it visible.
                 contextMenu.style.left = `${x}px`;
                 contextMenu.style.top = `${y}px`;
                 contextMenu.style.visibility = 'visible';
@@ -331,7 +339,6 @@
                 const foundPos = searchResults[currentResultIndex];
                 editor.focus();
                 editor.setSelectionRange(foundPos, foundPos + lastSearchTerm.length);
-                // Simple scroll into view logic
                 const totalLines = editor.value.split('\n').length;
                 const currentLine = editor.value.substring(0, foundPos).split('\n').length;
                 editor.scrollTop = (currentLine / totalLines) * editor.scrollHeight - (editor.clientHeight / 2);
@@ -364,7 +371,6 @@
                 const searchTerm = findInput.value;
                 if (!searchTerm) return;
                 
-                // If it's a new search, run the forward search first to populate results
                 if (searchTerm !== lastSearchTerm) {
                     findNextMatch();
                     return;
@@ -377,7 +383,6 @@
                 selectResult();
             };
             
-            // Find event listeners
             document.getElementById('menu-find').addEventListener('click', showFindBar);
             findClose.addEventListener('click', hideFindBar);
             findNext.addEventListener('click', findNextMatch);
@@ -392,7 +397,9 @@
 
             // --- FILE SYSTEM API FUNCTIONS ---
             const newFile = () => {
-                window.open(window.location.href, '_blank');
+                // Open a new tab with a new unique session ID
+                const newSessionId = crypto.randomUUID();
+                window.open(`${window.location.pathname}?session=${newSessionId}`, '_blank');
                 hideMenu();
             };
             const openFile = async () => {
@@ -401,8 +408,9 @@
                     const [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }] });
                     currentFileHandle = fileHandle;
                     const file = await fileHandle.getFile();
-                    editor.value = await file.text();
-                    localStorage.setItem('fluxTextContent', editor.value);
+                    const content = await file.text();
+                    editor.value = content;
+                    localStorage.setItem(contentStorageKey, content);
                     updateStats();
                 } catch (err) {
                     if (err.name !== 'AbortError') console.error('Error opening file:', err);
@@ -441,7 +449,6 @@
 
             // --- KEYBOARD SHORTCUTS ---
             document.addEventListener('keydown', (e) => {
-                // Allow find input to handle its own key events
                 if (findBar.style.display === 'flex' && e.target === findInput) return;
 
                 if (e.ctrlKey || e.metaKey) {

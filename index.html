@@ -291,18 +291,13 @@
                 };
 
                 // --- SESSION MANAGEMENT ---
-                const urlParams = new URLSearchParams(window.location.search);
-                let sessionId = urlParams.get("session");
+                // Use the URL hash for session IDs
+                let sessionId = window.location.hash.substring(1);
 
-                // If no session ID, create one and update the URL without reloading
+                // If no session ID in the hash, create one and update the URL
                 if (!sessionId) {
                     sessionId = generateShortId();
-                    // This updates the URL in the address bar so bookmarks and reloads work correctly
-                    history.replaceState(
-                        null,
-                        "",
-                        `${window.location.pathname}?session=${sessionId}`,
-                    );
+                    history.replaceState(null, "", `#${sessionId}`);
                 }
 
                 // Create session-specific keys for localStorage
@@ -485,13 +480,9 @@
                 // --- FILE SYSTEM API FUNCTIONS ---
                 const newFile = () => {
                     const newSessionId = generateShortId();
-
-                    // Use the URL API for robustly creating the new URL.
-                    // This takes the current URL and just replaces the session parameter.
-                    const currentUrl = new URL(window.location.href);
-                    currentUrl.searchParams.set("session", newSessionId);
-
-                    window.open(currentUrl.href, "_blank");
+                    // Get the base URL (everything before any existing hash)
+                    const baseUrl = window.location.href.split("#")[0];
+                    window.open(`${baseUrl}#${newSessionId}`, "_blank");
                     hideMenu();
                 };
                 const openFile = async () => {

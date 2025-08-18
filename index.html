@@ -1,469 +1,591 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FluxText</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Using Inter font from Tailwind's default config */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background-color: #282a36; /* Dracula background */
-        }
-
-        #editor {
-            width: 100%;
-            height: 100%;
-            padding: 2rem;
-            border: none;
-            outline: none;
-            resize: none;
-            background-color: transparent;
-            color: #f8f8f2; /* Dracula foreground */
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 16px;
-            line-height: 1.6;
-            box-sizing: border-box;
-        }
-        
-        #editor::placeholder {
-            color: #6272a4; /* Dracula comment */
-            opacity: 1;
-        }
-
-        #menu-trigger {
-            position: fixed;
-            bottom: 8px;
-            left: 8px;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        #menu-trigger:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        #context-menu {
-            position: fixed;
-            display: none;
-            z-index: 1000;
-            background-color: #44475a; /* Dracula selection */
-            border: 1px solid #6272a4; /* Dracula comment */
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            min-width: 180px;
-            padding: 8px 0;
-        }
-
-        .menu-item {
-            padding: 10px 20px;
-            cursor: pointer;
-            color: #f8f8f2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .menu-item:hover {
-            background-color: #6272a4; /* Dracula comment */
-        }
-        
-        .menu-item .shortcut {
-            color: #bd93f9; /* Dracula purple */
-            font-size: 12px;
-        }
-
-        .menu-separator {
-            height: 1px;
-            background-color: #6272a4;
-            margin: 8px 0;
-        }
-        
-        #stats-display {
-            position: fixed;
-            top: 16px;
-            right: 24px;
-            color: #6272a4; /* Dracula comment */
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 14px;
-            display: flex;
-            gap: 16px;
-            background-color: rgba(68, 71, 90, 0.5); /* Semi-transparent selection */
-            padding: 4px 12px;
-            border-radius: 6px;
-            z-index: 999;
-            transition: opacity 0.3s;
-        }
-
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        #find-bar {
-            position: fixed;
-            bottom: 16px;
-            right: 16px;
-            background-color: #44475a;
-            border: 1px solid #6272a4;
-            border-radius: 8px;
-            padding: 8px;
-            display: none; /* Initially hidden */
-            align-items: center;
-            gap: 8px;
-            z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        #find-input {
-            background-color: #282a36;
-            border: 1px solid #6272a4;
-            color: #f8f8f2;
-            border-radius: 4px;
-            padding: 4px 8px;
-            outline: none;
-            width: 200px;
-        }
-
-        #find-input:focus {
-            border-color: #bd93f9;
-        }
-        
-        .find-btn {
-            background-color: transparent;
-            border: none;
-            color: #f8f8f2;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-        }
-        .find-btn:hover {
-            background-color: #6272a4;
-        }
-
-    </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-
-    <!-- Main text editor area -->
-    <textarea id="editor" spellcheck="false" placeholder="Right-click or click ☰ for menu"></textarea>
-
-    <!-- Stats display -->
-    <div id="stats-display">
-        <span id="stats-line">↓ 1</span>
-        <span id="stats-char">→ 1</span>
-        <span id="stats-words">= 0</span>
-    </div>
-
-    <!-- Subtle icon to trigger the context menu -->
-    <div id="menu-trigger" title="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#f8f8f2" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path></svg>
-    </div>
-
-    <!-- Custom context menu -->
-    <div id="context-menu">
-        <div class="menu-item" id="menu-new">
-            <span>New</span>
-            <span class="shortcut">Ctrl+N</span>
-        </div>
-        <div class="menu-separator"></div>
-        <div class="menu-item" id="menu-open">
-            <span>Open...</span>
-            <span class="shortcut">Ctrl+O</span>
-        </div>
-        <div class="menu-item" id="menu-save">
-            <span>Save</span>
-            <span class="shortcut">Ctrl+S</span>
-        </div>
-        <div class="menu-item" id="menu-save-as">
-            <span>Save As...</span>
-        </div>
-        <div class="menu-separator"></div>
-        <div class="menu-item" id="menu-find">
-            <span>Find</span>
-            <span class="shortcut">Ctrl+F</span>
-        </div>
-        <div class="menu-separator"></div>
-        <div class="menu-item" id="menu-toggle-stats">
-            <span>Toggle Stats</span>
-        </div>
-    </div>
-
-    <!-- Find bar -->
-    <div id="find-bar">
-        <input type="text" id="find-input" placeholder="Find...">
-        <button id="find-prev" class="find-btn" title="Previous (Shift+Enter)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"></path></svg>
-        </button>
-        <button id="find-next" class="find-btn" title="Next (Enter)">
-             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"></path></svg>
-        </button>
-        <button id="find-close" class="find-btn" title="Close (Esc)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"></path></svg>
-        </button>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- SESSION MANAGEMENT ---
-            const urlParams = new URLSearchParams(window.location.search);
-            let sessionId = urlParams.get('session');
-
-            // If no session ID, create one and update the URL without reloading
-            if (!sessionId) {
-                sessionId = crypto.randomUUID();
-                // This updates the URL in the address bar so bookmarks and reloads work correctly
-                history.replaceState(null, '', `${window.location.pathname}?session=${sessionId}`);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FluxText</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Using Inter font from Tailwind's default config */
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: "Inter", sans-serif;
+                background-color: #282a36; /* Dracula background */
             }
 
-            // Create session-specific keys for localStorage
-            const contentStorageKey = `fluxTextContent-${sessionId}`;
-            const statsStorageKey = `fluxStatsHidden-${sessionId}`;
-
-            // Existing elements
-            const editor = document.getElementById('editor');
-            const contextMenu = document.getElementById('context-menu');
-            const menuTrigger = document.getElementById('menu-trigger');
-            const statsDisplay = document.getElementById('stats-display');
-            const statsLine = document.getElementById('stats-line');
-            const statsChar = document.getElementById('stats-char');
-            const statsWords = document.getElementById('stats-words');
-
-            // New Find elements
-            const findBar = document.getElementById('find-bar');
-            const findInput = document.getElementById('find-input');
-            const findPrev = document.getElementById('find-prev');
-            const findNext = document.getElementById('find-next');
-            const findClose = document.getElementById('find-close');
-
-            let currentFileHandle = null;
-            
-            // Find feature state
-            let lastSearchTerm = '';
-            let searchResults = [];
-            let currentResultIndex = -1;
-
-
-            // --- LOCAL STORAGE PERSISTENCE ---
-            const savedContent = localStorage.getItem(contentStorageKey);
-            if (savedContent) {
-                editor.value = savedContent;
-            }
-            editor.addEventListener('input', () => {
-                localStorage.setItem(contentStorageKey, editor.value);
-                updateStats(); 
-            });
-
-            // --- STATS LOGIC ---
-            const updateStats = () => {
-                const text = editor.value;
-                const cursorPos = editor.selectionStart;
-                const words = text.trim() === '' ? [] : text.trim().split(/\s+/);
-                statsWords.textContent = `= ${words.length}`;
-                const textUpToCursor = text.substring(0, cursorPos);
-                const lines = textUpToCursor.split('\n');
-                const currentLineNumber = lines.length;
-                const currentCharNumber = lines[lines.length - 1].length + 1;
-                statsLine.textContent = `↓ ${currentLineNumber}`;
-                statsChar.textContent = `→ ${currentCharNumber}`;
-            };
-            editor.addEventListener('keyup', updateStats);
-            editor.addEventListener('click', updateStats);
-            updateStats();
-
-            const toggleStats = () => {
-                const isHidden = statsDisplay.classList.toggle('hidden');
-                localStorage.setItem(statsStorageKey, isHidden);
-                hideMenu();
-            };
-            document.getElementById('menu-toggle-stats').addEventListener('click', toggleStats);
-            if (localStorage.getItem(statsStorageKey) === 'true') {
-                statsDisplay.classList.add('hidden');
+            #editor {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                border: none;
+                outline: none;
+                resize: none;
+                background-color: transparent;
+                color: #f8f8f2; /* Dracula foreground */
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 16px;
+                line-height: 1.6;
+                box-sizing: border-box;
             }
 
-            // --- CONTEXT MENU LOGIC ---
-            const showMenu = (x, y) => {
-                contextMenu.style.left = `${x}px`;
-                contextMenu.style.top = `${y}px`;
-                contextMenu.style.display = 'block';
-            };
-            const hideMenu = () => contextMenu.style.display = 'none';
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                showMenu(e.clientX, e.clientY);
-            });
-            menuTrigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const rect = menuTrigger.getBoundingClientRect();
-                contextMenu.style.visibility = 'hidden';
-                contextMenu.style.display = 'block';
-                const menuHeight = contextMenu.offsetHeight;
-                const x = rect.left;
-                const y = rect.top - menuHeight;
-                contextMenu.style.left = `${x}px`;
-                contextMenu.style.top = `${y}px`;
-                contextMenu.style.visibility = 'visible';
-            });
-            document.addEventListener('click', () => hideMenu());
+            #editor::placeholder {
+                color: #6272a4; /* Dracula comment */
+                opacity: 1;
+            }
 
-            // --- FIND FEATURE LOGIC ---
-            const showFindBar = () => {
-                hideMenu();
-                findBar.style.display = 'flex';
-                findInput.focus();
-                findInput.select();
-            };
-            const hideFindBar = () => {
-                findBar.style.display = 'none';
-            };
+            #menu-trigger {
+                position: fixed;
+                bottom: 8px;
+                left: 8px;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                z-index: 1001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
 
-            const selectResult = () => {
-                if (currentResultIndex === -1 || searchResults.length === 0) return;
-                const foundPos = searchResults[currentResultIndex];
-                editor.focus();
-                editor.setSelectionRange(foundPos, foundPos + lastSearchTerm.length);
-                const totalLines = editor.value.split('\n').length;
-                const currentLine = editor.value.substring(0, foundPos).split('\n').length;
-                editor.scrollTop = (currentLine / totalLines) * editor.scrollHeight - (editor.clientHeight / 2);
-            };
+            #menu-trigger:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
 
-            const findNextMatch = () => {
-                const searchTerm = findInput.value;
-                if (!searchTerm) return;
+            #context-menu {
+                position: fixed;
+                display: none;
+                z-index: 1000;
+                background-color: #44475a; /* Dracula selection */
+                border: 1px solid #6272a4; /* Dracula comment */
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                min-width: 180px;
+                padding: 8px 0;
+            }
 
-                if (searchTerm !== lastSearchTerm) {
-                    lastSearchTerm = searchTerm;
-                    searchResults = [];
-                    const text = editor.value;
-                    const regex = new RegExp(searchTerm, 'gi');
-                    let match;
-                    while ((match = regex.exec(text)) !== null) {
-                        searchResults.push(match.index);
-                    }
-                    currentResultIndex = -1;
+            .menu-item {
+                padding: 10px 20px;
+                cursor: pointer;
+                color: #f8f8f2;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 14px;
+            }
+
+            .menu-item:hover {
+                background-color: #6272a4; /* Dracula comment */
+            }
+
+            .menu-item .shortcut {
+                color: #bd93f9; /* Dracula purple */
+                font-size: 12px;
+            }
+
+            .menu-separator {
+                height: 1px;
+                background-color: #6272a4;
+                margin: 8px 0;
+            }
+
+            #stats-display {
+                position: fixed;
+                top: 16px;
+                right: 24px;
+                color: #6272a4; /* Dracula comment */
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 14px;
+                display: flex;
+                gap: 16px;
+                background-color: rgba(
+                    68,
+                    71,
+                    90,
+                    0.5
+                ); /* Semi-transparent selection */
+                padding: 4px 12px;
+                border-radius: 6px;
+                z-index: 999;
+                transition: opacity 0.3s;
+            }
+
+            .hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #find-bar {
+                position: fixed;
+                bottom: 16px;
+                right: 16px;
+                background-color: #44475a;
+                border: 1px solid #6272a4;
+                border-radius: 8px;
+                padding: 8px;
+                display: none; /* Initially hidden */
+                align-items: center;
+                gap: 8px;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            #find-input {
+                background-color: #282a36;
+                border: 1px solid #6272a4;
+                color: #f8f8f2;
+                border-radius: 4px;
+                padding: 4px 8px;
+                outline: none;
+                width: 200px;
+            }
+
+            #find-input:focus {
+                border-color: #bd93f9;
+            }
+
+            .find-btn {
+                background-color: transparent;
+                border: none;
+                color: #f8f8f2;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 4px;
+            }
+            .find-btn:hover {
+                background-color: #6272a4;
+            }
+        </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <!-- Main text editor area -->
+        <textarea
+            id="editor"
+            spellcheck="false"
+            placeholder="Right-click or click ☰ for menu"
+        ></textarea>
+
+        <!-- Stats display -->
+        <div id="stats-display">
+            <span id="stats-line">↓ 1</span>
+            <span id="stats-char">→ 1</span>
+            <span id="stats-words">= 0</span>
+        </div>
+
+        <!-- Subtle icon to trigger the context menu -->
+        <div id="menu-trigger" title="Menu">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="#f8f8f2"
+                viewBox="0 0 256 256"
+            >
+                <path
+                    d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+                ></path>
+            </svg>
+        </div>
+
+        <!-- Custom context menu -->
+        <div id="context-menu">
+            <div class="menu-item" id="menu-new">
+                <span>New</span>
+                <span class="shortcut">Ctrl+N</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-open">
+                <span>Open...</span>
+                <span class="shortcut">Ctrl+O</span>
+            </div>
+            <div class="menu-item" id="menu-save">
+                <span>Save</span>
+                <span class="shortcut">Ctrl+S</span>
+            </div>
+            <div class="menu-item" id="menu-save-as">
+                <span>Save As...</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-find">
+                <span>Find</span>
+                <span class="shortcut">Ctrl+F</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-toggle-stats">
+                <span>Toggle Stats</span>
+            </div>
+        </div>
+
+        <!-- Find bar -->
+        <div id="find-bar">
+            <input type="text" id="find-input" placeholder="Find..." />
+            <button
+                id="find-prev"
+                class="find-btn"
+                title="Previous (Shift+Enter)"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-next" class="find-btn" title="Next (Enter)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-close" class="find-btn" title="Close (Esc)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                    ></path>
+                </svg>
+            </button>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- SESSION MANAGEMENT ---
+                const urlParams = new URLSearchParams(window.location.search);
+                let sessionId = urlParams.get("session");
+
+                // If no session ID, create one and update the URL without reloading
+                if (!sessionId) {
+                    sessionId = crypto.randomUUID();
+                    // This updates the URL in the address bar so bookmarks and reloads work correctly
+                    history.replaceState(
+                        null,
+                        "",
+                        `${window.location.pathname}?session=${sessionId}`,
+                    );
                 }
 
-                if (searchResults.length === 0) return;
+                // Create session-specific keys for localStorage
+                const contentStorageKey = `fluxTextContent-${sessionId}`;
+                const statsStorageKey = `fluxStatsHidden-${sessionId}`;
 
-                currentResultIndex++;
-                if (currentResultIndex >= searchResults.length) currentResultIndex = 0;
-                selectResult();
-            };
-            
-            const findPrevMatch = () => {
-                const searchTerm = findInput.value;
-                if (!searchTerm) return;
-                
-                if (searchTerm !== lastSearchTerm) {
-                    findNextMatch();
-                    return;
+                // Existing elements
+                const editor = document.getElementById("editor");
+                const contextMenu = document.getElementById("context-menu");
+                const menuTrigger = document.getElementById("menu-trigger");
+                const statsDisplay = document.getElementById("stats-display");
+                const statsLine = document.getElementById("stats-line");
+                const statsChar = document.getElementById("stats-char");
+                const statsWords = document.getElementById("stats-words");
+
+                // New Find elements
+                const findBar = document.getElementById("find-bar");
+                const findInput = document.getElementById("find-input");
+                const findPrev = document.getElementById("find-prev");
+                const findNext = document.getElementById("find-next");
+                const findClose = document.getElementById("find-close");
+
+                let currentFileHandle = null;
+
+                // Find feature state
+                let lastSearchTerm = "";
+                let searchResults = [];
+                let currentResultIndex = -1;
+
+                // --- LOCAL STORAGE PERSISTENCE ---
+                const savedContent = localStorage.getItem(contentStorageKey);
+                if (savedContent) {
+                    editor.value = savedContent;
                 }
-                
-                if (searchResults.length === 0) return;
-
-                currentResultIndex--;
-                if (currentResultIndex < 0) currentResultIndex = searchResults.length - 1;
-                selectResult();
-            };
-            
-            document.getElementById('menu-find').addEventListener('click', showFindBar);
-            findClose.addEventListener('click', hideFindBar);
-            findNext.addEventListener('click', findNextMatch);
-            findPrev.addEventListener('click', findPrevMatch);
-            findInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.shiftKey ? findPrevMatch() : findNextMatch();
-                }
-                if (e.key === 'Escape') hideFindBar();
-            });
-
-            // --- FILE SYSTEM API FUNCTIONS ---
-            const newFile = () => {
-                // Open a new tab with a new unique session ID
-                const newSessionId = crypto.randomUUID();
-                window.open(`${window.location.pathname}?session=${newSessionId}`, '_blank');
-                hideMenu();
-            };
-            const openFile = async () => {
-                hideMenu();
-                try {
-                    const [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }] });
-                    currentFileHandle = fileHandle;
-                    const file = await fileHandle.getFile();
-                    const content = await file.text();
-                    editor.value = content;
-                    localStorage.setItem(contentStorageKey, content);
+                editor.addEventListener("input", () => {
+                    localStorage.setItem(contentStorageKey, editor.value);
                     updateStats();
-                } catch (err) {
-                    if (err.name !== 'AbortError') console.error('Error opening file:', err);
+                });
+
+                // --- STATS LOGIC ---
+                const updateStats = () => {
+                    const text = editor.value;
+                    const cursorPos = editor.selectionStart;
+                    const words =
+                        text.trim() === "" ? [] : text.trim().split(/\s+/);
+                    statsWords.textContent = `= ${words.length}`;
+                    const textUpToCursor = text.substring(0, cursorPos);
+                    const lines = textUpToCursor.split("\n");
+                    const currentLineNumber = lines.length;
+                    const currentCharNumber =
+                        lines[lines.length - 1].length + 1;
+                    statsLine.textContent = `↓ ${currentLineNumber}`;
+                    statsChar.textContent = `→ ${currentCharNumber}`;
+                };
+                editor.addEventListener("keyup", updateStats);
+                editor.addEventListener("click", updateStats);
+                updateStats();
+
+                const toggleStats = () => {
+                    const isHidden = statsDisplay.classList.toggle("hidden");
+                    localStorage.setItem(statsStorageKey, isHidden);
+                    hideMenu();
+                };
+                document
+                    .getElementById("menu-toggle-stats")
+                    .addEventListener("click", toggleStats);
+                if (localStorage.getItem(statsStorageKey) === "true") {
+                    statsDisplay.classList.add("hidden");
                 }
-            };
-            const saveFile = async () => {
-                hideMenu();
-                if (currentFileHandle) {
+
+                // --- CONTEXT MENU LOGIC ---
+                const showMenu = (x, y) => {
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.display = "block";
+                };
+                const hideMenu = () => (contextMenu.style.display = "none");
+                document.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    showMenu(e.clientX, e.clientY);
+                });
+                menuTrigger.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const rect = menuTrigger.getBoundingClientRect();
+                    contextMenu.style.visibility = "hidden";
+                    contextMenu.style.display = "block";
+                    const menuHeight = contextMenu.offsetHeight;
+                    const x = rect.left;
+                    const y = rect.top - menuHeight;
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.visibility = "visible";
+                });
+                document.addEventListener("click", () => hideMenu());
+
+                // --- FIND FEATURE LOGIC ---
+                const showFindBar = () => {
+                    hideMenu();
+                    findBar.style.display = "flex";
+                    findInput.focus();
+                    findInput.select();
+                };
+                const hideFindBar = () => {
+                    findBar.style.display = "none";
+                };
+
+                const selectResult = () => {
+                    if (currentResultIndex === -1 || searchResults.length === 0)
+                        return;
+                    const foundPos = searchResults[currentResultIndex];
+                    editor.focus();
+                    editor.setSelectionRange(
+                        foundPos,
+                        foundPos + lastSearchTerm.length,
+                    );
+                    const totalLines = editor.value.split("\n").length;
+                    const currentLine = editor.value
+                        .substring(0, foundPos)
+                        .split("\n").length;
+                    editor.scrollTop =
+                        (currentLine / totalLines) * editor.scrollHeight -
+                        editor.clientHeight / 2;
+                };
+
+                const findNextMatch = () => {
+                    const searchTerm = findInput.value;
+                    if (!searchTerm) return;
+
+                    if (searchTerm !== lastSearchTerm) {
+                        lastSearchTerm = searchTerm;
+                        searchResults = [];
+                        const text = editor.value;
+                        const regex = new RegExp(searchTerm, "gi");
+                        let match;
+                        while ((match = regex.exec(text)) !== null) {
+                            searchResults.push(match.index);
+                        }
+                        currentResultIndex = -1;
+                    }
+
+                    if (searchResults.length === 0) return;
+
+                    currentResultIndex++;
+                    if (currentResultIndex >= searchResults.length)
+                        currentResultIndex = 0;
+                    selectResult();
+                };
+
+                const findPrevMatch = () => {
+                    const searchTerm = findInput.value;
+                    if (!searchTerm) return;
+
+                    if (searchTerm !== lastSearchTerm) {
+                        findNextMatch();
+                        return;
+                    }
+
+                    if (searchResults.length === 0) return;
+
+                    currentResultIndex--;
+                    if (currentResultIndex < 0)
+                        currentResultIndex = searchResults.length - 1;
+                    selectResult();
+                };
+
+                document
+                    .getElementById("menu-find")
+                    .addEventListener("click", showFindBar);
+                findClose.addEventListener("click", hideFindBar);
+                findNext.addEventListener("click", findNextMatch);
+                findPrev.addEventListener("click", findPrevMatch);
+                findInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.shiftKey ? findPrevMatch() : findNextMatch();
+                    }
+                    if (e.key === "Escape") hideFindBar();
+                });
+
+                // --- FILE SYSTEM API FUNCTIONS ---
+                const newFile = () => {
+                    const newSessionId = crypto.randomUUID();
+
+                    // Use the URL API for robustly creating the new URL.
+                    // This takes the current URL and just replaces the session parameter.
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set("session", newSessionId);
+
+                    window.open(currentUrl.href, "_blank");
+                    hideMenu();
+                };
+                const openFile = async () => {
+                    hideMenu();
                     try {
-                        const writable = await currentFileHandle.createWritable();
+                        const [fileHandle] = await window.showOpenFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
+                        });
+                        currentFileHandle = fileHandle;
+                        const file = await fileHandle.getFile();
+                        const content = await file.text();
+                        editor.value = content;
+                        localStorage.setItem(contentStorageKey, content);
+                        updateStats();
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error opening file:", err);
+                    }
+                };
+                const saveFile = async () => {
+                    hideMenu();
+                    if (currentFileHandle) {
+                        try {
+                            const writable =
+                                await currentFileHandle.createWritable();
+                            await writable.write(editor.value);
+                            await writable.close();
+                        } catch (err) {
+                            console.error("Error saving file:", err);
+                        }
+                    } else {
+                        saveFileAs();
+                    }
+                };
+                const saveFileAs = async () => {
+                    hideMenu();
+                    try {
+                        const newFileHandle = await window.showSaveFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
+                        });
+                        currentFileHandle = newFileHandle;
+                        const writable = await newFileHandle.createWritable();
                         await writable.write(editor.value);
                         await writable.close();
-                    } catch (err) { console.error('Error saving file:', err); }
-                } else {
-                    saveFileAs();
-                }
-            };
-            const saveFileAs = async () => {
-                hideMenu();
-                try {
-                    const newFileHandle = await window.showSaveFilePicker({ types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }] });
-                    currentFileHandle = newFileHandle;
-                    const writable = await newFileHandle.createWritable();
-                    await writable.write(editor.value);
-                    await writable.close();
-                } catch (err) {
-                     if (err.name !== 'AbortError') console.error('Error saving file as:', err);
-                }
-            };
-
-            // --- MENU ITEM EVENT LISTENERS ---
-            document.getElementById('menu-new').addEventListener('click', newFile);
-            document.getElementById('menu-open').addEventListener('click', openFile);
-            document.getElementById('menu-save').addEventListener('click', saveFile);
-            document.getElementById('menu-save-as').addEventListener('click', saveFileAs);
-
-            // --- KEYBOARD SHORTCUTS ---
-            document.addEventListener('keydown', (e) => {
-                if (findBar.style.display === 'flex' && e.target === findInput) return;
-
-                if (e.ctrlKey || e.metaKey) {
-                    switch (e.key.toLowerCase()) {
-                        case 'n': e.preventDefault(); newFile(); break;
-                        case 'o': e.preventDefault(); openFile(); break;
-                        case 's': e.preventDefault(); saveFile(); break;
-                        case 'f': e.preventDefault(); showFindBar(); break;
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error saving file as:", err);
                     }
-                }
-                if (e.key === 'Escape') {
-                    hideFindBar();
-                }
+                };
+
+                // --- MENU ITEM EVENT LISTENERS ---
+                document
+                    .getElementById("menu-new")
+                    .addEventListener("click", newFile);
+                document
+                    .getElementById("menu-open")
+                    .addEventListener("click", openFile);
+                document
+                    .getElementById("menu-save")
+                    .addEventListener("click", saveFile);
+                document
+                    .getElementById("menu-save-as")
+                    .addEventListener("click", saveFileAs);
+
+                // --- KEYBOARD SHORTCUTS ---
+                document.addEventListener("keydown", (e) => {
+                    if (
+                        findBar.style.display === "flex" &&
+                        e.target === findInput
+                    )
+                        return;
+
+                    if (e.ctrlKey || e.metaKey) {
+                        switch (e.key.toLowerCase()) {
+                            case "n":
+                                e.preventDefault();
+                                newFile();
+                                break;
+                            case "o":
+                                e.preventDefault();
+                                openFile();
+                                break;
+                            case "s":
+                                e.preventDefault();
+                                saveFile();
+                                break;
+                            case "f":
+                                e.preventDefault();
+                                showFindBar();
+                                break;
+                        }
+                    }
+                    if (e.key === "Escape") {
+                        hideFindBar();
+                    }
+                });
             });
-        });
-    </script>
-</body>
+        </script>
+    </body>
 </html>

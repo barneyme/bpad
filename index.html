@@ -277,13 +277,26 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
+                // --- HELPER FUNCTION for short IDs ---
+                const generateShortId = (length = 8) => {
+                    const chars =
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    let result = "";
+                    for (let i = 0; i < length; i++) {
+                        result += chars.charAt(
+                            Math.floor(Math.random() * chars.length),
+                        );
+                    }
+                    return result;
+                };
+
                 // --- SESSION MANAGEMENT ---
                 const urlParams = new URLSearchParams(window.location.search);
                 let sessionId = urlParams.get("session");
 
                 // If no session ID, create one and update the URL without reloading
                 if (!sessionId) {
-                    sessionId = crypto.randomUUID();
+                    sessionId = generateShortId();
                     // This updates the URL in the address bar so bookmarks and reloads work correctly
                     history.replaceState(
                         null,
@@ -471,7 +484,7 @@
 
                 // --- FILE SYSTEM API FUNCTIONS ---
                 const newFile = () => {
-                    const newSessionId = crypto.randomUUID();
+                    const newSessionId = generateShortId();
 
                     // Use the URL API for robustly creating the new URL.
                     // This takes the current URL and just replaces the session parameter.

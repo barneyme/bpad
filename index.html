@@ -58,7 +58,7 @@
                     <button
                         id="newButton"
                         title="New Document (Ctrl/Cmd + N)"
-                        class="bg-red-500 hover:bg-red-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
+                        class="bg-green-500 hover:bg-green-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +95,7 @@
                     <button
                         id="saveButton"
                         title="Save File (Ctrl/Cmd + S)"
-                        class="bg-green-500 hover:bg-green-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
+                        class="bg-orange-500 hover:bg-orange-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -105,44 +105,6 @@
                         >
                             <path
                                 d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        id="copyButton"
-                        title="Copy Text (Ctrl/Cmd + C)"
-                        class="bg-purple-500 hover:bg-purple-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"
-                            />
-                            <path
-                                d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h6a2 2 0 00-2-2H5z"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        id="pasteButton"
-                        title="Paste Text (Ctrl/Cmd + V)"
-                        class="bg-orange-500 hover:bg-orange-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path d="M8 2a1 1 0 000 2h4a1 1 0 000-2H8z" />
-                            <path
-                                fill-rule="evenodd"
-                                d="M12 4h1a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 112 0v1h2zm-6 3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"
-                                clip-rule="evenodd"
                             />
                         </svg>
                     </button>
@@ -249,12 +211,11 @@
             // Buttons
             const saveButton = document.getElementById("saveButton");
             const fileInput = document.getElementById("fileInput");
-            const copyButton = document.getElementById("copyButton");
+            // const copyButton = document.getElementById("copyButton"); // REMOVED
             const newButton = document.getElementById("newButton");
             const undoButton = document.getElementById("undoButton"); // Now Previous File
             const redoButton = document.getElementById("redoButton"); // Now Next File
-            // ADDED PASTE BUTTON REFERENCE
-            const pasteButton = document.getElementById("pasteButton");
+            // const pasteButton = document.getElementById("pasteButton"); // REMOVED
 
             // Modal
             const confirmModal = document.getElementById("confirmModal");
@@ -556,7 +517,7 @@
                 }, duration);
             }
 
-            // --- Paste Functionality ADDED ---
+            // --- Paste Functionality REMOVED from original, but keeping definition for keyboard shortcut compatibility ---
             async function pasteText() {
                 editor.focus();
                 try {
@@ -676,26 +637,9 @@
                 event.target.value = null; // Clear input
             });
 
-            copyButton.addEventListener("click", () => {
-                if (!editor.value) return;
-                navigator.clipboard
-                    .writeText(editor.value)
-                    .then(() => {
-                        showToast("Copied to clipboard!");
-                    })
-                    .catch(() => {
-                        try {
-                            editor.select();
-                            document.execCommand("copy");
-                            showToast("Copied to clipboard!");
-                        } catch (err) {
-                            showToast("Failed to copy.");
-                        }
-                    });
-            });
+            // copyButton.addEventListener("click", () => { ... }); // REMOVED
 
-            // PASTE BUTTON LISTENER ADDED
-            pasteButton.addEventListener("click", pasteText);
+            // pasteButton.addEventListener("click", pasteText); // REMOVED
 
             undoButton.addEventListener("click", previousFile); // Previous File
             redoButton.addEventListener("click", nextFile); // Next File
@@ -720,8 +664,7 @@
                 const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
                 if (isCtrlOrCmd) {
-                    // Allow Ctrl/Cmd + Z and Y to pass through for content undo/redo logic below
-                    // V is intentionally not in this exception list, so its default browser action is prevented below
+                    // V is intentionally prevented if Ctrl/Cmd is pressed
                     if (
                         e.key.toUpperCase() !== "Z" &&
                         e.key.toUpperCase() !== "Y"
@@ -739,13 +682,12 @@
                         case "S": // Ctrl/Cmd + S: Save File
                             saveButton.click();
                             break;
-                        case "C": // Ctrl/Cmd + C: Copy Text (Handled by browser, but included for completeness)
-                            // The browser typically handles this, but we'll call the function to ensure the toast
-                            copyButton.click();
+                        case "C": // Ctrl/Cmd + C: Copy Text (Default browser action for copy is still allowed unless `e.preventDefault()` is used on C. Removed explicit call to copyButton.click() which added the toast.)
                             break;
                         case "V": // Ctrl/Cmd + V: Paste Text
                             // The default action is already prevented by e.preventDefault() above.
-                            pasteText();
+                            // Since paste button is removed, the functionality is also removed here.
+                            // If V is pressed, the default browser paste action is prevented.
                             break;
                         case "ARROWLEFT": // Ctrl/Cmd + Left Arrow: Previous File
                             previousFile();

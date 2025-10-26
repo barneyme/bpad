@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bPad Notes</title>
+        <title>bPad</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
@@ -25,24 +25,39 @@
                 opacity: 0.5;
                 cursor: not-allowed;
             }
+            /* Removed old tab-active/inactive styles for button theme */
+
+            /* Style to ensure tabs container respects its parent height */
+            #tabsContainer {
+                height: 48px; /* Standard height to align with header padding/items */
+            }
+            .tab-name {
+                max-width: 120px; /* Max width for name before truncation */
+            }
         </style>
     </head>
     <body class="bg-gray-100 text-gray-800 flex flex-col h-screen">
         <header class="bg-white shadow-md p-2 z-20">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="max-w-7xl mx-auto flex items-center">
                 <h1
-                    class="text-lg font-bold p-1.5 rounded-lg bg-blue-500 text-white hidden sm:block"
+                    class="text-lg font-bold p-1.5 rounded-lg bg-blue-500 text-white flex-shrink-0"
                 >
                     <span class="bg-white text-blue-500 px-1 rounded-md"
                         >bPad</span
                     >
-                    Notes
                 </h1>
 
-                <div class="flex items-center space-x-1 sm:space-x-2 flex-wrap">
+                <div
+                    id="tabsContainer"
+                    class="flex-1 flex overflow-x-auto ml-4 mr-2 items-center space-x-2"
+                ></div>
+
+                <div
+                    class="flex-shrink-0 flex items-center space-x-1 sm:space-x-2 flex-wrap"
+                >
                     <button
                         id="newButton"
-                        title="New Document"
+                        title="New Document (Ctrl/Cmd + N)"
                         class="bg-red-500 hover:bg-red-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
@@ -60,7 +75,7 @@
                     </button>
                     <label
                         for="fileInput"
-                        title="Open File"
+                        title="Open File (Ctrl/Cmd + O)"
                         class="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                         ><svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -79,7 +94,7 @@
                     />
                     <button
                         id="saveButton"
-                        title="Save File"
+                        title="Save File (Ctrl/Cmd + S)"
                         class="bg-green-500 hover:bg-green-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
@@ -95,7 +110,7 @@
                     </button>
                     <button
                         id="copyButton"
-                        title="Copy Text"
+                        title="Copy Text (Ctrl/Cmd + C)"
                         class="bg-purple-500 hover:bg-purple-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
@@ -113,8 +128,27 @@
                         </svg>
                     </button>
                     <button
+                        id="pasteButton"
+                        title="Paste Text (Ctrl/Cmd + V)"
+                        class="bg-orange-500 hover:bg-orange-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path d="M8 2a1 1 0 000 2h4a1 1 0 000-2H8z" />
+                            <path
+                                fill-rule="evenodd"
+                                d="M12 4h1a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 112 0v1h2zm-6 3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                    </button>
+                    <button
                         id="undoButton"
-                        title="Undo"
+                        title="Previous File (Ctrl/Cmd + Left Arrow)"
                         class="bg-gray-500 hover:bg-gray-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
@@ -134,7 +168,7 @@
                     </button>
                     <button
                         id="redoButton"
-                        title="Redo"
+                        title="Next File (Ctrl/Cmd + Right Arrow)"
                         class="bg-gray-500 hover:bg-gray-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
                     >
                         <svg
@@ -149,46 +183,6 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 d="M13 15l3-3m0 0l-3-3m3 3H8m11 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        id="decreaseFont"
-                        title="Decrease Font Size"
-                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M18 12H6"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        id="increaseFont"
-                        title="Increase Font Size"
-                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium p-2 rounded-lg transition duration-300 ease-in-out flex items-center"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                             />
                         </svg>
                     </button>
@@ -222,8 +216,10 @@
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"
         >
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-                <h3 class="text-lg font-bold mb-4">Are you sure?</h3>
-                <p class="text-gray-600 mb-6">
+                <h3 id="modalTitle" class="text-lg font-bold mb-4">
+                    Are you sure?
+                </h3>
+                <p id="modalText" class="text-gray-600 mb-6">
                     This will clear the current document. This action cannot be
                     undone.
                 </p>
@@ -235,7 +231,7 @@
                         Cancel
                     </button>
                     <button
-                        id="confirmNewButton"
+                        id="confirmActionButton"
                         class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded-lg"
                     >
                         Clear Document
@@ -249,55 +245,291 @@
             const charCountEl = document.getElementById("charCount");
             const wordCountEl = document.getElementById("wordCount");
             const toast = document.getElementById("toast");
+            const tabsContainer = document.getElementById("tabsContainer");
             // Buttons
             const saveButton = document.getElementById("saveButton");
             const fileInput = document.getElementById("fileInput");
             const copyButton = document.getElementById("copyButton");
             const newButton = document.getElementById("newButton");
-            const undoButton = document.getElementById("undoButton");
-            const redoButton = document.getElementById("redoButton");
-            const increaseFont = document.getElementById("increaseFont");
-            const decreaseFont = document.getElementById("decreaseFont");
+            const undoButton = document.getElementById("undoButton"); // Now Previous File
+            const redoButton = document.getElementById("redoButton"); // Now Next File
+            // ADDED PASTE BUTTON REFERENCE
+            const pasteButton = document.getElementById("pasteButton");
+
             // Modal
             const confirmModal = document.getElementById("confirmModal");
             const cancelButton = document.getElementById("cancelButton");
-            const confirmNewButton =
-                document.getElementById("confirmNewButton");
+            const confirmActionButton = document.getElementById(
+                "confirmActionButton",
+            );
+            const modalTitle = document.getElementById("modalTitle");
+            const modalText = document.getElementById("modalText");
 
-            let history = [""];
-            let historyIndex = 0;
-            let isUpdatingFromHistory = false;
-            const FONT_SIZE_STEP = 2;
-            const MIN_FONT_SIZE = 10;
-            const MAX_FONT_SIZE = 40;
+            let files = []; // Stores {name, content, history, historyIndex}
+            let currentFileIndex = 0;
+            let fileCounter = 1;
+            let currentModalAction = "new"; // 'new' or 'close'
+            let fileToCloseIndex = -1;
 
-            // --- Font Size ---
-            function changeFontSize(amount) {
-                let currentSize = parseFloat(editor.style.fontSize) || 18;
-                let newSize = currentSize + amount;
-                if (newSize >= MIN_FONT_SIZE && newSize <= MAX_FONT_SIZE) {
-                    editor.style.fontSize = `${newSize}px`;
-                    localStorage.setItem("fontSize", newSize);
+            // --- Default name constant updated ---
+            const DEFAULT_FILE_PREFIX = "New";
+            // ------------------------------------
+
+            // --- File Management ---
+
+            function saveCurrentFileState() {
+                if (files.length === 0) return;
+                const currentFile = files[currentFileIndex];
+                currentFile.content = editor.value;
+
+                localStorage.setItem(
+                    "bPadFiles",
+                    JSON.stringify(
+                        files.map((file) => ({
+                            name: file.name,
+                            content: file.content,
+                            history: file.history,
+                            historyIndex: file.historyIndex,
+                        })),
+                    ),
+                );
+                localStorage.setItem("bPadCurrentIndex", currentFileIndex);
+            }
+
+            function switchFile(index) {
+                if (
+                    index === currentFileIndex ||
+                    index < 0 ||
+                    index >= files.length
+                ) {
+                    return;
+                }
+
+                // 1. Save state of the file we are leaving
+                saveCurrentFileState();
+
+                // 2. Switch index and load new file state
+                currentFileIndex = index;
+                const newFile = files[currentFileIndex];
+                editor.value = newFile.content;
+                editor.focus();
+
+                // 3. Update UI
+                updateAll();
+                renderTabs();
+            }
+
+            // --- Updated to use DEFAULT_FILE_PREFIX ---
+            function createNewFile(
+                name = `${DEFAULT_FILE_PREFIX} ${fileCounter}`,
+                content = "",
+            ) {
+                const newFile = {
+                    name: name,
+                    content: content,
+                    history: [content],
+                    historyIndex: 0,
+                    lastAction: null, // For proper undo/redo within file
+                };
+
+                // Save old state before pushing new
+                saveCurrentFileState();
+
+                files.push(newFile);
+                fileCounter++;
+                switchFile(files.length - 1);
+            }
+            // ------------------------------------------
+
+            function closeFile(index) {
+                if (files.length === 1) {
+                    showToast(
+                        "Cannot close the last file. Clear it instead.",
+                        3000,
+                    );
+                    return;
+                }
+
+                // Remove the file
+                files.splice(index, 1);
+
+                // Adjust current index
+                if (index <= currentFileIndex) {
+                    currentFileIndex = Math.max(0, currentFileIndex - 1);
+                }
+
+                // Switch to the new active file, which implicitly saves state
+                switchFile(currentFileIndex);
+                renderTabs();
+                showToast(`File "${files[currentFileIndex].name}" closed.`);
+            }
+
+            // --- Undo/Redo (File Switching) ---
+
+            function previousFile() {
+                const newIndex =
+                    (currentFileIndex - 1 + files.length) % files.length;
+                switchFile(newIndex);
+            }
+
+            function nextFile() {
+                const newIndex = (currentFileIndex + 1) % files.length;
+                switchFile(newIndex);
+            }
+
+            // --- History Management (within file) ---
+            function getActiveFile() {
+                return files[currentFileIndex];
+            }
+
+            function recordHistory(newText) {
+                const file = getActiveFile();
+                if (file.lastAction === "undo" || file.lastAction === "redo") {
+                    file.lastAction = null; // Clear action if user starts typing
+                    return;
+                }
+
+                if (file.historyIndex < file.history.length - 1) {
+                    file.history = file.history.slice(0, file.historyIndex + 1);
+                }
+
+                // Debounce history recording slightly to avoid too many entries
+                setTimeout(() => {
+                    if (newText !== file.history[file.historyIndex]) {
+                        file.history.push(newText);
+                        file.historyIndex++;
+                    }
+                }, 300);
+            }
+
+            function undoContent() {
+                const file = getActiveFile();
+                if (file.historyIndex > 0) {
+                    file.historyIndex--;
+                    editor.value = file.history[file.historyIndex];
+                    file.lastAction = "undo";
+                    updateAll();
+                }
+            }
+
+            function redoContent() {
+                const file = getActiveFile();
+                if (file.historyIndex < file.history.length - 1) {
+                    file.historyIndex++;
+                    editor.value = file.history[file.historyIndex];
+                    file.lastAction = "redo";
+                    updateAll();
+                }
+            }
+
+            // --- UI Rendering ---
+
+            function renderTabs() {
+                tabsContainer.innerHTML = "";
+                files.forEach((file, index) => {
+                    const tab = document.createElement("button");
+                    const isActive = index === currentFileIndex;
+
+                    // --- New Button Styling ---
+                    const baseClasses =
+                        "font-medium p-2 rounded-lg transition duration-200 ease-in-out flex items-center space-x-1 flex-shrink-0";
+                    const activeClasses =
+                        "bg-blue-500 text-white shadow-md hover:bg-blue-600";
+                    const inactiveClasses =
+                        "bg-gray-300 text-gray-800 hover:bg-gray-400";
+
+                    tab.className = `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+                    // --------------------------
+
+                    tab.setAttribute("data-file-index", index);
+                    // 1. Add file name as hover-over (title attribute)
+                    tab.title = file.name;
+
+                    // File Name
+                    const fileNameSpan = document.createElement("span");
+                    // Add utility classes to make the name shrink/truncate
+                    fileNameSpan.className = "tab-name truncate";
+                    fileNameSpan.textContent = file.name;
+                    tab.appendChild(fileNameSpan);
+
+                    // Close Button (Only for multiple files)
+                    if (files.length > 1) {
+                        const closeBtn = document.createElement("button");
+                        // Adjust close button color for light/dark background
+                        const closeBtnColor = isActive
+                            ? "text-white opacity-90 hover:opacity-100 hover:bg-blue-600/50"
+                            : "text-gray-600 opacity-75 hover:opacity-100 hover:bg-gray-500/30";
+
+                        closeBtn.className = `ml-2 text-xs p-1 rounded-full flex-shrink-0 ${closeBtnColor}`;
+                        closeBtn.innerHTML =
+                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+                        closeBtn.title = `Close ${file.name}`;
+                        closeBtn.addEventListener("click", (e) => {
+                            e.stopPropagation(); // Prevent tab switch
+                            showCloseConfirmModal(index);
+                        });
+                        tab.appendChild(closeBtn);
+                    }
+
+                    tab.addEventListener("click", () => switchFile(index));
+                    tabsContainer.appendChild(tab);
+                });
+                // Scroll the active tab into view for better UX with many files
+                if (files.length > 0) {
+                    tabsContainer.children[currentFileIndex].scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                        inline: "center",
+                    });
                 }
             }
 
             // --- Core Functionality ---
             function loadContent() {
-                const savedFontSize = localStorage.getItem("fontSize");
-                if (savedFontSize) {
-                    editor.style.fontSize = `${savedFontSize}px`;
+                const savedFiles = JSON.parse(
+                    localStorage.getItem("bPadFiles"),
+                );
+                const savedIndex =
+                    parseInt(localStorage.getItem("bPadCurrentIndex")) || 0;
+
+                if (savedFiles && savedFiles.length > 0) {
+                    files = savedFiles.map((file) => ({
+                        ...file,
+                        history: file.history || [file.content], // Ensure history exists
+                        historyIndex: file.historyIndex || 0,
+                        lastAction: null,
+                    }));
+
+                    // --- Handle renaming old "Document X" files on load ---
+                    files = files.map((file) => {
+                        if (file.name.startsWith("Document ")) {
+                            // Check for "Document X" and convert to "New X"
+                            const num = file.name.split(" ")[1];
+                            file.name = `${DEFAULT_FILE_PREFIX} ${num}`;
+
+                            // Adjust fileCounter if needed
+                            fileCounter = Math.max(
+                                fileCounter,
+                                parseInt(num) + 1,
+                            );
+                        }
+                        return file;
+                    });
+                    // --------------------------------------------------------
+
+                    currentFileIndex = Math.min(savedIndex, files.length - 1);
+                    fileCounter = Math.max(fileCounter, files.length + 1); // Ensure counter is high enough
+                } else {
+                    createNewFile(`${DEFAULT_FILE_PREFIX} 1`, ""); // Creates the initial file
+                    fileCounter = 2; // Next file will be New 2
+                    currentFileIndex = 0;
                 }
 
-                const savedText = localStorage.getItem(
-                    "plainTextEditorContent",
-                );
-                if (savedText) {
-                    editor.value = savedText;
-                    history = [savedText];
-                    historyIndex = 0;
-                }
-                updateCounts();
-                updateUndoRedoButtons();
+                // Load the content of the active file
+                editor.value = files[currentFileIndex].content;
+
+                updateAll();
+                renderTabs();
             }
 
             function updateCounts() {
@@ -311,6 +543,11 @@
                 wordCountEl.textContent = `Words: ${wordCount}`;
             }
 
+            function updateAll() {
+                saveCurrentFileState();
+                updateCounts();
+            }
+
             function showToast(message, duration = 2000) {
                 toast.textContent = message;
                 toast.classList.remove("opacity-0", "translate-y-3");
@@ -319,51 +556,76 @@
                 }, duration);
             }
 
-            // --- Undo/Redo ---
-            function updateUndoRedoButtons() {
-                undoButton.disabled = historyIndex <= 0;
-                redoButton.disabled = historyIndex >= history.length - 1;
-            }
+            // --- Paste Functionality ADDED ---
+            async function pasteText() {
+                editor.focus();
+                try {
+                    // Read text from clipboard
+                    const text = await navigator.clipboard.readText();
 
-            function recordHistory(newText) {
-                if (isUpdatingFromHistory) return;
-                if (historyIndex < history.length - 1) {
-                    history = history.slice(0, historyIndex + 1);
-                }
-                // Debounce history recording slightly to avoid too many entries
-                setTimeout(() => {
-                    if (newText !== history[historyIndex]) {
-                        history.push(newText);
-                        historyIndex++;
-                        updateUndoRedoButtons();
+                    if (text) {
+                        // Get current cursor position
+                        const start = editor.selectionStart;
+                        const end = editor.selectionEnd;
+
+                        // Insert text at cursor position
+                        const before = editor.value.substring(0, start);
+                        const after = editor.value.substring(end);
+
+                        editor.value = before + text + after;
+
+                        // Update cursor position
+                        editor.selectionStart = editor.selectionEnd =
+                            start + text.length;
+
+                        updateAll(); // Updates counts, saves to local storage
+                        recordHistory(editor.value); // Records history for the active file
+                        showToast("Text pasted from clipboard!");
                     }
-                }, 300);
-            }
-
-            function undo() {
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    isUpdatingFromHistory = true;
-                    editor.value = history[historyIndex];
-                    isUpdatingFromHistory = false;
-                    updateAll();
+                } catch (err) {
+                    // Fallback for permissions error or non-secure context
+                    showToast(
+                        "Failed to paste. Ensure you have clipboard permission.",
+                    );
                 }
             }
+            // --- END Paste Functionality ---
 
-            function redo() {
-                if (historyIndex < history.length - 1) {
-                    historyIndex++;
-                    isUpdatingFromHistory = true;
-                    editor.value = history[historyIndex];
-                    isUpdatingFromHistory = false;
-                    updateAll();
+            // --- Modal Handlers ---
+            function showNewConfirmModal() {
+                if (!editor.value) {
+                    // No content, just clear
+                    confirmActionNew();
+                    return;
                 }
+                currentModalAction = "new";
+                modalTitle.textContent = "Create New Document?";
+                modalText.textContent =
+                    "This will clear the current document's content and create a new, empty file. Unsaved changes to the current file will be lost if you proceed without saving.";
+                confirmActionButton.textContent = "Create New";
+                confirmModal.classList.remove("hidden");
             }
 
-            function updateAll() {
-                updateCounts();
-                localStorage.setItem("plainTextEditorContent", editor.value);
-                updateUndoRedoButtons();
+            function showCloseConfirmModal(index) {
+                currentModalAction = "close";
+                fileToCloseIndex = index;
+                modalTitle.textContent = "Close Document?";
+                modalText.textContent =
+                    "Closing this document will remove it from the session. Unsaved changes will be lost if you proceed without saving.";
+                confirmActionButton.textContent = "Close Document";
+                confirmModal.classList.remove("hidden");
+            }
+
+            function confirmActionNew() {
+                confirmModal.classList.add("hidden");
+                createNewFile();
+                showToast(`New file "${getActiveFile().name}" created.`);
+            }
+
+            function confirmActionClose() {
+                confirmModal.classList.add("hidden");
+                closeFile(fileToCloseIndex);
+                fileToCloseIndex = -1;
             }
 
             // --- Event Listeners ---
@@ -376,25 +638,42 @@
                 const blob = new Blob([editor.value], { type: "text/plain" });
                 const a = document.createElement("a");
                 a.href = URL.createObjectURL(blob);
-                a.download = "document.txt";
+                a.download = getActiveFile().name.replace(/\s/g, "_") + ".txt";
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                showToast("File saved as document.txt");
+                showToast(`File "${getActiveFile().name}" saved.`);
             });
 
             fileInput.addEventListener("change", (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const newText = e.target.result;
-                    editor.value = newText;
-                    history = [newText];
-                    historyIndex = 0;
+                    // Check if current file is empty and unnamed
+                    if (
+                        files.length === 1 &&
+                        files[0].name === `${DEFAULT_FILE_PREFIX} 1` &&
+                        files[0].content === ""
+                    ) {
+                        // Overwrite the default empty file
+                        files[0].content = newText;
+                        files[0].name = file.name;
+                        files[0].history = [newText];
+                        files[0].historyIndex = 0;
+                        editor.value = newText;
+                    } else {
+                        // Create a new tab for the opened file
+                        createNewFile(file.name, newText);
+                    }
                     updateAll();
+                    renderTabs();
+                    showToast(`File "${file.name}" opened.`);
                 };
                 reader.readAsText(file);
+                event.target.value = null; // Clear input
             });
 
             copyButton.addEventListener("click", () => {
@@ -415,30 +694,73 @@
                     });
             });
 
-            undoButton.addEventListener("click", undo);
-            redoButton.addEventListener("click", redo);
-            increaseFont.addEventListener("click", () =>
-                changeFontSize(FONT_SIZE_STEP),
-            );
-            decreaseFont.addEventListener("click", () =>
-                changeFontSize(-FONT_SIZE_STEP),
-            );
+            // PASTE BUTTON LISTENER ADDED
+            pasteButton.addEventListener("click", pasteText);
+
+            undoButton.addEventListener("click", previousFile); // Previous File
+            redoButton.addEventListener("click", nextFile); // Next File
 
             // Modal listeners
-            newButton.addEventListener("click", () =>
-                confirmModal.classList.remove("hidden"),
-            );
+            newButton.addEventListener("click", showNewConfirmModal);
             cancelButton.addEventListener("click", () =>
                 confirmModal.classList.add("hidden"),
             );
-            confirmNewButton.addEventListener("click", () => {
-                editor.value = "";
-                history = [""];
-                historyIndex = 0;
-                updateAll();
-                localStorage.removeItem("plainTextEditorContent");
-                confirmModal.classList.add("hidden");
-                showToast("Document cleared");
+            confirmActionButton.addEventListener("click", () => {
+                if (currentModalAction === "new") {
+                    confirmActionNew();
+                } else if (currentModalAction === "close") {
+                    confirmActionClose();
+                }
+            });
+
+            // --- Keyboard Shortcuts ---
+            document.addEventListener("keydown", (e) => {
+                const isMac =
+                    navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+                const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+                if (isCtrlOrCmd) {
+                    // Allow Ctrl/Cmd + Z and Y to pass through for content undo/redo logic below
+                    // V is intentionally not in this exception list, so its default browser action is prevented below
+                    if (
+                        e.key.toUpperCase() !== "Z" &&
+                        e.key.toUpperCase() !== "Y"
+                    ) {
+                        e.preventDefault(); // Prevent default browser actions for shortcuts (N, O, S, C, V, ARROWLEFT, ARROWRIGHT)
+                    }
+
+                    switch (e.key.toUpperCase()) {
+                        case "N": // Ctrl/Cmd + N: New Document
+                            showNewConfirmModal();
+                            break;
+                        case "O": // Ctrl/Cmd + O: Open File
+                            fileInput.click();
+                            break;
+                        case "S": // Ctrl/Cmd + S: Save File
+                            saveButton.click();
+                            break;
+                        case "C": // Ctrl/Cmd + C: Copy Text (Handled by browser, but included for completeness)
+                            // The browser typically handles this, but we'll call the function to ensure the toast
+                            copyButton.click();
+                            break;
+                        case "V": // Ctrl/Cmd + V: Paste Text
+                            // The default action is already prevented by e.preventDefault() above.
+                            pasteText();
+                            break;
+                        case "ARROWLEFT": // Ctrl/Cmd + Left Arrow: Previous File
+                            previousFile();
+                            break;
+                        case "ARROWRIGHT": // Ctrl/Cmd + Right Arrow: Next File
+                            nextFile();
+                            break;
+                    }
+                } else if (e.key.toUpperCase() === "Z" && e.ctrlKey) {
+                    e.preventDefault();
+                    undoContent();
+                } else if (e.key.toUpperCase() === "Y" && e.ctrlKey) {
+                    e.preventDefault();
+                    redoContent();
+                }
             });
 
             // Initialize
